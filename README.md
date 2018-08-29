@@ -1,150 +1,82 @@
-This README gives an overview of how to build and contribute to the documentation of Apache Flink.
-
-The documentation is included with the source of Apache Flink in order to ensure that you always
-have docs corresponding to your checked out version. The online documentation at
-http://flink.apache.org/ is also generated from the files found here.
-
-# Requirements
-
-The dependencies are declared in the Gemfile in this directory. We use Markdown
-to write and Jekyll to translate the documentation to static HTML. All required
-dependencies are installed locally when you build the documentation through the
-`build_docs.sh` script. If you want to install the software manually, use Ruby's
-Bundler Gem to install all dependencies:
-
-    gem install bundler
-    bundle install
-
-Note that in Ubuntu based systems, it may be necessary to install the `ruby-dev`
-via apt to build native code.
-
-# Using Dockerized Jekyll
-
-We dockerized the jekyll environment above. If you have [docker](https://docs.docker.com/),
-you can run following command to start the container.
-
-```
-cd flink/docs/docker
-./run.sh
-```
-
-It takes a few moment to build the image for the first time, but will be a second from the second time.
-The run.sh command brings you in a bash session where you can run following doc commands.
-
-# Build
-
-The `docs/build_docs.sh` script installs dependencies locally, calls Jekyll, and
-generates the documentation in `docs/content`. You can then point your browser
-to `docs/content/index.html` and start reading.
-
-If you call the script with the preview flag `build_docs.sh -p`, Jekyll will
-start a web server at `localhost:4000` and watch the docs directory for
-updates. Use this mode to preview changes locally. 
-
-If you have ruby 2.0 or greater, 
-you can call the script with the incremental flag `build_docs.sh -i`.
-Jekyll will then serve a live preview at `localhost:4000`,
-and it will be much faster because it will only rebuild the pages corresponding
-to files that are modified. Note that if you are making changes that affect
-the sidebar navigation, you'll have to build the entire site to see
-those changes reflected on every page.
-
-## Generate configuration tables
-
-Configuration descriptions are auto generated from code. To trigger the generation you need to run:
-
-```
-mvn -Pgenerate-config-docs install
-```
-
-The resulting html files will be written to `_include/generated`. Tables are regenerated each time the command is invoked.
-These tables can be directly included into the documentation:
-
-```
-{% include generated/file_name.html %}
-```
+该仓库是Flink1.6.0文档翻译项目专用仓库。该翻译项目的文章最终都会放到改版之后的Flink China官网，作为中国Flink爱好者学习和入门Flink的第一手资料。
+我们非常欢迎有兴趣的同学参与一起翻译和优化中文文档。我们会在感谢页面感谢所有参与了贡献的人。如有遗漏，请联系我们！
 
 # Contribute
+如何贡献文档到Apache Flink中文社区。
 
 ## Markdown
 
-The documentation pages are written in [Markdown](http://daringfireball.net/projects/markdown/syntax). It is possible to use [GitHub flavored syntax](http://github.github.com/github-flavored-markdown) and intermix plain html.
+文档格式必须是[Markdown](http://daringfireball.net/projects/markdown/syntax). 
 
-## Front matter
+## 如何认领文章
+* 加入钉钉社区文档翻译群
+* 也可以在一下表给或 issue 页面中查看是否已经有人在翻译这篇文档。如果没有，你可以发布一个 issue 或者回复某个模块的 issue，说明你要认领的文档。
 
-In addition to Markdown, every page contains a Jekyll front matter, which specifies the title of the page and the layout to use. The title is used as the top-level heading for the page. The default layout is `plain` (found in `_layouts`).
+|文章	|	认领情况	|	认领时间	|
+|:--:|:--:|:--:|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/cep.html	|	已认领	|	8月29日	|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/storm_compatibility.html	|		|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/best_practices.html	|	已认领	|	8月29日	|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/ops/jobmanager_high_availability.html	|	已认领	|	8月29日	|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/ops/state/checkpoints.html	|	已认领	|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/ops/state/savepoints.html	|	已认领	|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/ops/state/state_backends.html	|	已认领	|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/ops/state/large_state_tuning.html	|	已认领	|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/ops/production_ready.html	|	已认领	|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/ops/cli.html	|		|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/ops/security-kerberos.html	|		|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/ops/security-ssl.html	|		|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/ops/filesystems.html	|		|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/ops/upgrading.html	|	已认领	|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/monitoring/metrics.html	|	已认领	|	8月29日	|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/monitoring/logging.html	|	已认领	|	8月29日	|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/monitoring/historyserver.html	|	已认领	|	8月29日	|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/monitoring/checkpoint_monitoring.html	|	已认领	|	8月29日	|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/monitoring/back_pressure.html	|	已认领	|	8月29日	|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/monitoring/rest_api.html	|	已认领	|	8月29日	|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/monitoring/debugging_event_time.html	|	已认领	|	8月29日	|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/monitoring/debugging_classloading.html	|		|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/monitoring/application_profiling.html	|		|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/gelly/	|		|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/gelly/graph_api.html	|		|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/gelly/iterative_graph_processing.html	|		|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/gelly/library_methods.html	|		|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/gelly/graph_algorithms.html	|		|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/gelly/graph_generators.html	|		|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/gelly/bipartite_graph.html	|	已认领	|	8月29日	|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/	|	已认领	|	8月29日	|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/quickstart.html	|	已认领	|	8月29日	|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/als.html	|		|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/contribution_guide.html	|		|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/cross_validation.html	|		|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/distance_metrics.html	|	已认领	|	8月29日	|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/knn.html	|	已认领	|	8月29日	|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/min_max_scaler.html	|	已认领	|	8月29日	|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/multiple_linear_regression.html	|	已认领	|	8月29日	|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/pipelines.html	|		|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/polynomial_features.html	|		|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/sos.html	|		|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/standard_scaler.html	|		|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/svm.html	|	已认领	|	8月29日	||
 
-    ---
-    title: "Title of the Page"
-    ---
+## 翻译规范
+我们建议你先在本地将英文文档按照原格式翻译成中文，直接在原英文文档基础上编辑翻译，注意保留文档原有的 TOC 、{% top %}等内容。并在本地测试验证后，提交你的翻译成果。
 
-Furthermore, you can access variables found in `docs/_config.yml` as follows:
+* 汉字，字母，数字等之间以空格隔开。
+* 中文使用中文符号，英文使用英文符号。
+* 专有词注意大小写，如 Flink，Java，Scala，API，不要用小写的 flink, java, scala, api。
+* 术语与已有译文保持一致，如果有不同意见请先在 issue 中讨论。
+* 代码只翻译注释，也可不翻译注释。
 
-    {{ site.NAME }}
+### 术语翻译对照
+* transformations:转换/转换操作
+* lazy evaluation:延迟计算
+* exactly-once:只处理一次
+* at-least-once:至少处理一次
+* at-most-once:最多处理一次
+* operator:算子
+* 不翻译的术语: DataSet, DataStream, sink, connector。
 
-This will be replaced with the value of the variable called `NAME` when generating the docs.
+## 如何上传已翻译好的文章
+对本项目，提交[Pull Request](https://help.github.com/articles/about-pull-requests/)的方式提交你的翻译结果。
 
-## Structure
-
-### Page
-
-#### Headings
-
-All documents are structured with headings. From these headings, you can automatically generate a page table of contents (see below).
-
-```
-# Level-1 Heading  <- Used for the title of the page (don't use this)
-## Level-2 Heading <- Start with this one
-### Level-3 heading
-#### Level-4 heading
-##### Level-5 heading
-```
-
-Please stick to the "logical order" when using the headlines, e.g. start with level-2 headings and use level-3 headings for subsections, etc. Don't use a different ordering, because you don't like how a headline looks.
-
-#### Table of Contents
-
-    * This will be replaced by the TOC
-    {:toc}
-
-
-Add this markup (both lines) to the document in order to generate a table of contents for the page. Headings until level 3 headings are included.
-
-You can exclude a heading from the table of contents:
-
-    # Excluded heading
-    {:.no_toc}
-
-#### Back to Top
-
-	{% top %}
-
-This will be replaced by a default back to top link. It is recommended to use these links at least at the end of each level-2 section.
-
-#### Labels
-
-	{% info %}
-	{% warn %}
-
-These will be replaced by a info or warning label. You can change the text of the label by providing an argument:
-
-    {% info Recommendation %}
-
-### Documentation
-
-#### Navigation
-
-The navigation on the left side of the docs is automatically generated when building the docs. You can modify the markup in `_include/sidenav.html`.
-
-The structure of the navigation is determined by the front matter of all pages. The fields used to determine the structure are:
-
-- `nav-id` => ID of this page. Other pages can use this ID as their parent ID.
-- `nav-parent_id` => ID of the parent. This page will be listed under the page with id `nav-parent_id`.
-
-Level 0 is made up of all pages, which have nav-parent_id set to `root`. There is no limitation on how many levels you can nest.
-
-The `title` of the page is used as the default link text. You can override this via `nav-title`. The relative position per navigational level is determined by `nav-pos`.
-
-If you have a page with sub pages, the link target will be used to expand the sub level navigation. If you want to actually add a link to the page as well, you can add the `nav-show_overview: true` field to the front matter. This will then add an `Overview` sub page to the expanded list.
-
-The nesting is also used for the breadcrumbs like `Application Development > Libraries > Machine Learning > Optimization`.
