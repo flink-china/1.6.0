@@ -1,6 +1,9 @@
+
+原文地址:https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/distance_metrics.html
+
 ---
 mathjax: include
-title: Distance Metrics
+title: 距离度量指标(Distance Metrics)
 nav-parent_id: ml
 ---
 <!--
@@ -25,15 +28,13 @@ under the License.
 * This will be replaced by the TOC
 {:toc}
 
-## Description
+## 描述
 
-Different metrics of distance are convenient for different types of analysis. Flink ML provides
-built-in implementations for many standard distance metrics. You can create custom
-distance metrics by implementing the `DistanceMetric` trait.
+不同类型的距离度量指标适用于不同类型的数据分析。Flink ML 内置了许多常用的距离度量指标。此外，你还可以通过 'DistanceMetric' 方法创建自定义距离度量指标。
 
-## Built-in Implementations
+## 内置距离度量指标
 
-Currently, FlinkML supports the following metrics:
+目前, FlinkML 支持以下距离度量指标:
 
 <table class="table table-bordered">
     <thead>
@@ -45,43 +46,43 @@ Currently, FlinkML supports the following metrics:
 
     <tbody>
       <tr>
-        <td><strong>Euclidean Distance</strong></td>
+        <td><strong>欧氏距离(Euclidean Distance)</strong></td>
         <td>
           $$d(\x, \y) = \sqrt{\sum_{i=1}^n \left(x_i - y_i \right)^2}$$
         </td>
       </tr>
       <tr>
-        <td><strong>Squared Euclidean Distance</strong></td>
+        <td><strong>平方欧氏距离(Squared Euclidean Distance)</strong></td>
         <td>
           $$d(\x, \y) = \sum_{i=1}^n \left(x_i - y_i \right)^2$$
         </td>
       </tr>
       <tr>
-        <td><strong>Cosine Similarity</strong></td>
+        <td><strong>余弦相似度(Cosine Similarity)</strong></td>
         <td>
           $$d(\x, \y) = 1 - \frac{\x^T \y}{\Vert \x \Vert \Vert \y \Vert}$$
         </td>
       </tr>
       <tr>
-        <td><strong>Chebyshev Distance</strong></td>
+        <td><strong>切比雪夫距离(Chebyshev Distance)</strong></td>
         <td>
           $$d(\x, \y) = \max_{i}\left(\left \vert x_i - y_i \right\vert \right)$$
         </td>
       </tr>
       <tr>
-        <td><strong>Manhattan Distance</strong></td>
+        <td><strong>曼哈顿距离(Manhattan Distance)</strong></td>
         <td>
           $$d(\x, \y) = \sum_{i=1}^n \left\vert x_i - y_i \right\vert$$
         </td>
       </tr>
       <tr>
-        <td><strong>Minkowski Distance</strong></td>
+        <td><strong>闵可夫斯基距离(Minkowski Distance)</strong></td>
         <td>
           $$d(\x, \y) = \left( \sum_{i=1}^{n} \left( x_i - y_i \right)^p \right)^{\rfrac{1}{p}}$$
         </td>
       </tr>
       <tr>
-        <td><strong>Tanimoto Distance</strong></td>
+        <td><strong>谷本距离(Tanimoto Distance)</strong></td>
         <td>
           $$d(\x, \y) = 1 - \frac{\x^T\y}{\Vert \x \Vert^2 + \Vert \y \Vert^2 - \x^T\y}$$
           with $\x$ and $\y$ being bit-vectors
@@ -90,9 +91,9 @@ Currently, FlinkML supports the following metrics:
     </tbody>
   </table>
 
-## Custom Implementation
+## 自定义距离度量指标
 
-You can create your own distance metric by implementing the `DistanceMetric` trait.
+你可以通过 'DistanceMetric' 这个方法创建自己的自定义距离度量指标。
 
 {% highlight scala %}
 class MyDistance extends DistanceMetric {
