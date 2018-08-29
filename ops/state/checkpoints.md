@@ -27,10 +27,14 @@ under the License.
 {:toc}
 
 ## Overview
+## 概览
 
 Checkpoints make state in Flink fault tolerant by allowing state and the
 corresponding stream positions to be recovered, thereby giving the application
-the same semantics as a failure-free execution.
+the same semantics as a failure-free execution.  
+检查点通过允许状态及状态使Flink中的状态容错
+要恢复的相应流位置，从而给出应用程序
+与无故障执行相同的语义。
 
 See [Checkpointing]({{ site.baseurl }}/dev/stream/state/checkpointing.html) for how to enable and
 configure checkpoints for your program.
