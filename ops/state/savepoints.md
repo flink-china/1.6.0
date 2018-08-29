@@ -27,18 +27,25 @@ under the License.
 
 ## Overview
 
-Savepoints are externally stored self-contained checkpoints that you can use to stop-and-resume or update your Flink programs. They use Flink's [checkpointing mechanism]({{ site.baseurl }}/internals/stream_checkpointing.html) to create a (non-incremental) snapshot of the state of your streaming program and write the checkpoint data and meta data out to an external file system.
+Savepoints are externally stored self-contained checkpoints that you can use to stop-and-resume or update your Flink programs. They use Flink's [checkpointing mechanism]({{ site.baseurl }}/internals/stream_checkpointing.html) to create a (non-incremental) snapshot of the state of your streaming program and write the checkpoint data and meta data out to an external file system.  
+savepoint是外部存储的自完备的checkpoint，你可以用来停止-恢复或更新你的Flink程序。他们使用Flink的 [checkpoint机制]({{ site.baseurl }}/internals/stream_checkpointing.html) to create a (non-incremental) 生成流作业的（非增量）状态快照，并且将checkpoint数据和元数据写出到外部文件系统。
 
 This page covers all steps involved in triggering, restoring, and disposing savepoints.
-For more details on how Flink handles state and failures in general, check out the [State in Streaming Programs]({{ site.baseurl }}/dev/stream/state/index.html) page.
+For more details on how Flink handles state and failures in general, check out the [State in Streaming Programs]({{ site.baseurl }}/dev/stream/state/index.html) page.  
+本页涵盖涉及触发、恢复、处理savepoint的所有步骤。Flink通常如何处理状态和故障的详细内容，请见[流程序中的状态]({{ site.baseurl }}/dev/stream/state/index.html)。
 
 <div class="alert alert-warning">
 <strong>Attention:</strong> In order to allow upgrades between programs and Flink versions, it is important to check out the following section about <a href="#assigning-operator-ids">assigning IDs to your operators</a>.
-</div>
+</div>  
+<div class="alert alert-warning">
+<strong>注意：</strong> 为了允许在不同程序和Flink版本间更新升级，需要查看接下来关于 <a href="#assigning-operator-ids">为你的算子分配ID</a>章节。 
+</div> 
 
 ## Assigning Operator IDs
+## 分配算子ID
 
-It is **highly recommended** that you adjust your programs as described in this section in order to be able to upgrade your programs in the future. The main required change is to manually specify operator IDs via the **`uid(String)`** method. These IDs are used to scope the state of each operator.
+It is **highly recommended** that you adjust your programs as described in this section in order to be able to upgrade your programs in the future. The main required change is to manually specify operator IDs via the **`uid(String)`** method. These IDs are used to scope the state of each operator.  
+**强烈推荐**你使用本章节的方法调整你的程序，以便在将来升级你的项目。需要的主要改变是通过使用**“uid(String)”**方法手动指定算子ID。这些ID将在每个算子的状态范围内使用。
 
 {% highlight java %}
 DataStream<String> stream = env.
@@ -53,11 +60,14 @@ DataStream<String> stream = env.
   .print(); // Auto-generated ID
 {% endhighlight %}
 
-If you don't specify the IDs manually they will be generated automatically. You can automatically restore from the savepoint as long as these IDs do not change. The generated IDs depend on the structure of your program and are sensitive to program changes. Therefore, it is highly recommended to assign these IDs manually.
+If you don't specify the IDs manually they will be generated automatically. You can automatically restore from the savepoint as long as these IDs do not change. The generated IDs depend on the structure of your program and are sensitive to program changes. Therefore, it is highly recommended to assign these IDs manually.  
+如果你不手动指定，ID将自动生成。只要这些ID不改变，你可以从savepoint中自动恢复。生成的ID依赖于你程序的结构，并且将受到程序变化的影响。因此，强烈推荐手动指定ID。
 
 ### Savepoint State
+### savepoint状态
 
-You can think of a savepoint as holding a map of `Operator ID -> State` for each stateful operator:
+You can think of a savepoint as holding a map of `Operator ID -> State` for each stateful operator:  
+你可以将savepoint想象成为每个有状态的算子执行“算子ID->状态”的映射操作。
 
 {% highlight plain %}
 Operator ID | State
@@ -66,13 +76,18 @@ source-id   | State of StatefulSource
 mapper-id   | State of StatefulMapper
 {% endhighlight %}
 
-In the above example, the print sink is stateless and hence not part of the savepoint state. By default, we try to map each entry of the savepoint back to the new program.
+In the above example, the print sink is stateless and hence not part of the savepoint state. By default, we try to map each entry of the savepoint back to the new program.  
+在上述示例中，print结果表是无状态的，因此不是savepoint状态的一部分。默认情况下，我们试图将savepoint的每个入口都映射到新的程序中。
 
 ## Operations
+## 算子
 
 You can use the [command line client]({{ site.baseurl }}/ops/cli.html#savepoints) to *trigger savepoints*, *cancel a job with a savepoint*, *resume from savepoints*, and *dispose savepoints*.
 
-With Flink >= 1.2.0 it is also possible to *resume from savepoints* using the webui.
+With Flink >= 1.2.0 it is also possible to *resume from savepoints* using the webui.  
+你可以使用 [命令行客户端]({{ site.baseurl }}/ops/cli.html#savepoints) *触发savepoint*, *取消作业保留savepoint*, *从savepoint恢复*, and *处理savepoint*。
+
+若Flink版本不低于1.2.0，同样可以使用webui *从savepoint恢复* 。
 
 ### Triggering Savepoints
 
