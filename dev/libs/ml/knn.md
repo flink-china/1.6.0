@@ -25,61 +25,52 @@ under the License.
 * This will be replaced by the TOC
 {:toc}
 
-## Description
-Implements an exact k-nearest neighbors join algorithm.  Given a training set $A$ and a testing set $B$, the algorithm returns
+## 描述
+实现精确的 k 近邻连接算法。给定训练集 $A$ 和测试集 $B$ ，算法返回
 
+$$  
+KNNJ(A, B, k) = \{ \left( b, KNN(b, A, k) \right) \text{ 其中 } b \in B \text{ 并且 } KNN(b, A, k) \text{ 是 } A \text{ 中离  } b \text{ 最近的 k 个点} \}  
 $$
-KNNJ(A, B, k) = \{ \left( b, KNN(b, A, k) \right) \text{ where } b \in B \text{ and } KNN(b, A, k) \text{ are the k-nearest points to }b\text{ in }A \}
-$$
 
-The brute-force approach is to compute the distance between every training and testing point. To ease the brute-force computation of computing the distance between every training point a quadtree is used. The quadtree scales well in the number of training points, though poorly in the spatial dimension. The algorithm will automatically choose whether or not to use the quadtree, though the user can override that decision by setting a parameter to force use or not use a quadtree.
+蛮力方法是计算每个训练点和测试点之间的距离。使用四叉树去简化每个训练点之间距离的强力计算。 四叉树在训练点的数量上很好地扩展，但在空间维度上很差。该算法将自动选择是否使用四叉树，但用户可以通过设置参数来强制使用或不使用四叉树来覆盖该决策。
+## 算子
 
-## Operations
+`KNN` 是一个`预测者`.
+因此,它支持`拟合`和`预测`运算.
 
-`KNN` is a `Predictor`.
-As such, it supports the `fit` and `predict` operation.
+### 拟合
 
-### Fit
-
-KNN is trained by a given set of `Vector`:
+KNN由一组给定的`向量`训练：
 
 * `fit[T <: Vector]: DataSet[T] => Unit`
 
-### Predict
+### 预测
 
-KNN predicts for all subtypes of FlinkML's `Vector` the corresponding class label:
+KNN预测FlinkML的`向量`的所有子类型对应的类标签：
 
-* `predict[T <: Vector]: DataSet[T] => DataSet[(T, Array[Vector])]`, where the `(T, Array[Vector])` tuple
-  corresponds to (test point, K-nearest training points)
+* `predict[T <: Vector]: DataSet[T] => DataSet[(T, Array[Vector])]`, 其中`(T, Array[Vector])`元组对应(测试点, K个最近训练点)
 
-## Parameters
-
-The KNN implementation can be controlled by the following parameters:
-
-   <table class="table table-bordered">
+## 参数
+KNN实现可以通过以下参数控制：
+<table class="table table-bordered">
     <thead>
       <tr>
-        <th class="text-left" style="width: 20%">Parameters</th>
-        <th class="text-center">Description</th>
+        <th class="text-left" style="width: 20%">参数</th>
+        <th class="text-center">描述</th>
       </tr>
     </thead>
-
     <tbody>
       <tr>
         <td><strong>K</strong></td>
         <td>
-          <p>
-            Defines the number of nearest-neighbors to search for. That is, for each test point, the algorithm finds the K-nearest neighbors in the training set
-            (Default value: <strong>5</strong>)
+          <p>定义要搜索的最近邻居数。也就是说，对于每个测试点，算法在训练集中找到K个最近邻(默认值: <strong>5</strong>)
           </p>
         </td>
       </tr>
       <tr>
         <td><strong>DistanceMetric</strong></td>
         <td>
-          <p>
-            Sets the distance metric we use to calculate the distance between two points. If no metric is specified, then [[org.apache.flink.ml.metrics.distances.EuclideanDistanceMetric]] is used.
-            (Default value: <strong>EuclideanDistanceMetric</strong>)
+          <p>设置我们用于计算两点之间距离的距离度量。如果未指定度量标准，则使用[[org.apache.flink.ml.metrics.distances.EuclideanDistanceMetric]]。(默认值: <strong>EuclideanDistanceMetric</strong>)
           </p>
         </td>
       </tr>
@@ -87,34 +78,29 @@ The KNN implementation can be controlled by the following parameters:
         <td><strong>Blocks</strong></td>
         <td>
           <p>
-            Sets the number of blocks into which the input data will be split. This number should be set
-            at least to the degree of parallelism. If no value is specified, then the parallelism of the
-            input [[DataSet]] is used as the number of blocks.
-            (Default value: <strong>None</strong>)
+            设置输入数据将被分割的块数。此数字应至少设置为并行度。如果未指定任何值，则输入的[[DataSet]]的并行性将被用作块数。
+            (默认值: <strong>None</strong>)
           </p>
         </td>
       </tr>
       <tr>
         <td><strong>UseQuadTree</strong></td>
         <td>
-          <p>
-            A boolean variable that whether or not to use a quadtree to partition the training set to potentially simplify the KNN search. If no value is specified, the code will automatically decide whether or not to use a quadtree. Use of a quadtree scales well with the number of training and testing points, though poorly with the dimension.
-            (Default value: <strong>None</strong>)
+          <p>一个布尔变量，决定是否使用四叉树来划分训练集来尽可能地简化KNN搜索。如果未指定任何值，代码将自动决定是否使用四叉树。四叉树的使用在训练和测试点的数量很好地扩展，但在空间维度上很差。(默认值: <strong>None</strong>)
           </p>
         </td>
       </tr>
       <tr>
         <td><strong>SizeHint</strong></td>
         <td>
-          <p>Specifies whether the training set or test set is small to optimize the cross product operation needed for the KNN search. If the training set is small this should be `CrossHint.FIRST_IS_SMALL` and set to `CrossHint.SECOND_IS_SMALL` if the test set is small.
-             (Default value: <strong>None</strong>)
+          <p>指定训练集或测试集是否很小，以优化KNN搜索所需的跨产品操作。如果训练集很小，则应该设置`CrossHint.FIRST_IS_SMALL`并且如果测试集很小则设置`CrossHint.SECOND_IS_SMALL`。(默认值: <strong>None</strong>)
           </p>
         </td>
       </tr>
     </tbody>
   </table>
 
-## Examples
+## 例子
 
 {% highlight scala %}
 import org.apache.flink.api.common.operators.base.CrossOperatorBase.CrossHint
@@ -141,6 +127,6 @@ knn.fit(trainingSet)
 val result = knn.predict(testingSet).collect()
 {% endhighlight %}
 
-For more details on the computing KNN with and without and quadtree, here is a presentation: [http://danielblazevski.github.io/](http://danielblazevski.github.io/)
+有关计算KNN和有无四叉树的详细信息，请参阅演示文稿：: [http://danielblazevski.github.io/](http://danielblazevski.github.io/)
 
 {% top %}
