@@ -1,102 +1,58 @@
----
-mathjax: include
-title: MinMax Scaler
-nav-parent_id: ml
----
-<!--
-Licensed to the Apache Software Foundation (ASF) under one
-or more contributor license agreements.  See the NOTICE file
-distributed with this work for additional information
-regarding copyright ownership.  The ASF licenses this file
-to you under the Apache License, Version 2.0 (the
-"License"); you may not use this file except in compliance
-with the License.  You may obtain a copy of the License at
+# MinMax Scaler
 
-  http://www.apache.org/licenses/LICENSE-2.0
+* [描述](#描述)
+* [操作](#操作)
+    * [训练](#训练)
+    * [转换](#转换)
+* [参数](#参数)
+* [示例](#示例)
 
-Unless required by applicable law or agreed to in writing,
-software distributed under the License is distributed on an
-"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, either express or implied.  See the License for the
-specific language governing permissions and limitations
-under the License.
--->
+## 描述
 
-* This will be replaced by the TOC
-{:toc}
+MinMax Scaler 通过对给定数据集进行缩放，使得所有值都落在指定的区间 \[min,max\]内。如果用户没有指定区间的最大和最小值，则 MinMax Scaler将会把输入特征缩放到 \[0,1\] 区间内。 给定输入数据集：`$x_1, x_2,… x_n$`，其中最小值为：
+```math
+x_{min} = min({x_1, x_2,..., x_n})
+```
+最大值为：
+```math
+x_{max} = max({x_1, x_2,..., x_n})
+```
+经过缩放的数据集 `$ z_1, z_2,…,z_n $` 为：
+```math
+z_{i}= \frac{x_{i} - x_{min}} {x_{max} - x_{min}}( max - min) + min
+```
+其中 `$\textit{min}$` 和 `$\textit{max}$` 是用户指定的最小值和最大值。
 
-## Description
+## 操作
 
- The MinMax scaler scales the given data set, so that all values will lie between a user specified range [min,max].
- In case the user does not provide a specific minimum and maximum value for the scaling range, the MinMax scaler transforms the features of the input data set to lie in the [0,1] interval.
- Given a set of input data $x_1, x_2,... x_n$, with minimum value:
+`MinMaxScaler` 是一个 `Transformer`。因此支持训练和转换操作。
 
- $$x_{min} = min({x_1, x_2,..., x_n})$$
+### 训练
 
- and maximum value:
+MinMaxScaler 可以在所有 `Vector` 或 `LabeledVector`的子类型上进行训练:
 
- $$x_{max} = max({x_1, x_2,..., x_n})$$
+*   `fit[T <: Vector]: DataSet[T] => Unit`
+*   `fit: DataSet[LabeledVector] => Unit`
 
-The scaled data set $z_1, z_2,...,z_n$ will be:
+### 转换
 
- $$z_{i}= \frac{x_{i} - x_{min}}{x_{max} - x_{min}} \left ( max - min \right ) + min$$
+MinMaxScaler 把 `Vector` 或 `LabeledVector` 的子类型数据集转换到对应的相同类型的数据集：
 
-where $\textit{min}$ and $\textit{max}$ are the user specified minimum and maximum values of the range to scale.
+*   `transform[T <: Vector]: DataSet[T] => DataSet[T]`
+*   `transform: DataSet[LabeledVector] => DataSet[LabeledVector]`
 
-## Operations
+## 参数
 
-`MinMaxScaler` is a `Transformer`.
-As such, it supports the `fit` and `transform` operation.
+MinMax Scaler 可由下列两个参数进行控制：
 
-### Fit
+参数 | 描述
+---|---
+**Min** | 缩放数据集范围的最小值 (默认值: **0.0**)
+**Max** | 缩放数据集范围的最大值 (默认值: **1.0**)
 
-MinMaxScaler is trained on all subtypes of `Vector` or `LabeledVector`:
+## 示例
 
-* `fit[T <: Vector]: DataSet[T] => Unit`
-* `fit: DataSet[LabeledVector] => Unit`
-
-### Transform
-
-MinMaxScaler transforms all subtypes of `Vector` or `LabeledVector` into the respective type:
-
-* `transform[T <: Vector]: DataSet[T] => DataSet[T]`
-* `transform: DataSet[LabeledVector] => DataSet[LabeledVector]`
-
-## Parameters
-
-The MinMax scaler implementation can be controlled by the following two parameters:
-
- <table class="table table-bordered">
-  <thead>
-    <tr>
-      <th class="text-left" style="width: 20%">Parameters</th>
-      <th class="text-center">Description</th>
-    </tr>
-  </thead>
-
-  <tbody>
-    <tr>
-      <td><strong>Min</strong></td>
-      <td>
-        <p>
-          The minimum value of the range for the scaled data set. (Default value: <strong>0.0</strong>)
-        </p>
-      </td>
-    </tr>
-    <tr>
-      <td><strong>Max</strong></td>
-      <td>
-        <p>
-          The maximum value of the range for the scaled data set. (Default value: <strong>1.0</strong>)
-        </p>
-      </td>
-    </tr>
-  </tbody>
-</table>
-
-## Examples
-
-{% highlight scala %}
+```scala
 // Create MinMax scaler transformer
 val minMaxscaler = MinMaxScaler()
   .setMin(-1.0)
@@ -109,6 +65,4 @@ minMaxscaler.fit(dataSet)
 
 // Scale the provided data set to have min=-1.0 and max=1.0
 val scaledDS = minMaxscaler.transform(dataSet)
-{% endhighlight %}
-
-{% top %}
+```
