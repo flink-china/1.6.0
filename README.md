@@ -6,7 +6,7 @@
 
 ## Markdown
 
-文档格式必须是[Markdown](http://daringfireball.net/projects/markdown/syntax). 
+文档格式必须是[Markdown](http://daringfireball.net/projects/markdown/syntax).
 
 ## 如何认领文章
 * 加入钉钉社区文档翻译群
@@ -47,15 +47,15 @@
 |https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/	|	已认领	|	8月29日	|
 |https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/quickstart.html	|	已认领	|	8月29日	|
 |https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/als.html	|		|		|
-|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/contribution_guide.html	|		|		|
-|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/cross_validation.html	|		|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/contribution_guide.html	|已认领		|8月30日		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/cross_validation.html	|已认领		|8月30日		|
 |https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/distance_metrics.html	|	已认领	|	8月29日	|
 |https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/knn.html	|	已认领	|	8月29日	|
 |https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/min_max_scaler.html	|	已认领	|	8月29日	|
 |https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/multiple_linear_regression.html	|	已认领	|	8月29日	|
 |https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/pipelines.html	|		|		|
 |https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/polynomial_features.html	|		|		|
-|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/sos.html	|		|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/sos.html	|已认领		|8月30日		|
 |https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/standard_scaler.html	|		|		|
 |https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/svm.html	|	已认领	|	8月29日	||
 
@@ -79,4 +79,3 @@
 
 ## 如何上传已翻译好的文章
 对本项目，提交[Pull Request](https://help.github.com/articles/about-pull-requests/)的方式提交你的翻译结果。
-

@@ -25,64 +25,66 @@ under the License.
 * This will be replaced by the TOC
 {:toc}
 
-## Description
+## 简述
 
- A prevalent problem when utilizing machine learning algorithms is *overfitting*, or when an algorithm "memorizes" the training data but does a poor job extrapolating to out of sample cases. A common method for dealing with the overfitting problem is to hold back some subset of data from the original training algorithm and then measure the fit algorithm's performance on this hold-out set. This is commonly known as *cross validation*.  A model is trained on one subset of data and then *validated* on another set of data.
+在应用机器学习算法**过拟合**的问题，即算法“记住了”训练集但是对样本之外的数据的推断能力非常差。在处理过拟合问题时，一个常见的方法是从原始的训练数据（original training algorithm 应该是原始训练算法，这里应该是原文有误，应该是original training data）中取出一部分数据作为一个子集，并且用它验证算法的表现。我们一般称之为**交叉验证**。即一个模型在数据的其中一个子集上训练并且在另一个子集上验证。
 
-## Cross Validation Strategies
+## 交叉验证策略
 
-There are several strategies for holding out data. FlinkML has convenience methods for
-- Train-Test Splits
-- Train-Test-Holdout Splits
-- K-Fold Splits
-- Multi-Random Splits
+数据划分有几种策略。 FlinkML 提供了以下几种方便的方法：
+- 训练-测试集 划分
+- 训练-测试-验证集 划分 （注：此处叫 holdout ，但是一般都称之为validation，特此翻译为验证集而不是什么“坚持集”）
+- K折划分
+- 多随机划分
 
-### Train-Test Splits
+### 训练-测试集 划分
 
-The simplest method of splitting is the `trainTestSplit`. This split takes a DataSet and a parameter *fraction*.  The *fraction* indicates the portion of the DataSet that should be allocated to the training set. This split also takes two additional optional parameters, *precise* and *seed*.  
+最简单的划分方法是 `trainTestSplit` 。这种划分方法需要一个 DataSet 和一个参数 *fraction* （分数）， *fraction* 指定了有多少的数据将会被划分给训练集。方法还需要两个额外的参数：*precise*（精确划分） 和 *seed*（随机数种子）。
 
-By default, the Split is done by randomly deciding whether or not an observation is assigned to the training DataSet with probability = *fraction*.  When *precise* is `true` however, additional steps are taken to ensure the training set is as close as possible to the length of the DataSet  $\cdot$ *fraction*.
+在默认的情况下，该种划分方法会以概率 = *fraction* 来随机决定将哪些数据分配到训练集。如果设置 *precise* 为 `true`，会有额外的步骤保证训练集的数据两接近 DataSet 的数据量  $\cdot$ *fraction*。
 
-The method returns a new `TrainTestDataSet` object which has a `.training` attribute containing the training DataSet and a `.testing` attribute containing the testing DataSet.
+方法会返回一个新的 `TrainTestDataSet` 对象 ，该对象的 `.training` 属性包含了训练集的 DataSet ， `.testing` 属性包含了测试集的 DataSet 。
 
 
-### Train-Test-Holdout Splits
+### 训练-测试-验证集 划分
 
-In some cases, algorithms have been known to 'learn' the testing set.  To combat this issue, a train-test-hold out strategy introduces a secondary holdout set, aptly called the *holdout* set.
+在某些案例中，已知算法将会从测试集中“学习”。 为了解决这个问题，训练-测试-验证集 划分引入了第二个测试集，我们一般称之为**验证**集。
 
-Traditionally, training and testing would be done to train an algorithms as normal and then a final test of the algorithm on the holdout set would be done.  Ideally, prediction errors/model scores in the holdout set would not be significantly different than those observed in the testing set.
+一般来说，会使用训练集和测试集对算法进行正常训练，最后使用验证集对算法进行最终的测试。理想情况下，验证集上得出的预测误差或者模型分数将不会和测试机有显著的不同。
 
-In a train-test-holdout strategy we sacrifice the sample size of the initial fitting algorithm for increased confidence that our model is not over-fit.
+训练-测试-验证集 策略通过牺牲拟合算法中初始的样本大小来更多的保证模型没有过拟合。
 
-When using `trainTestHoldout` splitter, the *fraction* `Double` is replaced by a *fraction* array of length three. The first element corresponds to the portion to be used for training, second for testing, and third for holdout.  The weights of this array are *relative*, e.g. an array `Array(3.0, 2.0, 1.0)` would results in approximately 50% of the observations being in the training set, 33% of the observations in the testing set, and 17% of the observations in holdout set.
+当使用 `trainTestHoldout` 划分的时候， *fraction* 参数使用一个长度为3的数组而非之前的 `Double` 。其中，第一个元素决定了多少数据将被划分给训练集，第二个元素决定多少数据将被划分给测试集，第二个元素决定多少数据将被划分给验证集。这个数组的权重是*相对的*，例如某个数组： `Array(3.0, 2.0, 1.0)` 将会把将近50%的数据分给训练集，33% 的数据分给测试集，17%的数据分给验证集。
 
-### K-Fold Splits
+### K折划分
 
-In a *k-fold* strategy, the DataSet is split into *k* equal subsets. Then for each of the *k* subsets, a `TrainTestDataSet` is created where the subset is the `.training` DataSet, and the remaining subsets are the `.testing` set.
+在K折策略中，数据集将会被均匀的分为*k*个子集。 随后针对每个子集会创建一个 `TrainTestDataSet` 对象，其中，该子集将会被划分为测试集（ `.testing` 属性），其余的子集将会划分为训练集（ `.training` 属性）。
 
-For each training set, an algorithm is trained and then is evaluated based on the predictions based on the associated testing set. When an algorithm that has consistent grades (e.g. prediction errors) across held out datasets we can have some confidence that our approach (e.g. choice of algorithm / algorithm parameters / number of iterations) is robust against overfitting.
+（注：这里原文又错了，K折取出的每一份子集是测试集，其余的用作训练集，原文写反了）
+
+针对每一个训练集都会训练一个模型并且在相应的测试集上测试算法的精度。当每个模型都能在数据集中得到稳定的分数（例如预测误差），我们就能相信我们的模型（注：原文“approach”是近似，太学术了）（例如算法选择、算法参数、迭代次数）足够鲁棒，可以对抗过拟合。
 
 <a href="https://en.wikipedia.org/wiki/Cross-validation_(statistics)#k-fold_cross-validation">K-Fold Cross Validation</a>
 
-### Multi-Random Splits
+### 多随机划分
 
-The *multi-random* strategy can be thought of as a more general form of the *train-test-holdout* strategy. In fact, `.trainTestHoldoutSplit` is a simple wrapper for `multiRandomSplit` which also packages the datasets into a `trainTestHoldoutDataSet` object.
+可以认为，*多随机* 策略是 *训练-测试-验证集* 策略的一种更普遍的形式。 事实上， `.trainTestHoldoutSplit` 就是 `multiRandomSplit` 的一个简单封装，它也会将数据集包装为 `trainTestHoldoutDataSet` 对象。
 
-The first major difference, is that `multiRandomSplit` takes an array of fractions of any length. E.g. one can create multiple holdout sets.  Alternatively, one could think of `kFoldSplit` as a wrapper for `multiRandomSplit` (which it is), the difference being `kFoldSplit` creates subsets of approximately equal size, where `multiRandomSplit` will create subsets of any size.
+其第一个主要的区别在于 `multiRandomSplit` 可以接受任意长度的 `fractions` 数组，例如：可以创建多个测试集。同样的，也可以认为`kFoldSplit`是 `multiRandomSplit` 的一个封装（其实就是），区别就在于`kFoldSplit` 将多个子集均匀的划分，而 `multiRandomSplit` 可以做任意的划分。
 
-The second major difference is that `multiRandomSplit` returns an array of DataSets, equal in size and proportion to the *fraction array* that it was passed as an argument.
+第二个主要的区别是，`multiRandomSplit`返回 DataSet 的数组，和输入的参数 *fraction 数组* 的长度一直
 
-## Parameters
+## 参数
 
-The various `Splitter` methods share many parameters.
+多种 `Splitter` 有同样的参数。
 
  <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 20%">Parameter</th>
-      <th class="text-center">Type</th>
-      <th class="text-center">Description</th>
-      <th class="text-right">Used by Method</th>
+      <th class="text-left" style="width: 20%">参数</th>
+      <th class="text-center">类型</th>
+      <th class="text-center">描述</th>
+      <th class="text-right">使用该参数的方法</th>
     </tr>
   </thead>
 
@@ -90,7 +92,7 @@ The various `Splitter` methods share many parameters.
     <tr>
       <td><code>input</code></td>
       <td><code>DataSet[Any]</code></td>
-      <td>DataSet to be split.</td>
+      <td>待划分的数据集</td>
       <td>
       <code>randomSplit</code><br>
       <code>multiRandomSplit</code><br>
@@ -104,7 +106,7 @@ The various `Splitter` methods share many parameters.
       <td><code>Long</code></td>
       <td>
         <p>
-          Used for seeding the random number generator which sorts DataSets into other DataSets.
+            用于随机数生成器的种子，用于将一些 DataSet 重新排序。
         </p>
       </td>
       <td>
@@ -118,7 +120,9 @@ The various `Splitter` methods share many parameters.
     <tr>
       <td><code>precise</code></td>
       <td><code>Boolean</code></td>
-      <td>When true, make additional effort to make DataSets as close to the prescribed proportions as possible.</td>
+      <td>
+      当值为真的时候，将使用额外的手段保证数据集大小尽可能和概率相符。
+      </td>
       <td>
       <code>randomSplit</code><br>
       <code>trainTestSplit</code>
@@ -127,7 +131,9 @@ The various `Splitter` methods share many parameters.
     <tr>
       <td><code>fraction</code></td>
       <td><code>Double</code></td>
-      <td>The portion of the `input` to assign to the first or <code>.training</code> DataSet. Must be in the range (0,1)</td>
+      <td>
+      将多少份 `input` 中的数据划分到训练集（<code>.training</code> DataSet。必需在(0,1)之间。
+      </td>
       <td><code>randomSplit</code><br>
         <code>trainTestSplit</code>
       </td>
@@ -135,7 +141,9 @@ The various `Splitter` methods share many parameters.
     <tr>
       <td><code>fracArray</code></td>
       <td><code>Array[Double]</code></td>
-      <td>An array that prescribes the proportions of the output datasets (proportions need not sum to 1 or be within the range (0,1))</td>
+      <td>
+      一个用以规定输出数据集比例的数组（不需要保证和为1或者在(0,1)之间）
+      </td>
       <td>
       <code>multiRandomSplit</code><br>
       <code>trainTestHoldoutSplit</code>
@@ -144,29 +152,29 @@ The various `Splitter` methods share many parameters.
     <tr>
       <td><code>kFolds</code></td>
       <td><code>Int</code></td>
-      <td>The number of subsets to break the <code>input</code> DataSet into.</td>
+      <td>需要将<code>input</code> DataSet 划分为多少份</td>
       <td><code>kFoldSplit</code></td>
       </tr>
 
   </tbody>
 </table>
 
-## Examples
+## 例程
 
 {% highlight scala %}
-// An input dataset- does not have to be of type LabeledVector
+// 一个输入数据集，不一定需要是LabeledVector类型的
 val data: DataSet[LabeledVector] = ...
 
-// A Simple Train-Test-Split
+// 简单的训练-测试集划分方法
 val dataTrainTest: TrainTestDataSet = Splitter.trainTestSplit(data, 0.6, true)
 
-// Create a train test holdout DataSet
+// 创建一个简单的训练-测试-验证集划分的 DataSet
 val dataTrainTestHO: trainTestHoldoutDataSet = Splitter.trainTestHoldoutSplit(data, Array(6.0, 3.0, 1.0))
 
-// Create an Array of K TrainTestDataSets
+// 创建一个包含 K 个 TrainTestDataSets 的数组
 val dataKFolded: Array[TrainTestDataSet] =  Splitter.kFoldSplit(data, 10)
 
-// create an array of 5 datasets
+// 创建一个5个数据集的数组
 val dataMultiRandom: Array[DataSet[T]] = Splitter.multiRandomSplit(data, Array(0.5, 0.1, 0.1, 0.1, 0.1))
 {% endhighlight %}
 
