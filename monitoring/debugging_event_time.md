@@ -41,7 +41,7 @@ Flink的每个任务都公开一个称为currentLowWatermark的指标，表示�
 获取度量的另一种方法是使用一个**指标报告程序**，如[指标系统](http://doc.flink-china.org/1.2.0/monitoring/metrics.html)文档中描述的那样。对于本地设置，我们建议使用JMX指标报告和像[VisualVM](https://visualvm.github.io/)这样的工具。
 
 ## 处理延迟事件时间
-* 方法1:水印滞留（数据完整生成），窗口延迟触发
+* 方法1:水印滞留（数据完整生成），窗口提前触发
 * 方法2:最大推迟启发式水印，窗口接受延迟数据
 
 {% top %}
