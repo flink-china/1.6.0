@@ -27,8 +27,9 @@ under the License.
 
 ## 描述
 
- 标准标量会对给定数据集进行缩放，以使所有的特征都有一个用户指定的均值和方差。
- 用户没有提供均值和标准差的情况下，标准标量会转换输入数据集的特征，以使它们的均值趋近0，标准差趋近1。
+ 标准化会对给定数据集按比例缩放，以使所有的特征都有一个用户指定的均值和方差。
+ 用户没有提供均值和标准差的情况下，标准化会转换输入数据集的特征，以使它们的均值趋近0，标准差趋近1。
+
 给定数据集$x_1, x_2,... x_n$，均值为：
 
  $$\bar{x} = \frac{1}{n}\sum_{i=1}^{n}x_{i}$$
@@ -45,25 +46,25 @@ $\textit{std}$和 $\textit{mean}$ 分别是指用户指定的标准差和均值�
 
 ## 操作
 
-`标准标量` 一个转换。因此，它支持 `fit` 和 `transform`操作。
+`标准化` 一个转换。因此，它支持 `拟合` 和 `转换`操作。
 
-### Fit
+### 拟合
 
-标准标量是基于`Vector` 或者 `LabeledVector`训练得到的：
+标准化是基于`Vector` 或者 `LabeledVector`训练得到的：
 
 * `fit[T <: Vector]: DataSet[T] => Unit`
 * `fit: DataSet[LabeledVector] => Unit`
 
-### Transform
+### 转换
 
-标准标量将`Vector` 或者`LabeledVector`的所有子类型转换为各自的类型：
+标准化将`Vector` 或者`LabeledVector`的所有子类型转换为各自的类型：
 
 * `transform[T <: Vector]: DataSet[T] => DataSet[T]`
 * `transform: DataSet[LabeledVector] => DataSet[LabeledVector]`
 
 ## 参数
 
-标准标量的实现可以由以下两个参数控制:
+标准化的实现可以由以下两个参数控制:
 
 
  <table class="table table-bordered">
