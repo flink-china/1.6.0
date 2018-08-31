@@ -57,18 +57,33 @@ application's performance and even state sizes, because Flink has to maintain ce
 can increase with the maximum parallelism. In general, you should choose a max parallelism that is high enough to fit your
 future needs in scalability, but keeping it as low as possible can give slightly better performance. In particular,
 a maximum parallelism higher that 128 will typically result in slightly bigger state snapshots from the keyed backends.
+最大并行度是Flink 1.2中新引入的配置参数，对Flink作业的（重新）可扩展性具有重要意义。
+该参数可以按每个作业和/或每个算子的粒度设置，而且可以决定扩展算子的最大并行度。
+重要的是要了解（截至目前）在作业启动后无法更改此参数，除了从头开始完全重新启动作业才行。（即用新状态，而不是从先前的检查点/保存点恢复） 。
+即使Flink将来会提供某种方法来改变现有保存点的最大并行度，您也可以假设对于大的状态，这可能是您想要避开的长时间运行的算子。
+此时，您可能想知道为什么不仅仅使用非常大的值作为此参数的默认值。
+原因是设置高的最大并行度会对应用程序的性能甚至状态大小产生一些影响，因为Flink必须维护某些调整能力元数据，并且可以随着最大并行度增加。
+通常，您应该选择足够高的最大并行度以满足您在可扩展性方面的未来需求，但保持尽可能低的最大并行度可以提供稍微更好的性能。
+特别是，高于128的最大并行度通常会导致来自keyed后端的稍微更大的状态快照。
 
 Notice that maximum parallelism must fulfill the following conditions:
+注意，最大并行度必须满足以下条件：
 
 `0 < parallelism  <= max parallelism <= 2^15`
 
 You can set the maximum parallelism by `setMaxParallelism(int maxparallelism)`. By default, Flink will choose the maximum
 parallelism as a function of the parallelism when the job is first started:
+您可以通过setMaxParallelism（int maxparallelism）方法设置最大并行度。
+默认情况下，Flink将在作业首次启动时选择最大并行度作为并行度的函数：
 
 - `128` : for all parallelism <= 128.
 - `MIN(nextPowerOfTwo(parallelism + (parallelism / 2)), 2^15)` : for all parallelism > 128.
+- `128` :对于所有并行度<= 128。 
+- `MIN(nextPowerOfTwo(parallelism + (parallelism / 2)), 2^15)` :对于所有并行度> 128。
+
 
 ### Set UUIDs for operators
+###为算子设置唯一标识
 
 As mentioned in the documentation for [savepoints]({{ site.baseurl }}/ops/state/savepoints.html), users should set uids for
 operators. Those operator uids are important for Flink's mapping of operator states to operators which, in turn, is 
@@ -77,13 +92,26 @@ properties. While this is comfortable from a user perspective, it is also very f
 exchanging an operator) will result in new UUIDs. To establish a stable mapping, we need stable operator uids provided 
 by the user through `setUid(String uid)`.
 
+正如[savepoints]（{{site.baseurl}} /ops/state/savepoints.html）文档中所述，用户应为算子设置uid。
+这些算子uid，对于Flink将算子状态映射到算子非常重要，反过来，算子对于保存点也是必不可少的。
+默认情况下，通过遍历JobGraph并散列某些算子属性来生成运算符uid。
+虽然从用户的角度来看这很舒服，但它也非常脆弱，因为对JobGraph的更改（例如，交换算子）将导致新的唯一标识。
+要建立稳定的映射，我们需要用户通过setUid（String uid）方法提供稳定的算子uid
+
+
+
 ### Choice of state backend
+### 状态后端的选择
 
 Currently, Flink has the limitation that it can only restore the state from a savepoint for the same state backend that
 took the savepoint. For example, this means that we can not take a savepoint with a memory state backend, then change
 the job to use a RocksDB state backend and restore. While we are planning to make backends interoperable in the near
 future, they are not yet. This means you should carefully consider which backend you use for your job before going to
 production.
+目前，Flink的局限性在于它只能从保存点恢复相同状态后端的状态。
+例如，这意味着我们将作业更改为使用RocksDB状态后端后，不能使用之前内存状态后端的保存点进行恢复。
+虽然我们有计划在不久的将来支持不同状态后端协同操作，但是现在确实不支持。
+这意味着在开始生产之前，您应该仔细考虑用哪种状态后端用于工作。
 
 In general, we recommend using RocksDB because this is currently the only state backend that supports large states (i.e.
 state that exceeds the available main memory) and asynchronous snapshots. From our experience, asynchronous snapshots are
@@ -92,15 +120,28 @@ stream processing. However, RocksDB can have worse performance than, for example
 you are sure that your state will never exceed main memory and blocking the stream processing to write it is not an issue,
 you **could consider** to not use the RocksDB backends. However, at this point, we **strongly recommend** using RocksDB
 for production.
+通常，我们建议使用RocksDB，因为这是目前唯一支持大状态（即超出可用主内存的状态）和异步快照的状态后端。
+根据我们的经验，异步快照对于大型状态非常重要，因为它们不会阻塞算子运行，Flink可以在不停止流处理的情况下写快照。
+但是，RocksDB的性能可能比基于内存的状态后端更差。
+如果您确定您的状态永远不会超过主内存并且阻塞流处理写入状态后段不是问题，您可以考虑不使用RocksDB后端。
+但是，在这一点上，我们强烈建议使用RocksDB进行生产。
+
 
 ### Config JobManager High Availability(HA)
+### 设置JobManager高可用
 
 The JobManager coordinates every Flink deployment. It is responsible for both *scheduling* and *resource management*.
+JobManager协调每个Flink部署。它负责调度和资源管理。
 
 By default, there is a single JobManager instance per Flink cluster. This creates a *single point of failure* (SPOF): 
 if the JobManager crashes, no new programs can be submitted and running programs fail.
+默认情况下，每个Flink群集都有单JobManager实例。
+这会产生单点故障（SPOF）：如果JobManager崩溃，则无法提交新程序并且运行中的程序会失败。 
 
 With JobManager High Availability, you can recover from JobManager failures and thereby eliminate the *SPOF*. 
 We **strongly recommend** you configure [high availability]({{ site.baseurl }}/ops/jobmanager_high_availability.html) for production.
+有了JobManager高可用，您可以从JobManager故障中恢复，从而消除SPOF。
+我们强烈建议您生产环境配置[high availability]({{ site.baseurl }}/ops/jobmanager_high_availability.html)。
+
 
 {% top %}
