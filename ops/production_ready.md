@@ -26,18 +26,24 @@ under the License.
 {:toc}
 
 ## Production Readiness Checklist
+##生产准备清单
 
 Purpose of this production readiness checklist is to provide a condensed overview of configuration options that are
 important and need **careful considerations** if you plan to bring your Flink job into **production**. For most of these options
 Flink provides out-of-the-box defaults to make usage and adoption of Flink easier. For many users and scenarios, those
 defaults are good starting points for development and completely sufficient for "one-shot" jobs. 
+此生产准备清单的目的是提供重要的配置选项概述，如果您计划将Flink作业投入生产，则需要仔细考虑。对于大多数这些选项，Flink提供了开箱即用的默认设置，以便更轻松地使用Flink。对于许多用户和场景，这些默认值是开发的良好起点，并且完全足以用于“一次性”作业。
+
 
 However, once you are planning to bring a Flink application to production the requirements typically increase. For example,
 you want your job to be (re-)scalable and to have a good upgrade story for your job and new Flink versions.
+但是，一旦您计划将Flink应用程序投入生产，通常会增加需求。例如，您希望您的作业（重新）可扩展，并为您的作业和新的Flink版本提供良好的升级故事。
 
 In the following, we present a collection of configuration options that you should check before your job goes into production.
+接下来，我们提供了一系列在作业投入生产之前需要检查的配置项。
 
 ### Set maximum parallelism for operators explicitly
+### 明确的为算子设置最大并行度
 
 Maximum parallelism is a configuration parameter that is newly introduced in Flink 1.2 and has important implications
 for the (re-)scalability of your Flink job. This parameter, which can be set on a per-job and/or per-operator granularity,
