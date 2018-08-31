@@ -25,26 +25,17 @@ under the License.
 * toc
 {:toc}
 
-As described in [timestamps and watermark handling]({{ site.baseurl }}/dev/event_timestamps_watermarks.html),
-Flink provides abstractions that allow the programmer to assign their own timestamps and emit their own watermarks. More specifically,
-one can do so by implementing one of the `AssignerWithPeriodicWatermarks` and `AssignerWithPunctuatedWatermarks` interfaces, depending
-on the use case. In a nutshell, the first will emit watermarks periodically, while the second does so based on some property of
-the incoming records, e.g. whenever a special element is encountered in the stream.
 
-In order to further ease the programming effort for such tasks, Flink comes with some pre-implemented timestamp assigners.
-This section provides a list of them. Apart from their out-of-the-box functionality, their implementation can serve as an example
-for custom implementations.
 
-### **Assigners with ascending timestamps**
+如[时间戳和水印处理中所述]({{ site.baseurl }}/dev/event_timestamps_watermarks.html)，Flink提供抽象，允许程序员分配他们自己的时间戳并发出他们自己的水印。更具体地说，可以通过实现`AssignerWithPeriodicWatermarks`和`AssignerWithPunctuatedWatermarks`其中一个接口来实现，具体取决于用例。简而言之，第一个接口将定期发出水印，而第二个接口基于传入记录的某些属性，例如，在流中遇到特殊元素时。
 
-The simplest special case for *periodic* watermark generation is the case where timestamps seen by a given source task
-occur in ascending order. In that case, the current timestamp can always act as a watermark, because no earlier timestamps will
-arrive.
+为了进一步简化此类任务的编程工作，Flink附带了一些预先实现的时间戳分配器。本节提供了它们的列表。除了开箱即用的功能外，它们的实现还可以作为自定义实现的示例。
 
-Note that it is only necessary that timestamps are ascending *per parallel data source task*. For example, if
-in a specific setup one Kafka partition is read by one parallel data source instance, then it is only necessary that
-timestamps are ascending within each Kafka partition. Flink's watermark merging mechanism will generate correct
-watermarks whenever parallel streams are shuffled, unioned, connected, or merged.
+### **具有递增时间戳的分配器**
+
+对于*周期性*水印生成，最简单的特殊情况是给定源任务看到的时间戳按升序出现的情况。在这种情况下，当前时间戳可以始终充当水印，因为不会有较早的时间戳到达。
+
+请注意，每个*并行数据源任务*需要升序的时间戳。例如，如果在特定设置中，一个并行数据源实例读取一个Kafka分区，则只需要在每个Kafka分区中时间戳递增。当并行流被混洗，联合，连接或合并时，Flink的水印合并机制将生成正确的水印。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -70,23 +61,14 @@ val withTimestampsAndWatermarks = stream.assignAscendingTimestamps( _.getCreatio
 </div>
 </div>
 
-### **Assigners allowing a fixed amount of lateness**
+### **允许固定数量的迟到的分配器**
 
-Another example of periodic watermark generation is when the watermark lags behind the maximum (event-time) timestamp
-seen in the stream by a fixed amount of time. This case covers scenarios where the maximum lateness that can be encountered in a
-stream is known in advance, e.g. when creating a custom source containing elements with timestamps spread within a fixed period of
-time for testing. For these cases, Flink provides the `BoundedOutOfOrdernessTimestampExtractor` which takes as an argument
-the `maxOutOfOrderness`, i.e. the maximum amount of time an element is allowed to be late before being ignored when computing the
-final result for the given window. Lateness corresponds to the result of `t - t_w`, where `t` is the (event-time) timestamp of an
-element, and `t_w` that of the previous watermark. If `lateness > 0` then the element is considered late and is, by default, ignored when computing
-the result of the job for its corresponding window. See the documentation about [allowed lateness]({{ site.baseurl }}/dev/stream/operators/windows.html#allowed-lateness)
-for more information about working with late elements.
+周期性水印生成的另一个例子是当水印滞后于在流中看到的最大（event-time）时间戳一段固定的时间。这种情况涵盖了预先知道流中可能遇到的最大延迟的情况，例如，当创建包含时间戳在固定时间段内扩展的元素的自定义源以进行测试时。对于这些情况，Flink提供了`BoundedOutOfOrdernessTimestampExtractor`作为参数的参数`maxOutOfOrderness`，即在计算给定窗口的最终结果时，在忽略元素之前允许元素延迟的最长时间。延迟对应于结果`t - t_w`，其中`t`是元素的（事件 - 时间）时间戳，以及`t_w`前一个水印的时间戳。如果`lateness > 0`然后，该元素被认为是迟到的，并且在计算其对应窗口的作业结果时默认被忽略。有关使用延迟元素的更多信息，请参阅有关[允许延迟]({{ site.baseurl }}/dev/stream/operators/windows.html#allowed-lateness)的文档。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
 {% highlight java %}
 DataStream<MyEvent> stream = ...
-
 DataStream<MyEvent> withTimestampsAndWatermarks =
     stream.assignTimestampsAndWatermarks(new BoundedOutOfOrdernessTimestampExtractor<MyEvent>(Time.seconds(10)) {
 
