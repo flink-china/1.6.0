@@ -25,33 +25,32 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-Stateful functions and operators store data across the processing of individual elements/events, making state a critical building block for
-any type of more elaborate operation.
+有状态函数和运算符在各个元素/事件的处理中存储数据，使状态成为任何类型的更复杂操作的关键构建块。
 
-For example:
+例如：
 
-  - When an application searches for certain event patterns, the state will store the sequence of events encountered so far.
-  - When aggregating events per minute/hour/day, the state holds the pending aggregates.
-  - When training a machine learning model over a stream of data points, the state holds the current version of the model parameters.
-  - When historic data needs to be managed, the state allows efficient access to events that occurred in the past.
+  - 当应用程序搜索某些事件模式时，状态将存储到目前为止遇到的事件序列。
+  - 在每分钟/小时/天聚合事件时，状态保留待处理的聚合。
+  - 当在数据点流上训练机器学习模型时，状态保持模型参数的当前版本。
+  - 当需要管理历史数据时，状态允许有效访问过去发生的事件。
 
-Flink needs to be aware of the state in order to make state fault tolerant using [checkpoints](checkpointing.html) and to allow [savepoints]({{ site.baseurl }}/ops/state/savepoints.html) of streaming applications.
+Flink需要了解状态，以便使用[检查点](checkpointing.html)使状态容错，并允许流应用程序的[保存点]({{ site.baseurl }}/ops/state/savepoints.html)。
 
-Knowledge about the state also allows for rescaling Flink applications, meaning that Flink takes care of redistributing state across parallel instances.
+有关状态的知识还允许重新调整Flink应用程序，这意味着Flink负责跨并行实例重新分配状态。
 
-The [queryable state](queryable_state.html) feature of Flink allows you to access state from outside of Flink during runtime.
+Flink的[可查询状态](queryable_state.html)功能允许您在运行时从Flink外部访问状态。
 
-When working with state, it might also be useful to read about [Flink's state backends]({{ site.baseurl }}/ops/state/state_backends.html). Flink provides different state backends that specify how and where state is stored. State can be located on Java's heap or off-heap. Depending on your state backend, Flink can also *manage* the state for the application, meaning Flink deals with the memory management (possibly spilling to disk if necessary) to allow applications to hold very large state. State backends can be configured without changing your application logic.
+在使用state时，阅读[Flink的状态后端]({{ site.baseurl }}/ops/state/state_backends.html)可能也很有用。Flink提供了不同的状态后端，用于指定状态的存储方式和位置。State可以位于Java的堆上或堆外。根据您的状态后端，Flink还可以*管理*应用程序的状态，这意味着Flink处理内存管理（如果需要可能会溢出到磁盘）以允许应用程序保持非常大的状态。可以在不更改应用程序逻辑的情况下配置状态后端。
 
 {% top %}
 
-Where to go next?
+下一步去哪儿？
 -----------------
 
-* [Working with State](state.html): Shows how to use state in a Flink application and explains the different kinds of state.
-* [The Broadcast State Pattern](broadcast_state.html): Explains how to connect a broadcast stream with a non-broadcast stream and use state to exchange information between them. 
-* [Checkpointing](checkpointing.html): Describes how to enable and configure checkpointing for fault tolerance.
-* [Queryable State](queryable_state.html): Explains how to access state from outside of Flink during runtime.
-* [Custom Serialization for Managed State](custom_serialization.html): Discusses custom serialization logic for state and its upgrades.
+* [使用状态](state.html)：显示如何在Flink应用程序中使用状态并解释不同类型的状态。
+* [广播状态模式](broadcast_state.html)：解释如何将广播流与非广播流连接，并使用状态在它们之间交换信息。
+* [检查点](checkpointing.html)：描述如何启用和配置容错检查点。
+* [可查询的状态](queryable_state.html)：介绍如何从Flink之外运行期间访问状态。
+* [托管状态的自定义序列化](custom_serialization.html)：讨论状态及其升级的自定义序列化逻辑。
 
 {% top %}
