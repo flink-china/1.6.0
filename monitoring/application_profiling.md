@@ -26,31 +26,22 @@ under the License.
 {:toc}
 
 ## Overview of Custom Logging with Apache Flink
-
-Each standalone JobManager, TaskManager, HistoryServer, and ZooKeeper daemon redirects `stdout` and `stderr` to a file
-with a `.out` filename suffix and writes internal logging to a file with a `.log` suffix. Java options configured by the
-user in `env.java.opts`, `env.java.opts.jobmanager`, and `env.java.opts.taskmanager` can likewise define log files with
-use of the script variable `FLINK_LOG_PREFIX` and by enclosing the options in double quotes for late evaluation. Log files
-using `FLINK_LOG_PREFIX` are rotated along with the default `.out` and `.log` files.
+每一个独立部署的JobManager,TaskManager,HistoryServer和ZooKeeper守护进程将`标准输出`和`错误信息`重定向到一个后缀为`.out`的文件，并将内部日志写到一个后缀为`.log`的文件。用户可以通过`env.java.opts`，`env.java.opts.jobmanager`来配置Java参数，`env.java.opts.taskmanager`同样可以通过脚本变量`FLINK_LOG_PREFIX`定义日志文件并通过双引号将配置项括起来以供后期评估。日志文件利用`FLINK_LOG_PREFIX`拼接默认的`.out`和`.log`文件。
 
 # Profiling with Java Flight Recorder
 
-Java Flight Recorder is a profiling and event collection framework built into the Oracle JDK.
-[Java Mission Control](http://www.oracle.com/technetwork/java/javaseproducts/mission-control/java-mission-control-1998576.html)
-is an advanced set of tools that enables efficient and detailed analysis of the extensive of data collected by Java
-Flight Recorder. Example configuration:
+Java Flight Recorder是一个内置于Oracle JDK的性能分析和事件收集框架。[Java Mission Control](http://www.oracle.com/technetwork/java/javaseproducts/mission-control/java-mission-control-1998576.html)是一个能够高效、详细分析Java Flight Recorder收集到的数据高级工具集合。配置示例如下所示：
 
 {% highlight yaml %}
-env.java.opts: "-XX:+UnlockCommercialFeatures -XX:+UnlockDiagnosticVMOptions -XX:+FlightRecorder -XX:+DebugNonSafepoints -XX:FlightRecorderOptions=defaultrecording=true,dumponexit=true,dumponexitpath=${FLINK_LOG_PREFIX}.jfr"
+env.java.opts: "-XX:+UnlockCommercialFeatures -XX:+UnlockDiagnosticVMOptions -XX:+FlightRecorder -XX:+DebugNonSafepoints -XX:FlightRecorderOptions=defaultrecording=true,dumponexit=true,dumponexitpath=${FLINK\_LOG\_PREFIX}.jfr"
 {% endhighlight %}
 
 # Profiling with JITWatch
 
-[JITWatch](https://github.com/AdoptOpenJDK/jitwatch/wiki) is a log analyser and visualizer for the Java HotSpot JIT
-compiler used to inspect inlining decisions, hot methods, bytecode, and assembly. Example configuration:
+[JITWatch](https://github.com/AdoptOpenJDK/jitwatch/wiki) 是HotSpot JIT编译器检查内联决策、热点方法、字节码和汇编的日志分析器和可视化工具。配置示例如下所示：
 
 {% highlight yaml %}
-env.java.opts: "-XX:+UnlockDiagnosticVMOptions -XX:+TraceClassLoading -XX:+LogCompilation -XX:LogFile=${FLINK_LOG_PREFIX}.jit -XX:+PrintAssembly"
+env.java.opts: "-XX:+UnlockDiagnosticVMOptions -XX:+TraceClassLoading -XX:+LogCompilation -XX:LogFile=${FLINK\_LOG\_PREFIX}.jit -XX:+PrintAssembly"
 {% endhighlight %}
 
 {% top %}
