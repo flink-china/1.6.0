@@ -1,5 +1,5 @@
 ---
-title: "Best Practices"
+title: "最佳实践"
 nav-parent_id: dev
 nav-pos: 90
 ---
@@ -22,30 +22,29 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-This page contains a collection of best practices for Flink programmers on how to solve frequently encountered problems.
+本章包含了一系列关于flink 编程人员如何处理常见问题的最佳实践。
 
 
 * This will be replaced by the TOC
 {:toc}
 
-## Parsing command line arguments and passing them around in your Flink application
+## 在你的flink应用中解析和传递命令行参数
 
-Almost all Flink applications, both batch and streaming, rely on external configuration parameters.
-They are used to specify input and output sources (like paths or addresses), system parameters (parallelism, runtime configuration), and application specific parameters (typically used within user functions).
+几乎所有Flink应用，包含批量计算和流式计算都依赖外部配置参数。
+它们被用来指定输入和输出来源（例如路径和地址）、系统参数（并行、运行时配置）和应用参数（通常在用户函数中使用到）。
 
-Flink provides a simple utility called `ParameterTool` to provide some basic tooling for solving these problems.
-Please note that you don't have to use the `ParameterTool` described here. Other frameworks such as [Commons CLI](https://commons.apache.org/proper/commons-cli/) and
-[argparse4j](http://argparse4j.sourceforge.net/) also work well with Flink.
-
-
-### Getting your configuration values into the `ParameterTool`
-
-The `ParameterTool` provides a set of predefined static methods for reading the configuration. The tool is internally expecting a `Map<String, String>`, so its very easy to integrate it with your own configuration style.
+Flink 提供了一个简单的基本工具：`ParameterTool` 用于解决这些问题。
+请注意以上提到的 `ParameterTool` 并不是必须使用的。其它框架如 [Commons CLI](https://commons.apache.org/proper/commons-cli/) 和
+[argparse4j](http://argparse4j.sourceforge.net/) 亦同Filnk集成较好。
 
 
-#### From `.properties` files
+### 将你的配置项配置进 `ParameterTool`
 
-The following method will read a [Properties](https://docs.oracle.com/javase/tutorial/essential/environment/properties.html) file and provide the key/value pairs:
+`ParameterTool` 提供了一系列预定义好的静态方法来读取配置项。该工具内部配置为`Map<String, String>`形式，所以它非常容易和你的配置风格集成。
+
+#### 使用 `.properties` 文件进行配置
+
+以下方法读取 [Properties](https://docs.oracle.com/javase/tutorial/essential/environment/properties.html) 文件，提供键/值对配置：
 {% highlight java %}
 String propertiesFilePath = "/home/sam/flink/myjob.properties";
 ParameterTool parameter = ParameterTool.fromPropertiesFile(propertiesFilePath);
@@ -58,9 +57,9 @@ ParameterTool parameter = ParameterTool.fromPropertiesFile(propertiesFileInputSt
 {% endhighlight %}
 
 
-#### From the command line arguments
+#### 使用命令行参数进行配置
 
-This allows getting arguments like `--input hdfs:///mydata --elements 42` from the command line.
+下面方法允许从命令行获取参数如： `--input hdfs:///mydata --elements 42` 
 {% highlight java %}
 public static void main(String[] args) {
     ParameterTool parameter = ParameterTool.fromArgs(args);
@@ -68,22 +67,22 @@ public static void main(String[] args) {
 {% endhighlight %}
 
 
-#### From system properties
+#### 使用系统属性进行配置
 
-When starting a JVM, you can pass system properties to it: `-Dinput=hdfs:///mydata`. You can also initialize the `ParameterTool` from these system properties:
+当启动jvm时，你可以设置系统属： `-Dinput=hdfs:///mydata`。你也可以使用如下系统属性初始化 `ParameterTool` ：
 
 {% highlight java %}
 ParameterTool parameter = ParameterTool.fromSystemProperties();
 {% endhighlight %}
 
 
-### Using the parameters in your Flink program
+### Flink 程序中参数使用
 
-Now that we've got the parameters from somewhere (see above) we can use them in various ways.
+现在我们已经知道如何从多种途径来获取参数（如上）。
 
-**Directly from the `ParameterTool`**
+**直接使用 `ParameterTool`**
 
-The `ParameterTool` itself has methods for accessing the values.
+ `ParameterTool` 提供方法获取参数值。
 {% highlight java %}
 ParameterTool parameters = // ...
 parameter.getRequired("input");
@@ -93,8 +92,8 @@ parameter.getNumberOfParameters()
 // .. there are more methods available.
 {% endhighlight %}
 
-You can use the return values of these methods directly in the `main()` method of the client submitting the application.
-For example, you could set the parallelism of a operator like this:
+你可以在客户端提交应用`main()`方法中直接使用这些方法的返回值。You can use the return values of these methods directly in the `main()` method of the client submitting the application.
+例如你可以像这样设置operator的并发数：
 
 {% highlight java %}
 ParameterTool parameters = ParameterTool.fromArgs(args);
@@ -102,20 +101,20 @@ int parallelism = parameters.get("mapParallelism", 2);
 DataSet<Tuple2<String, Integer>> counts = text.flatMap(new Tokenizer()).setParallelism(parallelism);
 {% endhighlight %}
 
-Since the `ParameterTool` is serializable, you can pass it to the functions itself:
+因为`ParameterTool`是可序列化的，所以你可以像这样把它传递给函数本身：
 
 {% highlight java %}
 ParameterTool parameters = ParameterTool.fromArgs(args);
 DataSet<Tuple2<String, Integer>> counts = text.flatMap(new Tokenizer(parameters));
 {% endhighlight %}
 
-and then use it inside the function for getting values from the command line.
+然后在方法内部使用获取命令行中的值。
 
-#### Register the parameters globally
+#### 注册全局参数
 
-Parameters registered as global job parameters in the `ExecutionConfig` can be accessed as configuration values from the JobManager web interface and in all functions defined by the user.
+在`ExecutionConfig`中把参数注册为全局任务参数，你可以通过JobManager的web接口和用户定义的方法来获取这些配置。
 
-Register the parameters globally:
+注册全局参数：
 
 {% highlight java %}
 ParameterTool parameters = ParameterTool.fromArgs(args);
@@ -125,28 +124,27 @@ final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 env.getConfig().setGlobalJobParameters(parameters);
 {% endhighlight %}
 
-Access them in any rich user function:
+在用户方法中获取这些全局参数：
 
 {% highlight java %}
 public static final class Tokenizer extends RichFlatMapFunction<String, Tuple2<String, Integer>> {
 
     @Override
     public void flatMap(String value, Collector<Tuple2<String, Integer>> out) {
-	ParameterTool parameters = (ParameterTool)
-	    getRuntimeContext().getExecutionConfig().getGlobalJobParameters();
-	parameters.getRequired("input");
-	// .. do more ..
+    ParameterTool parameters = (ParameterTool)
+        getRuntimeContext().getExecutionConfig().getGlobalJobParameters();
+    parameters.getRequired("input");
+    // .. do more ..
 {% endhighlight %}
 
 
-## Naming large TupleX types
+## 声明巨型 TupleX 类型
 
-It is recommended to use POJOs (Plain old Java objects) instead of `TupleX` for data types with many fields.
-Also, POJOs can be used to give large `Tuple`-types a name.
+强烈推荐在多字段的数据类型中使用 POJOs (Plain old Java objects) 代替`TupleX`。POJOs 也可以用来给巨型`Tuple`类型命名。
 
-**Example**
+**案例**
 
-Instead of using:
+在以下使用情况时：
 
 
 {% highlight java %}
@@ -154,7 +152,7 @@ Tuple11<String, String, ..., String> var = new ...;
 {% endhighlight %}
 
 
-It is much easier to create a custom type extending from the large Tuple type.
+从巨型Tuple类型扩展创建自定义类型更为容易。
 
 {% highlight java %}
 CustomType var = new ...;
@@ -164,17 +162,17 @@ public static class CustomType extends Tuple11<String, String, ..., String> {
 }
 {% endhighlight %}
 
-## Using Logback instead of Log4j
+## 使用 Logback 代替 Log4j
 
-**Note: This tutorial is applicable starting from Flink 0.10**
+**注: 本手册适用于Flink 0.10后的版本**
 
-Apache Flink is using [slf4j](http://www.slf4j.org/) as the logging abstraction in the code. Users are advised to use sfl4j as well in their user functions.
+Apache Flink 在代码中使用 [slf4j](http://www.slf4j.org/) 作日志抽象接口。我们也建议用户在他们的客户方法中使用 sfl4j。
 
-Sfl4j is a compile-time logging interface that can use different logging implementations at runtime, such as [log4j](http://logging.apache.org/log4j/2.x/) or [Logback](http://logback.qos.ch/).
+Sfl4j 是一个编译期的抽象日志接口，在其运行期支持不同日志实现，如 [log4j](http://logging.apache.org/log4j/2.x/) 或 [Logback](http://logback.qos.ch/).
 
-Flink is depending on Log4j by default. This page describes how to use Flink with Logback. Users reported that they were also able to set up centralized logging with Graylog using this tutorial.
+Flink 默认依赖 Log4j。 本篇将介绍如何在 Flink 中使用 Logback。据报告用户也可以使用本手册通过 Graylog 建立中心化的日志。
 
-To get a logger instance in the code, use the following code:
+使用如下代码，获取日志实例：
 
 
 {% highlight java %}
@@ -187,14 +185,14 @@ public class MyClass implements MapFunction {
 {% endhighlight %}
 
 
-### Use Logback when running Flink out of the IDE / from a Java application
+### 在 IDE 外或 JAVA 应用程序中运行 Flink 使用 Logback
 
 
-In all cases were classes are executed with a classpath created by a dependency manager such as Maven, Flink will pull log4j into the classpath.
+在所有通过依赖管理软件如 Maven 配置类路径执行的情况下，Flink 将把 log4j 添加到类路径。I
 
-Therefore, you will need to exclude log4j from Flink's dependencies. The following description will assume a Maven project created from a [Flink quickstart](../quickstart/java_api_quickstart.html).
+因此，你需要把 log4j 从 Flink 的依赖中排除掉，下面的配置假设是一个从[Flink quickstart](../quickstart/java_api_quickstart.html)创建出来的Maven项目。 
 
-Change your projects `pom.xml` file like this:
+你可以像这样来修改项目的pom.xml文件：
 
 {% highlight xml %}
 <dependencies>
@@ -217,7 +215,7 @@ Change your projects `pom.xml` file like this:
 		<artifactId>log4j-over-slf4j</artifactId>
 		<version>1.7.7</version>
 	</dependency>
-
+	
 	<dependency>
 		<groupId>org.apache.flink</groupId>
 		<artifactId>flink-java</artifactId>
@@ -266,33 +264,33 @@ Change your projects `pom.xml` file like this:
 </dependencies>
 {% endhighlight %}
 
-The following changes were done in the `<dependencies>` section:
+下面`<dependencies>`部份已经修改完成：
 
- * Exclude all `log4j` dependencies from all Flink dependencies: this causes Maven to ignore Flink's transitive dependencies to log4j.
- * Exclude the `slf4j-log4j12` artifact from Flink's dependencies: since we are going to use the slf4j to logback binding, we have to remove the slf4j to log4j binding.
- * Add the Logback dependencies: `logback-core` and `logback-classic`
- * Add dependencies for `log4j-over-slf4j`. `log4j-over-slf4j` is a tool which allows legacy applications which are directly using the Log4j APIs to use the Slf4j interface. Flink depends on Hadoop which is directly using Log4j for logging. Therefore, we need to redirect all logger calls from Log4j to Slf4j which is in turn logging to Logback.
+ * 从 Flink 依赖中排除所有`log4j`的依赖： Maven 将忽略 Flink 中 log4j 的传递依赖。
+ * 从 Flink 依赖中排除`slf4j-log4j12`部份：因为我们要绑定 slf4j 和 logback , 必须把 slf4j 和 log4j 的绑定关系删除。
+ * 添加 Logback 依赖： `logback-core` 和 `logback-classic`
+ * 添加 `log4j-over-slf4j` 的依赖。 `log4j-over-slf4j` 是一个允许应用程序直接使用 Log4j APIs 来使用 Slf4j 接口的工具。Flink 依赖的 Hadoop 直接使用 Log4j 来记录日志。因此，我们需要将所有日志调用从 Log4j 重定向为 Slf4j，然后再记录到 Logback。
 
-Please note that you need to manually add the exclusions to all new Flink dependencies you are adding to the pom file.
+请注意你需要在pom文件中将所有新增 FLink 依赖手动添加这些排除依赖项。
 
-You may also need to check if other (non-Flink) dependencies are pulling in log4j bindings. You can analyze the dependencies of your project with `mvn dependency:tree`.
+你也需要检查其它非 Flink 依赖是否绑定了 log4j。你可以通过 `mvn dependency:tree` 来分析项目中的依赖。
 
 
 
-### Use Logback when running Flink on a cluster
+### Flink 集群模式下使用 Logback
 
-This tutorial is applicable when running Flink on YARN or as a standalone cluster.
+本手册同样适用于以 standalone 方式或 YARN 上运行Flink。
 
-In order to use Logback instead of Log4j with Flink, you need to remove `log4j-1.2.xx.jar` and `sfl4j-log4j12-xxx.jar` from the `lib/` directory.
+为了在 Flink 中使用 Logback 代替 Log4j, 你需要在 `lib/` 目录下删除 `log4j-1.2.xx.jar` 和 `sfl4j-log4j12-xxx.jar`。
 
-Next, you need to put the following jar files into the `lib/` folder:
+然后，你需要在 `lib/` 目录下添加如下jar文件：
 
  * `logback-classic.jar`
  * `logback-core.jar`
- * `log4j-over-slf4j.jar`: This bridge needs to be present in the classpath for redirecting logging calls from Hadoop (which is using Log4j) to Slf4j.
+ * `log4j-over-slf4j.jar`: 此项在 classpath 中必须存在，用于将 Hadoop 的日志请求（使用Log4j）重定向到 Slf4j。
 
-Note that you need to explicitly set the `lib/` directory when using a per-job YARN cluster.
+请注意在使用 YARN 集群时，你需要显式设置 `lib/` 目录。
 
-The command to submit Flink on YARN with a custom logger is: `./bin/flink run -yt $FLINK_HOME/lib <... remaining arguments ...>`
+在 YARN 上提交 Flink 任务时, 设置自定义日志命令为：`./bin/flink run -yt $FLINK_HOME/lib <... remaining arguments ...>`
 
 {% top %}
