@@ -38,7 +38,7 @@ For Flink applications to run reliably at large scale, two conditions must be fu
 
   - The resources need to be sufficient catch up with the input data streams after a failure
   - 应用需要能够稳定获得checkpoint
-  - 作业失败后，输入数据流上的资源可以高效的被重新获取
+  - 作业失败后，输入数据流上的资源可以被重新高效的获取
 
 The first sections discuss how to get well performing checkpoints at scale.
 The last section explains some best practices concerning planning how many resources to use.  
@@ -64,22 +64,22 @@ The two numbers that are of particular interest when scaling up checkpoints are:
     When the time to trigger the checkpoint is constantly very high, it means that the *checkpoint barriers* need a long
     time to travel from the source to the operators. That typically indicates that the system is operating under a
     constant backpressure.  
-   - 算子开始checkpoint的时间：这个时间目前不直接暴露，但对应于：
+  - 算子开始checkpoint的时间：这个时间目前不直接暴露，但对应于：
     
     `checkpoint_start_delay = end_to_end_duration - synchronous_duration - asynchronous_duration`
 
     触发checkpoint的时间持续非常高意味着 *checkpoint barriers* 从source传送到算子需要很久，通常这表示系统处于恒定的反压下。   
     
-    - The amount of data buffered during alignments. For exactly-once semantics, Flink *aligns* the streams at
+ - The amount of data buffered during alignments. For exactly-once semantics, Flink *aligns* the streams at
     operators that receive multiple input streams, buffering some data for that alignment.
     The buffered data volume is ideally low - higher amounts means that checkpoint barriers are received at
     very different times from the different input streams.
-    - 对齐时缓存的数据量。对于只处理一次的语义，当算子收到多个输入流时，Flink通过缓存数据来*对齐* 流。
+ - 对齐时缓存的数据量。对于只处理一次的语义，当算子收到多个输入流时，Flink通过缓存数据来*对齐* 流。
     缓存的数据量理论上应该很低——大数据量意味着从不同的输入流中收到了不同时间点的checkpoint barrier。
 
 Note that when the here indicated numbers can be occasionally high in the presence of transient backpressure, data skew,
 or network issues. However, if the numbers are constantly very high, it means that Flink puts many resources into checkpointing.  
-请注意，这里指示的数字有时可能在因为存在瞬时反压、数据歪斜、或者网络问题时变高。然而，如果这些数字持续很高，意味着Flink的checkpoint消耗了大量资源。
+请注意，这里指示的数字有时可能因为存在瞬时反压、数据歪斜、或者网络问题时变高。然而，如果这些数字持续很高，意味着Flink的checkpoint消耗了大量资源。
 
 
 ## Tuning Checkpointing
@@ -112,7 +112,7 @@ of the next. The figure below illustrates how this impacts checkpointing.
 *Note:* Applications can be configured (via the `CheckpointConfig`) to allow multiple checkpoints to be in progress at
 the same time. For applications with large state in Flink, this often ties up too many resources into the checkpointing.
 When a savepoint is manually triggered, it may be in process concurrently with an ongoing checkpoint.  
-*注意：* 应用可以 (通过 `CheckpointConfig`) 配置允许多个checkpoint同时执行. 对于Flink中大状态的应用，这通常使checkpoint消耗过多的资源。当手动触发savepoint时，它可能与正在进行的checkpoint同时进行。
+*注意：* 应用可以 (通过 `CheckpointConfig`) 配置允许多个checkpoint同时执行。对于Flink中大状态的应用，这通常使checkpoint消耗过多的资源。当手动触发savepoint时，它可能与正在进行的checkpoint同时进行。
 
 
 ## Tuning Network Buffers
@@ -123,7 +123,7 @@ keeping more in-flight data meant that checkpoint barriers got delayed. Since Fl
 number of network buffers used per outgoing/incoming channel is limited and thus network buffers
 may be configured without affecting checkpoint times
 (see [network buffer configuration](../config.html#configuring-the-network-buffers)).  
-在Flink 1.3版本之前，网络缓存数量的增加导致checkpoint次数的增加，因为保存更多的未完成数据意味着checkpoint延时了。从Flink 1.3版本开始，每个出/入通道的网路缓存的数量被限制，因而网络缓存的配置将不影响checkpoint次数，(见 [network buffer configuration](../config.html#configuring-the-network-buffers))。
+在Flink 1.3版本之前，网络缓存数量的增加导致checkpoint次数的增加，因为保存更多的未完成数据意味着checkpoint延时。从Flink 1.3版本开始，每个出/入通道的网路缓存的数量被限制，因而网络缓存的配置将不影响checkpoint次数，(见 [network buffer configuration](../config.html#configuring-the-network-buffers))。
 
 ## Make state checkpointing Asynchronous where possible
 ## 尽可能异步执行状态checkpoint
@@ -149,7 +149,7 @@ To get state to be snapshotted asynchronously, applications have to do two thing
   2. 使用状态后端支持异步快照。Flink 1.2版本中，只有RocksDB状态后端使用完全的异步快照。 从Flink 1.3版本开始，基于堆的状态后端同样可以支持异步快照。
 
 The above two points imply that large state should generally be kept as keyed state, not as operator state.  
-以上两点意味着，大状态一般应保持为键状态，而不是算子状态。
+以上两点意味着，大状态一般应保存为键状态，而不是算子状态。
 
 ## Tuning RocksDB
 ## 调整RocksDB
@@ -163,7 +163,7 @@ RocksDB properly. For example, the default configuration is tailored towards SSD
 on spinning disks.  
 不幸的是，RocksDB状态后端的性能随配置变化，而且很少有如何合理调整RocksDB的相关文档。比如，默认配置是为SSD定制的，但对旋转式硬盘来说却不是最优的。
 
-**Incremental Checkpoints**
+**Incremental Checkpoints**  
 **增量checkpoint**
 
 Incremental checkpoints can dramatically reduce the checkpointing time in comparison to full checkpoints, at the cost of a (potentially) longer
@@ -182,8 +182,8 @@ by default. To enable this feature, users can instantiate a `RocksDBStateBackend
         new RocksDBStateBackend(filebackend, true);
 {% endhighlight %}
 
-**RocksDB Timers**
-** RocksDB定时器**
+**RocksDB Timers**  
+**RocksDB定时器**
 
 For RocksDB, a user can chose whether timers are stored on the heap (default) or inside RocksDB. Heap-based timers can have a better performance for smaller numbers of
 timers, while storing timers inside RocksDB offers higher scalability as the number of timers in RocksDB can exceed the available main memory (spilling to disk).  
@@ -196,7 +196,7 @@ Possible choices are `heap` (to store timers on the heap, default) and `rocksdb`
 <span class="label label-info">Note</span> *The combination RocksDB state backend / with incremental checkpoint / with heap-based timers currently does NOT support asynchronous snapshots for the timers state.
 Other state like keyed state is still snapshotted asynchronously. Please note that this is not a regression from previous versions and will be resolved with `FLINK-10026`.*  
 
-<span class="label label-info">注意</span> *RocksDB状态后端+增量checkpoint+基于堆的定时器的组合当前暂不支持对定时器状态使用异步快照，其他状态（如键状态）仍支持异步快照。请注意这不是以前版本的倒退，并且将在`FLINK-10026`中解决。*
+<span class="label label-info">注意</span>*RocksDB状态后端+增量checkpoint+基于堆的定时器的组合当前暂不支持对定时器状态使用异步快照，其他状态（如键状态）仍支持异步快照。请注意这不是以前版本的倒退，并且将在`FLINK-10026`中解决。*
 
 **Passing Options to RocksDB**  
 **向RocksDB传递选项**
@@ -241,14 +241,14 @@ found a set of options that work well and seem representative for certain worklo
 and not from the JVM. Any memory you assign to RocksDB will have to be accounted for, typically by decreasing the JVM heap size
 of the TaskManagers by the same amount. Not doing that may result in YARN/Mesos/etc terminating the JVM processes for
 allocating more memory than configured.  
-<span class="label label-info">注意</span> RocksDB是一种天然的从进程而不是JVM中分配内存的库。分配给RocksDB的任何内存都必须被考虑，通常通过将TaskManager的JVM堆大小减少相同的数量来实现。如果不这样做，将导致JVM进程因为分配了超过配置的内存数，被YARN/Mesos等中止的后果。
+<span class="label label-info">注意</span>RocksDB是一种天然的从进程而不是JVM中分配内存的库。分配给RocksDB的任何内存都必须被考虑，通常通过将TaskManager的JVM堆大小减少相同的数量来实现。如果不这样做，将导致JVM进程因为分配了超过配置的内存数，被YARN/Mesos等中止的后果。
 
 ## Capacity Planning
 ## 容量规划
 
 This section discusses how to decide how many resources should be used for a Flink job to run reliably.
 The basic rules of thumb for capacity planning are:  
-本节讨论如何决定Flink作业稳定运行需要使用多少资源。容量规划的基本原则是：
+本节讨论如何确定Flink作业稳定运行需要使用多少资源。容量规划的基本原则是：
 
   - Normal operation should have enough capacity to not operate under constant *back pressure*.
     See [back pressure monitoring](../../monitoring/back_pressure.html) for details on how to check whether the application runs under back pressure.  
@@ -267,19 +267,19 @@ The basic rules of thumb for capacity planning are:
 
   - Temporary back pressure is usually okay, and an essential part of execution flow control during load spikes,
     during catch-up phases, or when external systems (that are written to in a sink) exhibit temporary slowdown.  
-  - 暂时性的反压通常是没关系的，并且在负荷尖峰、追数据阶段、或外部系统（）呈现暂时性缓慢时执行流控是必须的部分。
+  - 暂时性的反压通常是没关系的，并且在负荷尖峰、追数据阶段、或外部系统（写入sink）呈现暂时性缓慢时执行流控是必须的部分。
 
   - Certain operations (like large windows) result in a spiky load for their downstream operators: 
     In the case of windows, the downstream operators may have little to do while the window is being built,
     and have a load to do when the windows are emitted.
     The planning for the downstream parallelism needs to take into account how much the windows emit and how
     fast such a spike needs to be processed.
-  - 某些算子（如大窗口）将导致下游算子产生负荷尖峰：窗口案例中，下游算子可能在窗口建立的时候无事可干，但是在窗口输出的时候要承担一定的工作量。下游并发的规划需要将窗口输出量的大小和需要处理这些负荷尖峰的快慢考虑进来。
+  - 某些算子（如大窗口）将导致下游算子产生负荷尖峰：窗口案例中，下游算子可能在窗口建立的时候无事可干，但是在窗口输出的时候要承担一定的工作量。下游并发的规划需要将窗口输出量的大小和需要处理这些负荷尖峰的速度考虑进来。
 
 **Important:** In order to allow for adding resources later, make sure to set the *maximum parallelism* of the
 data stream program to a reasonable number. The maximum parallelism defines how high you can set the programs
 parallelism when re-scaling the program (via a savepoint).  
-**重要：**为了允许后期增加资源，请确保为数据流程序设置合理的*最大并发数*。最大并发数定义了在重新扩缩容程序（通过savepoint）时你可以设置的最大并发数。
+**重要：**为了允许后期增加资源，请确保为数据流程序设置合理的*最大并发数*。最大并发数定义了在重新扩展程序（通过savepoint）时你可以设置的最大并发数。
 
 Flink's internal bookkeeping tracks parallel state in the granularity of max-parallelism-many *key groups*.
 Flink's design strives to make it efficient to have a very high value for the maximum parallelism, even if
@@ -343,12 +343,12 @@ However, for each task that can be rescheduled to the previous location for reco
 copy and avoid the costs of reading the state remotely. Given that *many failures are not node failures and node failures typically only affect one
 or very few nodes at a time*, it is very likely that in a recovery most tasks can return to their previous location and find their local state intact.
 This is what makes local recovery effective in reducing recovery time.  
-然而，对于重安排到之前回复位置的任务，我们可以从本地次拷贝上恢复状态，从而避免读远端状态的消耗代价。鉴于*很多故障并不是节点故障，且节点故障通常也仅仅同时影响一个或少量节点*，看起来大多数任务可以回到它们之前的位置并且找到它们完整的本地状态。这就是本地恢复高效降低恢复时间的原因。
+然而，对于重安排到之前恢复位置的任务，我们可以从本地次拷贝上恢复状态，从而避免读远端状态的消耗代价。鉴于*很多故障并不是节点故障，且节点故障通常也仅仅同时影响一个或少量节点*，看起来大多数任务可以回到它们之前的位置并且找到它们完整的本地状态。这就是本地恢复高效降低恢复时间的原因。
 
 Please note that this can come at some additional costs per checkpoint for creating and storing the secondary local state copy, depending on the
 chosen state backend and checkpointing strategy. For example, in most cases the implementation will simply duplicate the writes to the distributed
 store to a local file.  
-请注意这将在每次生成和存储本地次状态拷贝时额外带来的代价，取决于状态后端和checkpoint策略的选择。比如，大多数应用案例中，采用简单的将写入到分布式存储的状态复制到本地文件的方式。
+请注意这将在每次创建和存储本地次状态拷贝时额外带来的代价，取决于状态后端和checkpoint策略的选择。比如，大多数应用案例中，采用简单的将写入到分布式存储的状态复制到本地文件的方式。
 
 <img src="../../fig/local_recovery.png" class="center" width="80%" alt="Illustration of checkpointing with task-local recovery."/>
 
@@ -357,16 +357,16 @@ store to a local file.
 
 Task-local state is always considered a secondary copy, the ground truth of the checkpoint state is the primary copy in the distributed store. This
 has implications for problems with local state during checkpointing and recovery:  
-本地任务状态通常被认为是次拷贝，checkpoint状态的基本事实是分布式存储中的主拷贝。这对再执行checkpoint和恢复的过程中使用本地状态的涵义受到影响：
+本地任务状态通常被认为是次拷贝，checkpoint状态的基本事实仍是分布式存储中的主拷贝。这对在执行checkpoint和恢复的过程中使用本地状态的涵义产生影响：
 
 - For checkpointing, the *primary copy must be successful* and a failure to produce the *secondary, local copy will not fail* the checkpoint. A checkpoint
 will fail if the primary copy could not be created, even if the secondary copy was successfully created.  
-- 执行checkpoint时，*主拷贝必须成功*且生成*本地次拷贝失败不会导致*checkpoint失败。如果主拷贝不能创建则checkpoint失败，即使此拷贝创建成功。
+- 执行checkpoint时，*主拷贝必须成功*且生成*本地次拷贝失败不会导致*checkpoint失败。如果主拷贝不能创建则checkpoint失败，即使次拷贝创建成功。
 
 - Only the primary copy is acknowledged and managed by the job manager, secondary copies are owned by task managers and their life cycles can be
 independent from their primary copies. For example, it is possible to retain a history of the 3 latest checkpoints as primary copies and only keep
 the task-local state of the latest checkpoint.  
-- 只有主拷贝被JobManager确认和管理，次拷贝被TaskManager管理，且生命周期可以独立于它们的主拷贝。比如，可以保留3份最新的checkpoint作为出拷贝，而仅保留1份最新的checkpoint作为本地任务状态拷贝。
+- 只有主拷贝被JobManager确认和管理，次拷贝被TaskManager管理，且生命周期可以独立于它们的主拷贝。比如，可以保留3份最新的checkpoint作为主拷贝，而仅保留1份最新的checkpoint作为本地任务状态拷贝。
 
 - For recovery, Flink will always *attempt to restore from task-local state first*, if a matching secondary copy is available. If any problem occurs during
 the recovery from the secondary copy, Flink will *transparently retry to recover the task from the primary copy*. Recovery only fails, if primary
@@ -380,7 +380,7 @@ a *superset of the task-local state*.
 
 - Task-local state can have a different format than the primary state, they are not required to be byte identical. For example, it could be even possible
 that the task-local state is an in-memory consisting of heap objects, and not stored in any files.
-- 本地任务状态可以使用与主状态不同的格式，它们不要求字节相同。比如，本地任务状态甚至可以仅仅存在于内存里的堆对象，而无需存储于任何文件中。
+- 本地任务状态可以使用与主状态不同的格式，它们不要求字节相同。比如，本地任务状态甚至可以仅仅存在于内存的堆对象中，而无需存储于任何文件中。
 
 - If a task manager is lost, the local state from all its task is lost.  
 - 如果TaskManager丢失，它所有任务的本地状态都将丢失。
@@ -424,6 +424,6 @@ we give the maximum number of tasks a chance to recover from their local state a
 本地任务恢复假设在故障时任务分配保持调度，工作机制如下。每个任务记住它之前的分配，并且从资源管理器中*请求完全一样的槽位*。这样，如果一个TaskManager不再可用，即使任务不能返回它之前的位置*也不会将其他正在恢复的任务从它们之前的槽位上挤走*。我们的原则是之前的槽位仅在TaskManager不再可用的时候消失，在这种情况下*部分*任务必须请求新的槽位。通过我们的调度策略，我们将让最大数量的任务有机会从它们的本地状态中恢复，并且通过禁止任务互相抢占各自之前的槽位来避免产生级联影响。
 
 Allocation-preserving scheduling does not work with Flink's legacy mode.  
-分配报纸调度不支持Flink的传统模式。
+分配保持调度不支持Flink的传统模式。
 
 {% top %}

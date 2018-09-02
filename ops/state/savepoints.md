@@ -1,5 +1,5 @@
 ---
-title: "Savepoints"
+title: "savepoint"
 nav-parent_id: ops_state
 nav-pos: 8
 ---
@@ -28,7 +28,7 @@ under the License.
 ## Overview
 
 Savepoints are externally stored self-contained checkpoints that you can use to stop-and-resume or update your Flink programs. They use Flink's [checkpointing mechanism]({{ site.baseurl }}/internals/stream_checkpointing.html) to create a (non-incremental) snapshot of the state of your streaming program and write the checkpoint data and meta data out to an external file system.  
-savepoint是外部存储的自完备的checkpoint，你可以用来停止-恢复或更新你的Flink程序。他们使用Flink的 [checkpoint机制]({{ site.baseurl }}/internals/stream_checkpointing.html) to create a (non-incremental) 生成流作业的（非增量）状态快照，并且将checkpoint数据和元数据写出到外部文件系统。
+savepoint是外部存储的自完备的checkpoint，你可以用来停止-恢复或更新升级你的Flink程序。他们使用Flink的 [checkpoint机制]({{ site.baseurl }}/internals/stream_checkpointing.html) 创建流作业的（非增量）状态快照，并且将checkpoint数据和元数据写出到外部文件系统。
 
 This page covers all steps involved in triggering, restoring, and disposing savepoints.
 For more details on how Flink handles state and failures in general, check out the [State in Streaming Programs]({{ site.baseurl }}/dev/stream/state/index.html) page.  
@@ -38,14 +38,14 @@ For more details on how Flink handles state and failures in general, check out t
 <strong>Attention:</strong> In order to allow upgrades between programs and Flink versions, it is important to check out the following section about <a href="#assigning-operator-ids">assigning IDs to your operators</a>.
 </div>  
 <div class="alert alert-warning">
-<strong>注意：</strong> 为了允许在不同程序和Flink版本间更新升级，需要查看接下来关于 <a href="#assigning-operator-ids">为你的算子分配ID</a>章节。 
+<strong>注意：</strong> 为了允许在不同程序和Flink版本间更新升级，需要查看接下来关于 <a href="#assigning-operator-ids">为你的算子分配ID</a> 章节。 
 </div> 
 
 ## Assigning Operator IDs
 ## 分配算子ID
 
 It is **highly recommended** that you adjust your programs as described in this section in order to be able to upgrade your programs in the future. The main required change is to manually specify operator IDs via the **`uid(String)`** method. These IDs are used to scope the state of each operator.  
-**强烈推荐**你使用本章节的方法调整你的程序，以便在将来升级你的项目。需要的主要改变是通过使用**“uid(String)”**方法手动指定算子ID。这些ID将在每个算子的状态范围内使用。
+**强烈推荐**你使用本章节的方法调整你的程序，以便在将来更新升级你的项目。需要的主要改变是通过使用**“uid(String)”**方法手动指定算子ID。这些ID将在每个算子的状态范围内使用。
 
 {% highlight java %}
 DataStream<String> stream = env.
@@ -85,9 +85,9 @@ In the above example, the print sink is stateless and hence not part of the save
 You can use the [command line client]({{ site.baseurl }}/ops/cli.html#savepoints) to *trigger savepoints*, *cancel a job with a savepoint*, *resume from savepoints*, and *dispose savepoints*.
 
 With Flink >= 1.2.0 it is also possible to *resume from savepoints* using the webui.  
-你可以使用 [命令行客户端]({{ site.baseurl }}/ops/cli.html#savepoints) *触发savepoint*, *取消作业保留savepoint*, *从savepoint恢复*, and *处理savepoint*。
+你可以使用 [命令行客户端]({{ site.baseurl }}/ops/cli.html#savepoints) *触发savepoint*, *取消作业保留savepoint*, *从savepoint恢复*, 以及*处理savepoint*。
 
-若Flink版本不低于1.2.0，同样可以使用webui *从savepoint恢复* 。
+若Flink版本不低于1.2.0，同样可以使用 webui *从savepoint恢复* 。
 
 ### Triggering Savepoints
 ### 触发savepoint
@@ -101,7 +101,7 @@ When triggering a savepoint, a new savepoint directory is created where the data
 </div>
 
 For example with a `FsStateBackend` or `RocksDBStateBackend`:  
-举例`FsStateBackend`或`RocksDBStateBackend`：
+以`文件系统存储后端`或`RocksDB存储后端`为例：
 
 {% highlight shell %}
 # Savepoint target directory
@@ -126,7 +126,6 @@ For example with a `FsStateBackend` or `RocksDBStateBackend`:
 Although it looks as if the savepoints may be moved, it is currently not possible due to absolute paths in the <code>_metadata</code> file.
 Please follow <a href="https://issues.apache.org/jira/browse/FLINK-5778">FLINK-5778</a> for progress on lifting this restriction.  
 <strong>注意：</strong>
-Please follow <a href="https://issues.apache.org/jira/browse/FLINK-5778">FLINK-5778</a> for progress on lifting this restriction.  
 虽然看起来savepoint可能被移动，但是得益于<code>_metadata</code>文件中的绝对路径，目前这是不可能的。请跟随FLIK-578了解关于解除此限制的进展。
 </div>
 
@@ -183,14 +182,14 @@ $ bin/flink run -s :savepointPath -n [:runArgs]
 {% endhighlight %}
 
 ### Disposing Savepoints
-### 处理savepoint
+### 处置savepoint
 
 {% highlight shell %}
 $ bin/flink savepoint -d :savepointPath
 {% endhighlight %}
 
 This disposes the savepoint stored in `:savepointPath`.  
-这将处理存储于`:savepointPath`的savepoint。
+这将处置存储于`:savepointPath`的savepoint。
 
 Note that it is possible to also manually delete a savepoint via regular file system operations without affecting other savepoints or checkpoints (recall that each savepoint is self-contained). Up to Flink 1.2, this was a more tedious task which was performed with the savepoint command above.  
 注意同样可以通过常规的文件系统操作手动的删除savepoint，而不影响其他的savepoint或checkpoint（回想下每个savepoint都是自完备的）。在FLink 1.2版本之前，执行以上savepoint命令曾是一个更繁琐的任务。
@@ -260,7 +259,7 @@ If you did not assign IDs, the auto generated IDs of the stateful operators will
 If you assigned IDs to your stateful operators, the stateless operators will not influence the savepoint restore.  
 如果你为有状态算子分配了ID，在savepoint恢复时无状态算子将不受影响。
 
-If you did not assign IDs, the auto generated IDs of the stateful operators will most likely change after the reordering. This would result in you not being able to restore from a previous savepoint.
+If you did not assign IDs, the auto generated IDs of the stateful operators will most likely change after the reordering. This would result in you not being able to restore from a previous savepoint.  
 如果你没有分配ID，在重排序后，这些为有状态算子自动生成的ID将很可能改变。这将可能导致你无法从之前的savepoint中恢复。
 
 ### What happens when I change the parallelism of my program when restoring?

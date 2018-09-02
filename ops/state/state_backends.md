@@ -46,7 +46,7 @@ chosen **State Backend**.
 ## Available State Backends
 ## 可用的状态后端
 
-Out of the box, Flink bundles these state backends:
+Out of the box, Flink bundles these state backends:  
 非常好，Flink拥有这些状态后端：
 
  - *MemoryStateBackend*
@@ -95,7 +95,7 @@ The MemoryStateBackend is encouraged for:
   - Local development and debugging
   - Jobs that do hold little state, such as jobs that consist only of record-at-a-time functions (Map, FlatMap, Filter, ...). The Kafka Consumer requires very little state.
   - 本地开发和调试
-  - 状态拥有很少的状态，比如仅仅由一次一记录函数（Map, FlatMap, Filter, ...）组成的作业。Kafka消费者需要非常少的状态。
+  - 拥有很少状态的作业，比如仅仅由一次一记录函数（Map, FlatMap, Filter, ...）组成的作业。Kafka消费者需要非常少的状态。
 
 
 ### The FsStateBackend
@@ -114,7 +114,7 @@ The FsStateBackend uses *asynchronous snapshots by default* to avoid blocking th
     new FsStateBackend(path, false);
 {% endhighlight %}
 
-The FsStateBackend is encouraged for:
+The FsStateBackend is encouraged for:  
 文件系统状态后端一般推荐用于：
 
   - Jobs with large state, long windows, large key/value states.
@@ -137,12 +137,13 @@ RocksDB状态后端在[RocksDB](http://rocksdb.org)数据库中保留未完成�
 The RocksDBStateBackend always performs asynchronous snapshots.  
 RocksDB通常执行异步快照。
 
-Limitations of the RocksDBStateBackend:
+Limitations of the RocksDBStateBackend:  
 RocksDB状态后端的局限性：
 
   - As RocksDB's JNI bridge API is based on byte[], the maximum supported size per key and per value is 2^31 bytes each. 
   IMPORTANT: states that use merge operations in RocksDB (e.g. ListState) can silently accumulate value sizes > 2^31 bytes and will then fail on their next retrieval. This is currently a limitation of RocksDB JNI.
-  - 因为RocksDB的JNI桥API基于byte[]，每个键和每个值所支持的最大尺寸是2^31字节。重要：在RocksDB中使用合并算子（如ListState）的状态很容易将值尺寸累积超过2^31字节，然后在下一次检索时失败。这是当前RocksDB JNI的局限性。
+  - 因为RocksDB的JNI桥API基于字节数组，每个键和每个值所支持的最大尺寸是2^31字节。  
+  重要：RocksDB的合并算子（如ListState）的状态很容易将值尺寸累积超过2^31字节，然后在下一次检索时将会失败。这是当前RocksDB JNI的局限性。
 
 The RocksDBStateBackend is encouraged for:  
 RocksDB状态后端一般推荐用于：

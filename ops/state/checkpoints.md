@@ -1,5 +1,5 @@
 ---
-title: "Checkpoints"
+title: "checkpoint"
 nav-parent_id: ops_state
 nav-pos: 7
 ---
@@ -47,7 +47,7 @@ You can, however, configure periodic checkpoints to be retained.
 Depending on the configuration these *retained* checkpoints are *not*
 automatically cleaned up when the job fails or is canceled.
 This way, you will have a checkpoint around to resume from if your job fails.  
-checkpoint默认不保留，并且仅仅用于从故障中恢复作业。它们将在程序结束时被删除。然后，你可以配置周期性的保留checkpoint。依赖于配置，当作业失败或被取消时，这些保留的checkpoints将不会被自动清除。这样，如果你的作业失败，你将拥有一个用于恢复的checkpoint。
+checkpoint默认不保留，并且仅仅用于从故障中恢复作业。它们将在程序结束时被删除。然而，你可以配置周期性的保留checkpoint。依赖于配置，当作业失败或被取消时，这些保留的checkpoints将不会被自动清除。这样，如果你的作业失败，你将拥有一个用于恢复的checkpoint。
 
 {% highlight java %}
 CheckpointConfig config = env.getCheckpointConfig();
@@ -92,12 +92,12 @@ env.setStateBackend(new RocksDBStateBackend("hdfs:///checkpoints-data/");
 ### Difference to Savepoints
 ### 与savepoint的区别
 
-Checkpoints have a few differences from [savepoints](savepoints.html). They
-- use a state backend specific (low-level) data format, may be incremental.
+Checkpoints have a few differences from [savepoints](savepoints.html). They  
+- use a state backend specific (low-level) data format, may be incremental.  
 - do not support Flink specific features like rescaling.  
-checkpoint与 [savepoints](savepoints.html)有少许区别。 他们  
+checkpoint与 [savepoint](savepoints.html)有少许区别。 他们  
 - 使用状态后端具体的(低级别)数据格式，可能以增量方式。  
-- 不支持Flink诸如重新缩放等具体特性。
+- 不支持Flink诸如重扩展等具体特性。
 
 ### Resuming from a retained checkpoint
 ### 从保留checkpoint恢复
