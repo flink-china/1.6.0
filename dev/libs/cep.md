@@ -1,5 +1,5 @@
 ---
-title: "FlinkCEP - Complex event processing for Flink"
+title: "FlinkCEP - Flink的复杂事件处理"
 nav-title: Event Processing (CEP)
 nav-parent_id: libs
 nav-pos: 1
@@ -32,9 +32,9 @@ FlinkCEP 是在 Flink 之上实现的复杂事件处理（CEP）库。
 * This will be replaced by the TOC
 {:toc}
 
-## Getting Started
+## 入门
 
-如果您要直接进入，请[设置 Flink 程序]({{ site.baseurl }}/dev/linking_with_flink.html)并将 FlinkCEP 依赖项添加到项目的 `pom.xml` 中。
+如果您要直接使用，请[设置 Flink 程序]({{ site.baseurl }}/dev/linking_with_flink.html)并将 FlinkCEP 依赖项添加到项目的 `pom.xml` 中。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -58,11 +58,11 @@ FlinkCEP 是在 Flink 之上实现的复杂事件处理（CEP）库。
 </div>
 </div>
 
-{% info %} FlinkCEP不是二进制分发包的一部分。在[此处]({{site.baseurl}}/dev/linking.html)了解如何与集群执行相关联。 
+{% info %} FlinkCEP 不是二进制分发包的一部分。在[此处]({{site.baseurl}}/dev/linking.html)了解如何与集群执行相关联。 
 
-现在，您可以使用Pattern API开始编写第一个CEP程序。
+现在，您可以使用 Pattern API 开始编写第一个 CEP 程序。
 
-{% warn Attention %} 要应用模式匹配 `DataStream` 中的事件必须正确的实现 `equals()` 和 `hashCode()` 方法，因为 FlinkCEP 使用它们来比较和匹配事件。
+{% warn Attention %} 为了要应用模式匹配，`DataStream` 中的事件必须正确的实现 `equals()` 和 `hashCode()` 方法，因为 FlinkCEP 需要它们用作比较和匹配事件。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -119,29 +119,29 @@ val result: DataStream[Alert] = patternStream.select(createAlert(_))
 </div>
 </div>
 
-## The Pattern API
+## 模式 API
 
-Pattern API 允许您定义要从输入流中提取的复杂模式序列。
+模式 API 允许您定义需要从输入流中提取的复杂模式序列。
 
-每个复杂模式序列由多个简单模式组成，例如寻找具有相同属性的个别事件的模式。从现在开始，我们将称之为简单模式 **patterns**，以及我们在流中搜索的最终复杂模式序列，即 **pattern sequence**。您可以将模式序列视为此类模式的图，其中从一个模式到下一个模式的转换基于用户指定的条件发生，例如`event.getName().equals("end")`。**匹配**是输入事件序列，它通过一系列有效的模式转换访问复杂模式图的所有模式。
+每个复杂模式序列由多个简单模式组成，例如寻找具有相同属性的个别事件模式。从现在开始，我们将称那些简单模式为 **模式（patterns）**，以及我们在流中搜索的最终复杂模式序列，即 **模式序列（pattern sequence）**。您可以将模式序列视为此类模式的图，其中从一个模式到下一个模式的转换基于用户指定的条件发生，例如`event.getName().equals("end")`。**匹配（match）**是输入事件的序列，它通过一系列有效的模式转换访问复杂模式图的所有模式。
 
 {% warn Attention %} 每个模式都必须具有唯一的名称，稍后您可以使用该名称来标识匹配的事件。
 
 {% warn Attention %} 模式名称**不能**包含字符 `":"`。
 
-在本节的其余部分，我们将首先介绍如何定义[单个模式](#individual-patterns)，然后如何将各个模式组合到[复杂模式](#combining-patterns)中。
+在本节的其余部分，我们将首先介绍如何定义[个别模式（Individual Patterns）](#individual-patterns)，然后如何将个别模式组合到[复杂模式（Complex Patterns）](#combining-patterns)中。
 
-### Individual Patterns
+### 个别模式 (Individual Patterns)
 
 **模式** 可以是单例，也可以是循环 。单例模式接受单个事件，而循环模式可以接受多个事件。在模式匹配符号中，
 
-`"a b+ c? d"` （即`"a"` ，后跟一个或者多个 `"b"`，可选的跟 `"c"`,跟 `"d"`），`a`，`c?`，和 `d` 是单例模式，而 `b+` 是循环模式。默认情况下，模式为单例模式，你可以使用 [Quantifiers](#quantifiers) 将其转换为循环模式。 每个模式可以有一个或多个 [条件](#conditions)，基于它接受的事件。
+`"a b+ c? d"` （即`"a"` ，后跟一个或者多个 `"b"`，可选的跟 `"c"`,跟 `"d"`），`a`，`c?`，和 `d` 是单例模式，而 `b+` 是循环模式。默认情况下，模式均为单例模式，你可以使用 [量词（Quantifiers）](#quantifiers) 将其转换为循环模式。 每个模式可以有一个或多个 [条件（Conditions）](#conditions)，基于它接受的事件。
 
-#### Quantifiers
+#### 量词 （Quantifiers）
 
-在FlinkCEP中，您可以使用以下方法指定循环模式：`pattern.oneOrMore()`，用于期望一个或多个事件发生的模式（例如之前提到的 `b+`）；`pattern.times(#ofTimes)`，用于期望给定类型事件的特定出现次数的模式，例如4次`a`；`pattern.times(#fromTimes, #toTimes)`，用于期望特定最小出现次数和给定类型事件的最大出现次数的模式，例如， 2-4次 `a`。
+在 FlinkCEP 中，您可以使用以下方法指定循环模式：`pattern.oneOrMore()`，用于期望一个或多个事件发生的模式（例如之前提到的 `b+`）；`pattern.times(#ofTimes)`，用于期望给定类型事件的特定出现次数的模式，例如发生 4 次 `a`；`pattern.times(#fromTimes, #toTimes)`，用于期望特定最小出现次数和给定类型事件的最大出现次数的模式，例如， 发生 2-4 次 `a`。
 
-您可以使用 `pattern.greedy()` 方法使循环模式变为贪婪，但是您还不能使模式组变为贪婪。 您可以使用`pattern.optional()`方法创建所有模式指定循环与否和可选项。
+您可以使用 `pattern.greedy()` 方法使循环模式变为贪婪，但是您还不能使模式组变为贪婪。 您可以使用`pattern.optional()`方法为所有模式指定循环与否和可选项。
 
 对于名为 `start` 的模式，以下是有效的量词：
 
@@ -236,13 +236,13 @@ Pattern API 允许您定义要从输入流中提取的复杂模式序列。
  </div>
  </div>
 
-#### Conditions
+#### 条件 （Conditions）
 
-对于每个模式，您可以指定传入事件必须满足的条件，以便“接受”到模式中，例如其值应大于5，或大于先前接受的事件的平均值。 您可以通过 `pattern.where()`，`pattern.or()` 或 `pattern.until()` 方法指定事件属性的条件。 这些可以是 `IterativeCondition  `或 `SimpleCondition `。
+对于每个模式，您可以指定传入事件必须满足的条件，以便“接受”到模式中，例如其值应大于5，或大于先前接受的事件的平均值。 您可以通过 `pattern.where()`，`pattern.or()` 或 `pattern.until()` 方法指定事件在属性上的条件。 这些可以是 `IterativeCondition  ` 或 `SimpleCondition `。
 
 **迭代条件: **这是最常见的条件类型。 这是您可以如何指定一个条件，该条件基于先前接受的事件的属性或其子集的统计信息来接受后续事件。
 
-下面是迭代条件的代码，如果名称以“foo”开头，则接受名为“middle”的模式的下一个事件，并且如果该模式的先前接受的事件的价格总和加上当前的价格事件不超过5.0。 迭代条件非常强大，尤其是与循环模式相结合，例如， `oneOrMore()`。
+下面是迭代条件的代码，如果名称以 “foo” 开头，则接受名为 “middle” 的模式的下一个事件，并且如果该模式的先前接受的事件的价格总和加上当前的价格事件不超过5.0。 迭代条件非常强大，尤其是与循环模式相结合，例如  `oneOrMore()`。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -324,7 +324,7 @@ start.subtype(classOf[SubEvent]).where(subEvent => ... /* some condition */)
 </div>
 </div>
 
-**组合条件：**如上所示，您可以将 `subtype`  条件与其他条件组合使用。 这适用于所有条件。 您可以通过顺序调用`where()` 来任意组合条件。 最终结果将是各个条件的结果 **AND**。 要使用 **OR** 组合条件，可以使用 `or()`  方法，如下所示。
+**组合条件：**如上所示，您可以将 `subtype`  条件与其他条件组合使用。 这适用于所有条件。 您可以通过一定顺序调用 `where()` 来任意组合条件。 最终会将各个条件的结果 **逻辑与 （AND）**。 要使用 **或 （OR） ** 来组合条件，可以使用 `or()`  方法，如下所示。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -350,18 +350,18 @@ pattern.where(event => ... /* some condition */).or(event => ... /* or condition
 </div>
 </div>
 
-**停止条件：**在循环模式（`oneOrMore()` 和 `oneOrMore().optional()` ）的情况下，您还可以指定停止条件，例如： 接受值大于5的事件，直到值的总和小于50。
+**停止条件：**在循环模式（`oneOrMore()` 和 `oneOrMore().optional()` ）的情况下，您还可以指定停止条件，例如： 接受值大于 5 的事件，直到值的总和小于 50。
 
 为了更好地理解它，请看下面的示例。给定
 
-- 模式如  `"(a+ until b)"`（一个或多个 `"a"` 直到 `"b"`）
+- 模式  `"(a+ until b)"`（一个或多个 `"a"` 直到 `"b"`）
 
-- 一系列传入事件 `"a1" "c" "a2" "b" "a3"`
+- 将要传入事件的序列 `"a1" "c" "a2" "b" "a3"`
 
 - 将输出结果：`{a1 a2} {a1} {a2} {a3}`。
 
 
-如您所见，由于停止条件，未返回 `{a1 a2 a3}` 或 `{a2 a3}`。
+如您所见，由于停止条件，并未返回 `{a1 a2 a3}` 或 `{a2 a3}`。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -376,7 +376,7 @@ pattern.where(event => ... /* some condition */).or(event => ... /* or condition
        <tr>
             <td><strong>where(condition)</strong></td>
             <td>
-                <p>定义当前模式的条件。 要匹配模式，事件必须满足条件。 多个连续的 where() 子句其条件为AND：</p>
+                <p>定义当前模式的条件。 要匹配模式，事件必须满足条件。 多个连续的 where() 子句将会被逻辑与运算：</p>
 
 {% highlight java %}
 pattern.where(new IterativeCondition<Event>() {
@@ -391,7 +391,7 @@ pattern.where(new IterativeCondition<Event>() {
         <tr>
             <td><strong>or(condition)</strong></td>
             <td>
-                <p>添加与现有条件进行OR运算的新条件。 只有在至少满足其中一个条件时，事件才能匹配该模式：</p>
+                <p>添加与现有条件进行 OR 运算的新条件。 只有在至少满足其中一个条件时，事件才能匹配该模式：</p>
 {% highlight java %}
 pattern.where(new IterativeCondition<Event>() {
     @Override
@@ -426,7 +426,7 @@ pattern.oneOrMore().until(new IterativeCondition<Event>() {
        <tr>
            <td><strong>subtype(subClass)</strong></td>
            <td>
-               <p>定义当前模式的子类型条件。 如果事件属于此子类型，则事件匹配该模式：</p>
+               <p>定义当前模式的子类型条件。 如果事件属于此子类型，则匹配该模式：</p>
 {% highlight java %}
 pattern.subtype(SubEvent.class);
 {% endhighlight %}
@@ -436,7 +436,7 @@ pattern.subtype(SubEvent.class);
           <td><strong>oneOrMore()</strong></td>
           <td>
               <p>指定此模式至少发生一次匹配事件。</p>
-              <p>默认情况下，使用宽松的内部连续性（在后续事件之间）。 有关内部连续性的更多信息，请参阅<a href="#consecutive_java">consecutive</a>。</p>
+              <p>默认情况下，使用宽松的内部连续性（relaxed internal contiguity ）（在后续事件之间）。 有关内部连续性（internal contiguity ）的更多信息，请参阅<a href="#consecutive_java">consecutive</a>。</p>
 
 ​              <p><b>NOTE:</b> 建议使用 <code>until()</code> 或者<code>within()</code> 来启用状态清除</p>
 {% highlight java %}
@@ -448,7 +448,7 @@ pattern.oneOrMore();
               <td><strong>timesOrMore(#times)</strong></td>
               <td>
                   <p>指定此模式至少需要 <strong>#times</strong> 发生的匹配事件。</p>
-                  <p>默认情况下，使用宽松的内部连续性（在后续事件之间）。 有关内部邻接的更多信息，请参阅 <a href="#consecutive_java">consecutive</a>。</p>
+                  <p>默认情况下，使用宽松的内部连续性（relaxed internal contiguity ）（在后续事件之间）。 有关内部连续性（internal contiguity ）的更多信息，请参阅<a href="#consecutive_java">consecutive</a>。</p>
 {% highlight java %}
 pattern.timesOrMore(2);
 {% endhighlight %}
@@ -458,7 +458,7 @@ pattern.timesOrMore(2);
           <td><strong>times(#ofTimes)</strong></td>
           <td>
               <p>指定此模式需要匹配事件的确切出现的次数。</p>
-              <p>默认情况下，使用宽松的内部连续性（在后续事件之间）。 有关内部邻接的更多信息，请参阅<a href="#consecutive_java">consecutive</a>。</p>
+              <p>默认情况下，使用宽松的内部连续性（relaxed internal contiguity ）（在后续事件之间）。 有关内部连续性（internal contiguity ）的更多信息，请参阅<a href="#consecutive_java">consecutive</a>。</p>
 {% highlight java %}
 pattern.times(2);
 {% endhighlight %}
@@ -469,7 +469,7 @@ pattern.times(2);
           <td>
               <p>指定此模式期望在 <strong>#fromTimes</strong>
               和 <strong>#toTimes</strong> 之间的匹配事件。</p>
-              <p>默认情况下，使用宽松的内部连续性（在后续事件之间）。 有关内部邻接的更多信息，请参阅<a href="#consecutive_java">consecutive</a>。</p>
+              <p>默认情况下，使用宽松的内部连续性（relaxed internal contiguity ）（在后续事件之间）。 有关内部连续性（internal contiguity ）的更多信息，请参阅<a href="#consecutive_java">consecutive</a>。</p>
 {% highlight java %}
 pattern.times(2, 4);
 {% endhighlight %}
@@ -510,7 +510,7 @@ pattern.oneOrMore().greedy();
         <tr>
             <td><strong>where(condition)</strong></td>
             <td>
-              <p>定义当前模式的条件。 要匹配模式，事件必须满足条件。 多个连续的 where() 子句其条件为AND：</p>
+              <p>定义当前模式的条件。 要匹配模式，事件必须满足条件。 多个连续的 where() 子句将会被逻辑与运算：</p>
 {% highlight scala %}
 pattern.where(event => ... /* some condition */)
 {% endhighlight %}
@@ -519,7 +519,7 @@ pattern.where(event => ... /* some condition */)
         <tr>
             <td><strong>or(condition)</strong></td>
             <td>
-                <p>添加与现有条件进行OR运算的新条件。 只有在至少满足其中一个条件时，事件才能匹配该模式：</p>
+                <p>添加与现有条件进行 OR 运算的新条件。 只有在至少满足其中一个条件时，事件才能匹配该模式：</p>
 {% highlight scala %}
 pattern.where(event => ... /* some condition */)
     .or(event => ... /* alternative condition */)
@@ -550,7 +550,7 @@ pattern.subtype(classOf[SubEvent])
           <td><strong>oneOrMore()</strong></td>
           <td>
                 <p>指定此模式至少发生一次匹配事件。</p>
-              <p>默认情况下，使用宽松的内部连续性（在后续事件之间）。 有关内部连续性的更多信息，请参阅<a href="#consecutive_java">consecutive</a>。</p>
+              <p>默认情况下，使用宽松的内部连续性（relaxed internal contiguity ）（在后续事件之间）。 有关内部连续性（internal contiguity ）的更多信息，请参阅<a href="#consecutive_java">consecutive</a>。</p>
 
 ​              <p><b>NOTE:</b> 建议使用 <code>until()</code> 或者<code>within()</code> 来启用状态清除</p>
 {% highlight scala %}
@@ -562,7 +562,7 @@ pattern.oneOrMore()
           <td><strong>timesOrMore(#times)</strong></td>
           <td>
                <p>指定此模式至少需要 <strong>#times</strong> 发生的匹配事件。</p>
-                  <p>默认情况下，使用宽松的内部连续性（在后续事件之间）。 有关内部邻接的更多信息，请参阅 <a href="#consecutive_java">consecutive</a>。</p>
+                  <p>默认情况下，使用宽松的内部连续性（relaxed internal contiguity ）（在后续事件之间）。 有关内部连续性（internal contiguity ）的更多信息，请参阅<a href="#consecutive_java">consecutive</a>。</p>
 {% highlight scala %}
 pattern.timesOrMore(2)
 {% endhighlight %}
@@ -572,7 +572,7 @@ pattern.timesOrMore(2)
                  <td><strong>times(#ofTimes)</strong></td>
                  <td>
                          <p>指定此模式需要匹配事件的确切出现的次数。</p>
-              <p>默认情况下，使用宽松的内部连续性（在后续事件之间）。 有关内部邻接的更多信息，请参阅<a href="#consecutive_java">consecutive</a>。</p>
+              <p>默认情况下，使用宽松的内部连续性（relaxed internal contiguity ）（在后续事件之间）。 有关内部连续性（internal contiguity ）的更多信息，请参阅<a href="#consecutive_java">consecutive</a>。</p>
 {% highlight scala %}
 pattern.times(2)
 {% endhighlight %}
@@ -584,7 +584,7 @@ pattern.times(2)
 
  <p>指定此模式期望在 <strong>#fromTimes</strong>
               和 <strong>#toTimes</strong> 之间的匹配事件。</p>
-              <p>默认情况下，使用宽松的内部连续性（在后续事件之间）。 有关内部邻接的更多信息，请参阅<a href="#consecutive_java">consecutive</a>。</p>
+              <p>默认情况下，使用宽松的内部连续性（relaxed internal contiguity ）（在后续事件之间）。 有关内部连续性（internal contiguity ）的更多信息，请参阅<a href="#consecutive_java">consecutive</a>。</p>
 {% highlight scala %}
 pattern.times(2, 4)
 {% endhighlight %}
@@ -613,9 +613,9 @@ pattern.oneOrMore().greedy()
 </div>
 </div>
 
-### Combining Patterns
+### 组合模式 （Combining Patterns）
 
-现在你已经看到了单个模式的样子，现在是时候看看如何将它们组合成一个完整的模式序列。
+现在你已经看到了个别模式的样子，现在是时候看看如何将它们组合成一个完整的模式序列。
 
 模式序列必须以初始模式开始，如下所示：
 
@@ -633,13 +633,13 @@ val start : Pattern[Event, _] = Pattern.begin("start")
 </div>
 </div>
 
-接下来，您可以通过指定它们之间所需的连续条件，为模式序列添加更多模式。 FlinkCEP支持事件之间的以下形式的邻接：
+接下来，您可以通过指定它们之间所需的连续条件，为模式序列添加更多模式。 FlinkCEP 支持事件之间的以下形式的邻接：
 
-  1. **Strict Contiguity**: 期望所有匹配事件一个接一个地出现，中间没有任何不匹配的事件。
+  1. **严格连续性（Strict Contiguity）**：期望所有匹配事件一个接一个地出现，中间没有任何不匹配的事件。
 
-  2. **Relaxed Contiguity**: 忽略匹配的事件之间出现的不匹配事件。
+  2. **宽松连续性（Relaxed Contiguity）**： 忽略匹配的事件之间出现的不匹配事件。
 
-  3. **Non-Deterministic Relaxed Contiguity**: 进一步放宽连续性，允许忽略一些匹配事件的其他匹配。
+  3. **非确定的宽松连续性（Non-Deterministic Relaxed Contiguity）**：进一步放宽连续性，允许忽略一些匹配事件的其他匹配。
 
 要在连续模式之间应用它们，您可以使用：
 
@@ -649,12 +649,12 @@ val start : Pattern[Event, _] = Pattern.begin("start")
 
 或者
 
-1. `notNext()` ， 如果您不希望事件类型直接跟随另一个事件类型
-2. `notFollowedBy() ` ，如果您不希望事件类型在两个其他事件类型之间的任何位置。
+1. `notNext()` ， 如果您不希望事件类型直接跟随另一个。
+2. `notFollowedBy() ` ，如果您不希望事件类型在其他两个之间的任何位置。
 
 {% warn Attention %} 模式序列无法以 `notFollowedBy()` 结束。
 
-{% warn Attention %}  `NOT `模式不能以可选的模式开头。
+{% warn Attention %}  `非（NOT） ` 模式不能以可选（**optional** ）开头。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -700,13 +700,13 @@ val relaxedNot: Pattern[Event, _] = start.notFollowedBy("not").where(...)
 </div>
 </div>
 
-Relaxed contiguity 意味着只匹配第一个匹配事件，虽然具有 non-deterministic relaxed contiguity ,将针对同一开始发出多个匹配。 例如，给定事件序列`"a", "c", "b1", "b2"` 的模式 `"a b"` ，将给出以下结果：
+宽松连续性（Relaxed contiguity） 意味着只匹配第一个成功匹配事件，虽然具有非确定的宽松连续性（non-deterministic relaxed contiguity） ,将对同一开始发出多个匹配。 例如，给定事件序列 `"a", "c", "b1", "b2"` 的模式 `"a b"` ，将给出以下结果：
 
-1. Strict Contiguity 在 `"a"` 和 `"b"`: `{}` (不匹配) ，  `"c"` 在 `"a"` 之后导致 `"a"` 被丢弃。
-2. Relaxed Contiguity 在`"a"` 和 `"b"`: `{a b1}`，因为放松的连续性被视为“跳过不匹配的事件直到下一个匹配的事件”。
-3. Non-Deterministic Relaxed Contiguity 在`"a"` 和 `"b"`: `{a b1}`, `{a b2}`, 因为这是最一般的形式。
+1. 严格连续性（Strict Contiguity）在 `"a"` 和 `"b"` 中： `{}` (不匹配) ，  `"c"` 在 `"a"` 之后导致 `"a"` 被丢弃。
+2. 宽松连续性（Relaxed Contiguity） 在 `"a"` 和 `"b"` 中： `{a b1}`，因为宽松的连续性被视为“跳过不匹配的事件直到下一个匹配的事件”。
+3. 非确定的宽松连续性（Non-Deterministic Relaxed Contiguity） 在`"a"` 和 `"b"` 中： `{a b1}`, `{a b2}`, 这是最为一般的方式。
 
-也可以为模式定义时间约束以使其有效。 例如，您可以通过 `pattern.within()` 方法定义模式应在10秒内发生。 [处理时间和事件时间]({{site.baseurl}}/dev/event_time.html)都支持时间模式。
+也可以为模式定义时间约束。 例如，您可以通过 `pattern.within()` 方法定义模式应在10秒内发生。 时间模式支持[处理时间和事件时间]({{site.baseurl}}/dev/event_time.html)。
 
 {% warn Attention %} A pattern sequence can only have one temporal constraint. If multiple such constraints are defined on different individual patterns, then the smallest is applied.
 
@@ -724,16 +724,16 @@ next.within(Time.seconds(10))
 </div>
 </div>
 
-#### Contiguity within looping patterns
+#### 循环模式中的连续性（Contiguity within looping patterns）
 
-您可以在循环模式中应用与[上一节](#combining-patterns)讨论中相同的连续条件。 连续性将应用于被接受到这种模式中的元素之间。 为了举例说明上述情况，模式序列 `"a b+ c"`（`"a"` 后跟一个或多个 `"b"` 的任何（non-deterministic relaxed）序列，后跟 `"c"`），输入 `"a", "b1", "d1", "b2", "d2", "b3" "c"` 将产生以下结果：
+您可以在循环模式中应用与[上一节](#combining-patterns)讨论中相同的连续条件。 连续性将应用于被接受到这种模式中的元素之间。 为了举例说明上述情况，模式序列 `"a b+ c"`（`"a"` 后跟一个或多个 `"b"` 的（non-deterministic relaxed）序列，后跟 `"c"`），输入 `"a", "b1", "d1", "b2", "d2", "b3" "c"` 将产生以下结果：
 
-  1. **Strict Contiguity**: `{a b3 c}` -- `"d1"` 在 `"b1"` 之后引起 `"b1"` 被丢弃， `"b2"` 也因为`"d2"` 被丢弃。
-  2. **Relaxed Contiguity**: `{a b1 c}`, `{a b1 b2 c}`, `{a b1 b2 b3 c}`, `{a b2 c}`, `{a b2 b3 c}`, `{a b3 c}` - `"d"` 被忽略。
-  3. **Non-Deterministic Relaxed Contiguity**: `{a b1 c}`, `{a b1 b2 c}`, `{a b1 b3 c}`, `{a b1 b2 b3 c}`, `{a b2 c}`, `{a b2 b3 c}`, `{a b3 c}` -
-    注意 `{a b1 b3 c}` ，这是放松 `"b"` 之间的邻近的结果。
+  1. **严格连续性（Strict Contiguity）**： `{a b3 c}` -- `"d1"` 在 `"b1"` 之后引起 `"b1"` 被丢弃， `"b2"` 也因为`"d2"` 被丢弃。
+  2. **宽松连续性（Relaxed Contiguity）** ：`{a b1 c}`, `{a b1 b2 c}`, `{a b1 b2 b3 c}`, `{a b2 c}`, `{a b2 b3 c}`, `{a b3 c}` - `"d"` 被忽略。
+  3. **非确定宽松连续性（Non-Deterministic Relaxed Contiguity）**： `{a b1 c}`, `{a b1 b2 c}`, `{a b1 b3 c}`, `{a b1 b2 b3 c}`, `{a b2 c}`, `{a b2 b3 c}`, `{a b3 c}` -
+    注意 `{a b1 b3 c}` ，这是放宽 `"b"` 之间连续性的结果。
 
-对于循环模式（例如 `oneOrMore()` 和 `times()`），默认是  *relaxed contiguity*。 如果你想要 strict contiguity，你必须使用 `consecutive()` 调用显式指定它，如果你想要 *non-deterministic relaxed contiguity*，你可以使用`allowCombinations()` 调用。
+对于循环模式（例如 `oneOrMore()` 和 `times()`），默认是*宽松连续性（relaxed contiguity）*。 如果你想要严格连续性，你必须显式调用 `consecutive()` 方法，如果你想要非确定宽松连续性，你可以使用`allowCombinations()` 方法。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -750,11 +750,11 @@ next.within(Time.seconds(10))
           <td>
               <p>与<code>oneOrMore()</code> 和<code>times()</code> 
 
-一起使用并在匹配事件之间应用 strict contiguity，即任何不匹配的元素都会中断匹配 (如 <code>next()</code>).</p>
+一起使用并在匹配事件之间强加严格连续性，即任何不匹配的元素都会中断匹配 (如 <code>next()</code>).</p>
 
-​              <p>如果不应用，则使用 relaxed contiguity (如 <code>followedBy()</code>)</p>
+​              <p>如果不加严格连续性，则宽松连续性被使用 (如 <code>followedBy()</code>)</p>
 
-              <p>E.g. a pattern like:</p>
+              <p>例如：</p>
 {% highlight java %}
 Pattern.<Event>begin("start").where(new SimpleCondition<Event>() {
   @Override
@@ -777,17 +777,17 @@ Pattern.<Event>begin("start").where(new SimpleCondition<Event>() {
 {% endhighlight %}
               <p>将为输入序列生成以下匹配项： C D A1 A2 A3 D A4 B</p>
 
-              <p>with consecutive applied: {C A1 B}, {C A1 A2 B}, {C A1 A2 A3 B}</p>
-              <p>without consecutive applied: {C A1 B}, {C A1 A2 B}, {C A1 A2 A3 B}, {C A1 A2 A3 A4 B}</p>
+              <p>启用 consecutive： {C A1 B}, {C A1 A2 B}, {C A1 A2 A3 B}</p>
+              <p>不启用 consecutive： {C A1 B}, {C A1 A2 B}, {C A1 A2 A3 B}, {C A1 A2 A3 A4 B}</p>
           </td>
        </tr>
        <tr>
        <td><strong>allowCombinations()</strong><a name="allow_comb_java"></a></td>
        <td>
-              <p> 与 <code>oneOrMore()</code> 和 <code>times()</code> 一起使用并在匹配事件之间应用 non-deterministic relaxed contiguity (如 <code>followedByAny()</code>).</p>
-              <p> 如果不应用，则使用 relaxed contiguity。(as in <code>followedBy()</code>)</p>
+              <p> 与 <code>oneOrMore()</code> 和 <code>times()</code> 一起使用并在匹配事件之间强加非确定宽松连续性 (如 <code>followedByAny()</code>).</p>
+              <p> 如果不加非确定宽松连续性，则宽松连续性被使用。(如 <code>followedBy()</code>)</p>
     
-              <p>E.g. a pattern like:</p>
+              <p>例如：</p>
 {% highlight java %}
 Pattern.<Event>begin("start").where(new SimpleCondition<Event>() {
   @Override
@@ -808,10 +808,10 @@ Pattern.<Event>begin("start").where(new SimpleCondition<Event>() {
   }
 });
 {% endhighlight %}
-               <p>Will generate the following matches for an input sequence: C D A1 A2 A3 D A4 B</p>
+               <p>将为输入序列生成以下匹配项： C D A1 A2 A3 D A4 B</p>
 
-               <p>with combinations enabled: {C A1 B}, {C A1 A2 B}, {C A1 A3 B}, {C A1 A4 B}, {C A1 A2 A3 B}, {C A1 A2 A4 B}, {C A1 A3 A4 B}, {C A1 A2 A3 A4 B}</p>
-               <p>without combinations enabled: {C A1 B}, {C A1 A2 B}, {C A1 A2 A3 B}, {C A1 A2 A3 A4 B}</p>
+               <p>启用combinations： {C A1 B}, {C A1 A2 B}, {C A1 A3 B}, {C A1 A4 B}, {C A1 A2 A3 B}, {C A1 A2 A4 B}, {C A1 A3 A4 B}, {C A1 A2 A3 A4 B}</p>
+               <p>不启用combinations: {C A1 B}, {C A1 A2 B}, {C A1 A2 A3 B}, {C A1 A2 A3 A4 B}</p>
        </td>
        </tr>
   </tbody>
@@ -830,10 +830,10 @@ Pattern.<Event>begin("start").where(new SimpleCondition<Event>() {
            <tr>
               <td><strong>consecutive()</strong><a name="consecutive_scala"></a></td>
               <td>
-                <p> 与 <code>oneOrMore()</code> 和 <code>times()</code> 一起使用并在匹配事件之间应用 strict contiguity ，即任何不匹配的元素都会中断匹配 (如 <code>next()</code>).</p>
+                <p> 与 <code>oneOrMore()</code> 和 <code>times()</code> 一起使用并在匹配事件之间应用 严格连续性 ，即任何不匹配的元素都会中断匹配 (如 <code>next()</code>)。</p>
                               <p>如果不应用，则使用 relaxed contiguity。 (如 <code>followedBy()</code>)</p>
     
-          <p>E.g. a pattern like:</p>
+          <p>例如：</p>
 {% highlight scala %}
 Pattern.begin("start").where(_.getName().equals("c"))
   .followedBy("middle").where(_.getName().equals("a"))
@@ -841,20 +841,19 @@ Pattern.begin("start").where(_.getName().equals("c"))
   .followedBy("end1").where(_.getName().equals("b"))
 {% endhighlight %}
     
-                <p>Will generate the following matches for an input sequence: C D A1 A2 A3 D A4 B</p>
+                <p>将为输入序列生成以下匹配项： C D A1 A2 A3 D A4 B</p>
     
-                              <p>with consecutive applied: {C A1 B}, {C A1 A2 B}, {C A1 A2 A3 B}</p>
-                              <p>without consecutive applied: {C A1 B}, {C A1 A2 B}, {C A1 A2 A3 B}, {C A1 A2 A3 A4 B}</p>
+                              <p>启用 consecutive： {C A1 B}, {C A1 A2 B}, {C A1 A2 A3 B}</p>
+                              <p>不启用 consecutive： {C A1 B}, {C A1 A2 B}, {C A1 A2 A3 B}, {C A1 A2 A3 A4 B}</p>
               </td>
            </tr>
            <tr>
                   <td><strong>allowCombinations()</strong><a name="allow_comb_java"></a></td>
                   <td>
-                    <p>Works in conjunction with <code>oneOrMore()</code> and <code>times()</code> and imposes non-deterministic relaxed contiguity
-                         between the matching events (as in <code>followedByAny()</code>).</p>
-                         <p>If not applied a relaxed contiguity (as in <code>followedBy()</code>) is used.</p>
+                            <p> 与 <code>oneOrMore()</code> 和 <code>times()</code> 一起使用并在匹配事件之间应用 strict contiguity ，即任何不匹配的元素都会中断匹配 (如 <code>next()</code>)。</p>
+                          <p>如果不应用，则使用 relaxed contiguity。 (如 <code>followedBy()</code>)</p>
     
-          <p>E.g. a pattern like:</p>
+          <p>例如：</p>
 {% highlight scala %}
 Pattern.begin("start").where(_.getName().equals("c"))
   .followedBy("middle").where(_.getName().equals("a"))
@@ -862,10 +861,10 @@ Pattern.begin("start").where(_.getName().equals("c"))
   .followedBy("end1").where(_.getName().equals("b"))
 {% endhighlight %}
     
-                          <p>Will generate the following matches for an input sequence: C D A1 A2 A3 D A4 B</p>
+                          <p>将为输入序列生成以下匹配项： C D A1 A2 A3 D A4 B</p>
     
-                          <p>with combinations enabled: {C A1 B}, {C A1 A2 B}, {C A1 A3 B}, {C A1 A4 B}, {C A1 A2 A3 B}, {C A1 A2 A4 B}, {C A1 A3 A4 B}, {C A1 A2 A3 A4 B}</p>
-                          <p>without combinations enabled: {C A1 B}, {C A1 A2 B}, {C A1 A2 A3 B}, {C A1 A2 A3 A4 B}</p>
+                          <p>启用 combinations： {C A1 B}, {C A1 A2 B}, {C A1 A3 B}, {C A1 A4 B}, {C A1 A2 A3 B}, {C A1 A2 A4 B}, {C A1 A3 A4 B}, {C A1 A2 A3 A4 B}</p>
+                          <p>不启用 combinations： {C A1 B}, {C A1 A2 B}, {C A1 A2 A3 B}, {C A1 A2 A3 A4 B}</p>
                   </td>
                   </tr>
   </tbody>
@@ -873,9 +872,9 @@ Pattern.begin("start").where(_.getName().equals("c"))
 </div>
 </div>
 
-### Groups of patterns
+### 模式组（Groups of patterns）
 
-也可以将模式序列定义为 `begin` ， `followedBy` ， `followedByAny` 和 `next` 的条件。 模式序列将被逻辑地视为匹配条件，并且将返回 `GroupPattern`。也可以应用 `oneOrMore()`，`times(#ofTimes)`， `times(#fromTimes, #toTimes)`， `optional()`，`consecutive()`， `allowCombinations()` 与 `GroupPattern`。
+也可以定义为 `begin` ， `followedBy` ， `followedByAny` 和 `next` 模式序列的条件。 模式序列将被逻辑地视为匹配条件，并且将返回 `GroupPattern`。也可以启用 `oneOrMore()`，`times(#ofTimes)`， `times(#fromTimes, #toTimes)`， `optional()`，`consecutive()`， `allowCombinations()` 于 `GroupPattern`。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -965,7 +964,7 @@ Pattern<Event, ?> start = Pattern.<Event>begin(
             <td><strong>next(#name)</strong></td>
             <td>
                 <p>添加新模式。 匹配事件必须直接接替先前的匹配事件
-                (strict contiguity):</p>
+                (严格连续性):</p>
 {% highlight java %}
 Pattern<Event, ?> next = start.next("middle");
 {% endhighlight %}
@@ -975,7 +974,7 @@ Pattern<Event, ?> next = start.next("middle");
             <td><strong>next(#pattern_sequence)</strong></td>
             <td>
                 <p>添加新模式。一个序列的匹配事件必须直接接替先前的匹配事件
-                (strict contiguity):</p>
+                (严格连续性):</p>
 {% highlight java %}
 Pattern<Event, ?> next = start.next(
     Pattern.<Event>begin("start").where(...).followedBy("middle").where(...)
@@ -986,7 +985,7 @@ Pattern<Event, ?> next = start.next(
         <tr>
             <td><strong>followedBy(#name)</strong></td>
             <td>
-                <p>添加新模式。 匹配事件和先前匹配事件之间可能发生其他事件 (relaxed contiguity):</p>
+                <p>添加新模式。 匹配事件和先前匹配事件之间可能发生其他事件 (宽松连续性):</p>
 {% highlight java %}
 Pattern<Event, ?> followedBy = start.followedBy("middle");
 {% endhighlight %}
@@ -995,7 +994,7 @@ Pattern<Event, ?> followedBy = start.followedBy("middle");
         <tr>
             <td><strong>followedBy(#pattern_sequence)</strong></td>
             <td>
-                 <p>添加新模式。 在一个序列匹配事件和先前匹配事件之间可能发生其他事件 (relaxed contiguity):</p>
+                 <p>添加新模式。 在一个序列匹配事件和先前匹配事件之间可能发生其他事件 (宽松连续性):</p>
 {% highlight java %}
 Pattern<Event, ?> followedBy = start.followedBy(
     Pattern.<Event>begin("start").where(...).followedBy("middle").where(...)
@@ -1006,9 +1005,8 @@ Pattern<Event, ?> followedBy = start.followedBy(
         <tr>
             <td><strong>followedByAny(#name)</strong></td>
             <td>
-                <p>Appends a new pattern. Other events can occur between a matching event and the previous
-                matching event, and alternative matches will be presented for every alternative matching event
-                (non-deterministic relaxed contiguity):</p>
+                <p>添加新模式。 在一序列匹配事件和先前匹配事件之间可能发生其他事件，对于每一个可替代的匹配事件都将以可替代的匹配呈现（非确定宽松连续性）：</p>
+
 {% highlight java %}
 Pattern<Event, ?> followedByAny = start.followedByAny("middle");
 {% endhighlight %}
@@ -1017,9 +1015,8 @@ Pattern<Event, ?> followedByAny = start.followedByAny("middle");
         <tr>
              <td><strong>followedByAny(#pattern_sequence)</strong></td>
              <td>
-                 <p>添加新模式。 在一个序列匹配事件和先前匹配事件之间可能发生其他事件the previous
-                 matching event, and alternative matches will be presented for every alternative sequence of matching events
-                 (non-deterministic relaxed contiguity):</p>
+                 <p>添加新模式。 在一序列匹配事件和先前匹配事件之间可能发生其他事件，对于每一个可替代的匹配事件序列都将以可替代的匹配呈现（非确定宽松连续性）：</p>
+
 {% highlight java %}
 Pattern<Event, ?> followedByAny = start.followedByAny(
     Pattern.<Event>begin("start").where(...).followedBy("middle").where(...)
@@ -1030,8 +1027,8 @@ Pattern<Event, ?> followedByAny = start.followedByAny(
         <tr>
                     <td><strong>notNext()</strong></td>
                     <td>
-                        <p>Appends a new negative pattern. A matching (negative) event has to directly succeed the
-                        previous matching event (strict contiguity) for the partial match to be discarded:</p>
+                        <p>添加新的反模式。 匹配（否定）事件必须直接成功执行先前的匹配事件（严格连续性）才能丢弃部分匹配：</p>
+
 {% highlight java %}
 Pattern<Event, ?> notNext = start.notNext("not");
 {% endhighlight %}
@@ -1040,9 +1037,7 @@ Pattern<Event, ?> notNext = start.notNext("not");
                 <tr>
                     <td><strong>notFollowedBy()</strong></td>
                     <td>
-                        <p>Appends a new negative pattern. A partial matching event sequence will be discarded even
-                        if other events occur between the matching (negative) event and the previous matching event
-                        (relaxed contiguity):</p>
+                        <p>添加新的反模式。 即使在匹配（否定）事件和先前匹配事件（宽松连续性）之间发生其他事件，也将丢弃部分匹配事件序列：</p>
 {% highlight java %}
 Pattern<Event, ?> notFollowedBy = start.notFollowedBy("not");
 {% endhighlight %}
@@ -1051,8 +1046,7 @@ Pattern<Event, ?> notFollowedBy = start.notFollowedBy("not");
        <tr>
           <td><strong>within(time)</strong></td>
           <td>
-              <p>Defines the maximum time interval for an event sequence to match the pattern. If a non-completed event
-              sequence exceeds this time, it is discarded:</p>
+              <p>定义事件序列与模式匹配的最大时间间隔。 如果未完成的事件序列超过此时间，则将其丢弃：</p>
 {% highlight java %}
 pattern.within(Time.seconds(10));
 {% endhighlight %}
@@ -1105,7 +1099,7 @@ val next = start.next("middle")
             <td><strong>next(#pattern_sequence)</strong></td>
             <td>
                 <p>添加新模式。一个序列的匹配事件必须直接接替先前的匹配事件
-                (strict contiguity):</p>
+                (严格连续性):</p>
 {% highlight scala %}
 val next = start.next(
     Pattern.begin[Event]("start").where(...).followedBy("middle").where(...)
@@ -1117,7 +1111,7 @@ val next = start.next(
             <td><strong>followedBy(#name)</strong></td>
             <td>
                 <p>添加新模式。 匹配事件和先前匹配事件之间可能发生其他事件
-                 (relaxed contiguity) :</p>
+                 (宽松连续性) :</p>
 {% highlight scala %}
 val followedBy = start.followedBy("middle")
 {% endhighlight %}
@@ -1126,7 +1120,7 @@ val followedBy = start.followedBy("middle")
         <tr>
             <td><strong>followedBy(#pattern_sequence)</strong></td>
             <td>
-                <p>Appends a new pattern. Other events can occur between a sequence of matching events and t (relaxed contiguity) :</p>
+                    <p>添加新模式。 在一个序列匹配事件和先前匹配事件之间可能发生其他事件 (宽松连续性):</p>
 {% highlight scala %}
 val followedBy = start.followedBy(
     Pattern.begin[Event]("start").where(...).followedBy("middle").where(...)
@@ -1141,7 +1135,7 @@ val followedBy = start.followedBy(
 
 添加新模式。 匹配事件和先前匹配事件之间可能发生其他事件，
 
-对于每一个可替代的匹配事件都将以可替代的匹配呈现 (non-deterministic relaxed contiguity)：
+对于每一个可替代的匹配事件都将以可替代的匹配呈现 (非确定宽松连续性)：
 
 </p>
 {% highlight scala %}
@@ -1180,7 +1174,7 @@ val notNext = start.notNext("not")
                                     <td>
                                         <p>
 
-添加新的否定模式。 即使在匹配（否定）事件和先前匹配事件（relaxed contiguity）之间发生其他事件，也将丢弃部分匹配事件序列：</p>
+添加新的否定模式。 即使在匹配（否定）事件和先前匹配事件（宽松连续性）之间发生其他事件，也将丢弃部分匹配事件序列：</p>
 
 {% highlight scala %}
 val notFollowedBy = start.notFollowedBy("not")
@@ -1203,7 +1197,7 @@ pattern.within(Time.seconds(10))
 
 </div>
 
-### After Match Skip Strategy
+### 匹配后跳过策略（After Match Skip Strategy）
 
 对于给定模式，可以将同一事件分配给多个成功匹配。要控制将分配事件的匹配数，您需要指定名为 `AfterMatchSkipStrategy` 的跳过策略。 跳过策略有四种类型，如下所示：
 
@@ -1327,9 +1321,9 @@ Pattern.begin("patternName", skipStrategy)
 </div>
 </div>
 
-## Detecting Patterns
+## 检测模式（Detecting Patterns）
 
-指定要查找的模式序列后，是时候将其应用于输入流以检测潜在匹配。要对模式序列运行事件流，您必须创建 `PatternStream` 。给定一个输入流 `input`，模式 `pattern` 和可选的比较器 `comparator` ，用于对具有相同时间戳的事件或在同一时刻到达的事件进行排序，通过调用以下命令创建`PatternStream` ：
+指定要查找的模式序列后，是时候将其应用于输入流以检测潜在匹配。要对模式序列运行事件流，您必须创建 `PatternStream` 。给定一个输入流 `input`，模式 `pattern` 和可选的比较器 `comparator` 用于对具有相同时间戳的事件或在同一时刻到达的事件进行排序。通过调用以下命令创建`PatternStream` ：
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -1353,11 +1347,11 @@ val patternStream: PatternStream[Event] = CEP.pattern(input, pattern, comparator
 </div>
 </div>
 
-根据您的使用情况，输入流可以是 *keyed*  或 *non-keyed*。
+根据您的使用情况，输入流可以是 *有键的（keyed）*  或 *无键的（non-keyed）*。
 
-{% warn Attention %} 在 non-keyed  流上应用模式将导致作业并行度等于1。
+{% warn Attention %} 在无键流上应用模式将导致作业并行度等于1。
 
-### Selecting from Patterns
+### 从模式中选择（Selecting from Patterns）
 
 获得 `PatternStream`  后，您可以通过 `select`  或 `flatSelect`  方法从检测到的事件序列中进行选择。
 
@@ -1422,7 +1416,7 @@ def flatSelectFn(pattern : Map[String, Iterable[IN]], collector : Collector[OUT]
 </div>
 </div>
 
-### Handling Timed Out Partial Patterns
+### 处理超时部分模式（Handling Timed Out Partial Patterns）
 
 每当模式具有 `within` 关键字附加的窗口长度时，部分事件序列可能因为超出窗口长度而被丢弃。 为了对这些超时的部分匹配作出反应，`select` 和 `flatSelect` API 调用允许您指定超时处理程序。 为每个超时的部分事件序列调用此超时处理程序。 超时处理程序接收到目前为止由模式匹配的所有事件，以及检测到超时时的时间戳。
 
@@ -1496,7 +1490,7 @@ val timeoutResult: DataStream<TimeoutEvent> = result.getSideOutput(outputTag)
 </div>
 </div>
 
-## Handling Lateness in Event Time
+## 处理事件时间的延迟（Handling Lateness in Event Time）
 
 在 `CEP` 中，元素处理的顺序很重要。 为了保证在事件时间工作时按正确的顺序处理元素，传入的元素最初放在缓冲区中，其中元素根据其 *时间戳按升序排序*，当水印到达时，此缓冲区中时间戳小于水印时间的所有元素被处理。 这意味着水印之间的元素按事件时间顺序处理。
 
@@ -1546,9 +1540,9 @@ val lateData: DataStream<String> = result.getSideOutput(lateDataOutputTag)
 </div>
 </div>
 
-## Examples
+## 示例
 
-以下示例检测基于 keyed stream 事件上的模式 `start, middle(name = "error") -> end(name = "critical")` 。 事件由其ID键入，并且有效模式必须在10秒内发生。 整个处理是在事件时间上完成的。
+以下示例检测基于有键事件流上的模式 `start, middle(name = "error") -> end(name = "critical")` 。 事件由其ID键入，并且有效模式必须在10秒内发生。 整个处理是在事件时间上完成的。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -1610,13 +1604,13 @@ val alerts = patternStream.select(createAlert(_)))
 </div>
 </div>
 
-## Migrating from an older Flink version(pre 1.3)
+## 从较旧的Flink版本迁移（1.3之前版本）
 
-### Migrating to 1.4+
+### 迁移到 1.4+
 
 在 Flink-1.4 中，CEP 库与 <= Flink 1.2 的向后兼容性被删除。 遗憾的是，无法恢复曾经使用 1.2.x 运行的 CEP 作业。
 
-### Migrating to 1.3.x
+### 迁移到 1.3.x
 
 Flink-1.3 中的 CEP 库附带了许多新功能，这些功能导致了 API 的一些变化。 在这里，我们描述了您需要对旧 CEP作业进行的更改，以便能够使用 Flink-1.3 运行它们。 进行这些更改并重新编译作业后，您将能够从使用旧版本作业的保存点恢复执行，即无需重新处理过去的数据。
 
@@ -1624,7 +1618,7 @@ Flink-1.3 中的 CEP 库附带了许多新功能，这些功能导致了 API 的
 
 1. 更改条件 ( `where(...)` 子句中的条件) ，扩展 `SimpleCondition`  类 `SimpleCondition` ，代替实现 `FilterFunction`  接口。
 2. 更改作为参数提供的函数 `select(...)` 和 `flatSelect(...)`，以期望与每个模式( `List` in `Java`, `Iterable` in `Scala` )关联的事件列表。这是因为通过添加循环模式，多个输入事件可以匹配单个（或者循环）模式。
-3. `followedBy()` 在 Flink 1.1 和 1.2 中默认了`non-deterministic relaxed contiguity` (see
-  [here](#conditions-on-contiguity)). 在Flink 1.3 这已经改变， `followedBy()` 默认为 `relaxed contiguity`，但如果需要`non-deterministic relaxed contiguity`，则应该使用 `followedByAny()`。
+3. `followedBy()` 在 Flink 1.1 和 1.2 中默认了`非确定宽松连续性（non-deterministic relaxed contiguity）` (参见
+  [here](#conditions-on-contiguity))。 在Flink 1.3 这已经改变， `followedBy()` 默认为 `宽松连续性（relaxed contiguity）`，但如果需要`非确定宽松连续性（non-deterministic relaxed contiguity）`，则应该使用 `followedByAny()`。
 
 {% top %}
