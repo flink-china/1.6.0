@@ -1,5 +1,5 @@
 ---
-title: "Checkpoint"
+title: "Checkpoints"
 nav-parent_id: ops_state
 nav-pos: 7
 ---
@@ -26,51 +26,69 @@ under the License.
 * toc
 {:toc}
 
-## 概览
+## Overview
 
-checkpoint使Fink的状态具有非常好的容错性，通过Checkpoint，Flink可以对作业的状态和计算位置进行恢复，因此Flink作业具备高容错执行语意。
-通过 [Checkpointing]({{ site.baseurl }}/dev/stream/state/checkpointing.html) 查看如何在程序中开启和配置checkpoint。
+Checkpoints make state in Flink fault tolerant by allowing state and the
+corresponding stream positions to be recovered, thereby giving the application
+the same semantics as a failure-free execution.
 
-## 保留Checkpoint
+See [Checkpointing]({{ site.baseurl }}/dev/stream/state/checkpointing.html) for how to enable and
+configure checkpoints for your program.
 
-默认情况下，Checkpoint仅用于恢复失败的作业，是不保留的，程序结束时Checkpoints也会被删除。然而，你可以配置周期性的保留checkpoint。当作业失败或被取消时，这些checkpoints将不会被自动清除。这样，你就可以用该checkpoint来恢复失败的作业。
+## Retained Checkpoints
+
+Checkpoints are by default not retained and are only used to resume a
+job from failures. They are deleted when a program is cancelled.
+You can, however, configure periodic checkpoints to be retained.
+Depending on the configuration these *retained* checkpoints are *not*
+automatically cleaned up when the job fails or is canceled.
+This way, you will have a checkpoint around to resume from if your job fails.
 
 {% highlight java %}
 CheckpointConfig config = env.getCheckpointConfig();
 config.enableExternalizedCheckpoints(ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
 {% endhighlight %}
 
-“ExternalizedCheckpointCleanup”配置项定义了当作业取消时，对作业checkpoints的操作：
+The `ExternalizedCheckpointCleanup` mode configures what happens with checkpoints when you cancel the job:
 
-- **`ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION`**: 作业取消时，保留作业的checkpoint。注意，这种情况下，需要手动清除该作业的checkpoint。 
-- **`ExternalizedCheckpointCleanup.DELETE_ON_CANCELLATION`**: 作业取消时，删除作业的checkpoint。仅当作业失败时，作业的checkpoint才会被使用。
+- **`ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION`**: Retain the checkpoint when the job is cancelled. Note that you have to manually clean up the checkpoint state after cancellation in this case.
 
-### 目录结构
+- **`ExternalizedCheckpointCleanup.DELETE_ON_CANCELLATION`**: Delete the checkpoint when the job is cancelled. The checkpoint state will only be available if the job fails.
 
-与 [savepoints](savepoints.html) 类似， checkpoint由元数据文件、额外的数据文件（与state backend相关）组成。可以通过配置文件中“state.checkpoints.dir”配置项，指定元数据文件和数据文件的存储路径，也可以在代码中针对单个作业指定该配置。
+### Directory Structure
 
-#### 通过配置文件全局配置
+Similarly to [savepoints](savepoints.html), a checkpoint consists
+of a meta data file and, depending on the state backend, some additional data
+files. The meta data file and data files are stored in the directory that is
+configured via `state.checkpoints.dir` in the configuration files, 
+and also can be specified for per job in the code.
+
+#### Configure globally via configuration files
 
 {% highlight yaml %}
 state.checkpoints.dir: hdfs:///checkpoints/
 {% endhighlight %}
 
-#### 创建state backend时对单个作业进行配置
+#### Configure for per job when constructing the state backend
 
 {% highlight java %}
 env.setStateBackend(new RocksDBStateBackend("hdfs:///checkpoints-data/");
 {% endhighlight %}
 
-### checkpoint与savepoint的区别
+### Difference to Savepoints
 
-checkpoint与[savepoint](savepoints.html)有一些区别。 他们  
-- 的数据格式与state backend密切相关，可能以增量方式存储。  
-- 不支持Flink的特殊功能，如扩缩容。
+Checkpoints have a few differences from [savepoints](savepoints.html). They
+- use a state backend specific (low-level) data format, may be incremental.
+- do not support Flink specific features like rescaling.
 
-### 从checkpoint中恢复状态
+### Resuming from a retained checkpoint
 
-同savepoint一样，作业也可以使用checkpoint的元数据文件进行错误恢复 (
-[savepoint恢复指南](../cli.html#restore-a-savepoint))。注意若元数据文件中信息不够，那么jobmanager就需要使用相关的数据文件来恢复作业(详见[目录结构](#目录结构))。
+A job may be resumed from a checkpoint just as from a savepoint
+by using the checkpoint's meta data file instead (see the
+[savepoint restore guide](../cli.html#restore-a-savepoint)). Note that if the
+meta data file is not self-contained, the jobmanager needs to have access to
+the data files it refers to (see [Directory Structure](#directory-structure)
+above).
 
 {% highlight shell %}
 $ bin/flink run -s :checkpointMetaDataPath [:runArgs]
