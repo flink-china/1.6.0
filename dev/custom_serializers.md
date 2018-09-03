@@ -1,36 +1,9 @@
----
-title: Register a custom serializer for your Flink program
-nav-title: Custom Serializers
-nav-parent_id: types
-nav-pos: 10
----
-<!--
-Licensed to the Apache Software Foundation (ASF) under one
-or more contributor license agreements.  See the NOTICE file
-distributed with this work for additional information
-regarding copyright ownership.  The ASF licenses this file
-to you under the Apache License, Version 2.0 (the
-"License"); you may not use this file except in compliance
-with the License.  You may obtain a copy of the License at
+<span id="top"></span>
+# 为 FLink 程序注册自定义序列化程序
 
-  http://www.apache.org/licenses/LICENSE-2.0
+如果在 Flink 程序中使用不能由 Flink 类型序列化器序列化的自定义类型，则Flink返回使用通用 Kryo 序列化器。您可以注册自己的序列化程序或序列化系统，如 Google Protobuf 或 Apache Thrift with Kryo 。要做到这一点，只需在FLink程序的 “ExecutionConfig” 中注册这个类型的类和序列化程序即可。
 
-Unless required by applicable law or agreed to in writing,
-software distributed under the License is distributed on an
-"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, either express or implied.  See the License for the
-specific language governing permissions and limitations
-under the License.
--->
-
-If you use a custom type in your Flink program which cannot be serialized by the
-Flink type serializer, Flink falls back to using the generic Kryo
-serializer. You may register your own serializer or a serialization system like
-Google Protobuf or Apache Thrift with Kryo. To do that, simply register the type
-class and the serializer in the `ExecutionConfig` of your Flink program.
-
-
-{% highlight java %}
+```java
 final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
 // register the class of the serializer as serializer for a type
@@ -39,14 +12,11 @@ env.getConfig().registerTypeWithKryoSerializer(MyCustomType.class, MyCustomSeria
 // register an instance as serializer for a type
 MySerializer mySerializer = new MySerializer();
 env.getConfig().registerTypeWithKryoSerializer(MyCustomType.class, mySerializer);
-{% endhighlight %}
+```
 
-Note that your custom serializer has to extend Kryo's Serializer class. In the
-case of Google Protobuf or Apache Thrift, this has already been done for
-you:
+请注意，自定义序列化程序必须扩展 Kryo 的序列化类。在使用 Google Protobuf 或Apache Thrift 的情况下，这已经为你做了：
 
-{% highlight java %}
-
+```java
 final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
 // register the Google Protobuf serializer with Kryo
@@ -55,15 +25,11 @@ env.getConfig().registerTypeWithKryoSerializer(MyCustomType.class, ProtobufSeria
 // register the serializer included with Apache Thrift as the standard serializer
 // TBaseSerializer states it should be initialized as a default Kryo serializer
 env.getConfig().addDefaultKryoSerializer(MyCustomType.class, TBaseSerializer.class);
+```
 
-{% endhighlight %}
+对于上面的示例，您需要在 Maven 项目文件（pom.xml）中包含必要的依赖项。在依赖项中，为 Apache Thrift 添加以下内容： 
 
-For the above example to work, you need to include the necessary dependencies in
-your Maven project file (pom.xml). In the dependency section, add the following
-for Apache Thrift:
-
-{% highlight xml %}
-
+```xml
 <dependency>
 	<groupId>com.twitter</groupId>
 	<artifactId>chill-thrift</artifactId>
@@ -85,13 +51,11 @@ for Apache Thrift:
 		</exclusion>
 	</exclusions>
 </dependency>
+```
 
-{% endhighlight %}
+对于 Google Protobuf 您需要以下 Maven 依赖：
 
-For Google Protobuf you need the following Maven dependency:
-
-{% highlight xml %}
-
+```xml
 <dependency>
 	<groupId>com.twitter</groupId>
 	<artifactId>chill-protobuf</artifactId>
@@ -103,24 +67,16 @@ For Google Protobuf you need the following Maven dependency:
 	<artifactId>protobuf-java</artifactId>
 	<version>2.5.0</version>
 </dependency>
+```
 
-{% endhighlight %}
+请根据需要调整两个依赖库的版本。
 
+## 使用 Kryo 的 `JavaSerializer` 的问题
 
-Please adjust the versions of both libraries as needed.
+如果您为您的自定义类型注册了 Kryo 的 `JavaSerializer`，即使您的自定义类型类包含在提交的用户代码的jar中，也可能遇到 `ClassNotFoundException` 的异常。这是由于 Kryo 的 `JavaSerializer` 一个已知的问题，它可能错误的使用了错误的类加载器。
 
-### Issue with using Kryo's `JavaSerializer` 
+在这种情况下，你应该使用 `org.apache.flink.api.java.typeutils.runtime.kryo.JavaSerializer` 作为替代来解决这个问题。这是在 Flink 中重新实现的 `JavaSerializer` ，它确保使用了用户代码的类加载器。
 
-If you register Kryo's `JavaSerializer` for your custom type, you may
-encounter `ClassNotFoundException`s even though your custom type class is
-included in the submitted user code jar. This is due to a know issue with
-Kryo's `JavaSerializer`, which may incorrectly use the wrong classloader.
+详情请参阅 [FLINK-6025](https://issues.apache.org/jira/browse/FLINK-6025) 。
 
-In this case, you should use `org.apache.flink.api.java.typeutils.runtime.kryo.JavaSerializer`
-instead to resolve the issue. This is a reimplemented `JavaSerializer` in Flink
-that makes sure the user code classloader is used.
-
-Please refer to [FLINK-6025](https://issues.apache.org/jira/browse/FLINK-6025)
-for more details.
-
-{% top %}
+[返回顶部](#top)
