@@ -1,5 +1,5 @@
 ---
-title: "Apache Cassandra Connector"
+title: "Apache Cassandra 连接器"
 nav-title: Cassandra
 nav-parent_id: connectors
 nav-pos: 2
@@ -27,13 +27,13 @@ under the License.
 {:toc}
 
 
-This connector provides sinks that writes data into a [Apache Cassandra](https://cassandra.apache.org/) database.
+该连接器提供将数据写入 [Apache Cassandra](https://cassandra.apache.org/) 数据库的接收器。
 
 <!--
   TODO: Perhaps worth mentioning current DataStax Java Driver version to match Cassandra version on user side.
 -->
 
-To use this connector, add the following dependency to your project:
+若要使用此连接器，请将下列依赖项添加到项目中：
 
 {% highlight xml %}
 <dependency>
@@ -43,71 +43,60 @@ To use this connector, add the following dependency to your project:
 </dependency>
 {% endhighlight %}
 
-Note that the streaming connectors are currently __NOT__ part of the binary distribution. See how to link with them for cluster execution [here]({{ site.baseurl}}/dev/linking.html).
+注意，流连接器目前不是二进制分布的一部分。[请参见集群如何与它们建立关联]({{ site.baseurl}}/dev/linking.html)。
 
-## Installing Apache Cassandra
-There are multiple ways to bring up a Cassandra instance on local machine:
+## 安装Apache Cassandra
+有多种方法在本地机器上生成一个Cassandra实例：
 
-1. Follow the instructions from [Cassandra Getting Started page](http://cassandra.apache.org/doc/latest/getting_started/index.html).
-2. Launch a container running Cassandra from [Official Docker Repository](https://hub.docker.com/_/cassandra/)
+1. 遵循[Cassandra入门指南](http://cassandra.apache.org/doc/latest/getting_started/index.html)。
+2. 从 [官方Docker Repository](https://hub.docker.com/_/cassandra/)启动一个容器来运行Cassandra。
 
-## Cassandra Sinks
+## Cassandra落地口
 
-### Configurations
+### 配置
 
-Flink's Cassandra sink are created by using the static CassandraSink.addSink(DataStream<IN> input) method.
-This method returns a CassandraSinkBuilder, which offers methods to further configure the sink, and finally `build()` the sink instance.
+Flink's Cassandra落地口是通过使用静态方法CassandraSink.addSink(DataStream<IN> input) 创建。此方法返回CassandraSinkBuilder，它提供进一步配置落地口的方法，最后返回 `build()` 接收器实例。
 
-The following configuration methods can be used:
+可以使用以下配置方法：
 
 1. _setQuery(String query)_
-    * Sets the upsert query that is executed for every record the sink receives.
-    * The query is internally treated as CQL statement.
-    * __DO__ set the upsert query for processing __Tuple__ data type.
-    * __DO NOT__ set the query for processing __POJO__ data types.
+    * 设置落地口接收的每个记录所执行的更新插入查询。
+    * 该查询被内部处理为CQL语句。
+    * 请为处理元组数据类型设置更新插入查询。
+    * 不要设置用于处理POJO数据类型的查询。
 2. _setClusterBuilder()_
-    * Sets the cluster builder that is used to configure the connection to cassandra with more sophisticated settings such as consistency level, retry policy and etc.
+    * 设置用于配置cassandra连接的集群构建器，其中设置了更复杂的设置，如一致性级别、重试策略等。
 3. _setHost(String host[, int port])_
-    * Simple version of setClusterBuilder() with host/port information to connect to Cassandra instances
+    * setClusterBuilder() 的简单版本，具有连接到cassandra实例的主机/端口信息。
 4. _setMapperOptions(MapperOptions options)_
-    * Sets the mapper options that are used to configure the DataStax ObjectMapper.
-    * Only applies when processing __POJO__ data types.
+    * 设置用于配置DataStax 对象映射器的映射器选项。
+    * 只适用于处理POJO数据类型。
 5. _enableWriteAheadLog([CheckpointCommitter committer])_
-    * An __optional__ setting
-    * Allows exactly-once processing for non-deterministic algorithms.
+    * 可选设置。
+    * 允许对非确定性算法进行一次性处理。
 6. _build()_
-    * Finalizes the configuration and constructs the CassandraSink instance.
+    * 确定配置并构造CassandraSink 实例。
 
-### Write-ahead Log
+### 写前日志
 
-A checkpoint committer stores additional information about completed checkpoints
-in some resource. This information is used to prevent a full replay of the last
-completed checkpoint in case of a failure.
-You can use a `CassandraCommitter` to store these in a separate table in cassandra.
-Note that this table will NOT be cleaned up by Flink.
+检查点提交器在某些资源中存储关于已完成检查点的附加信息。此信息用于避免在故障情况下最后完成检查点的完全重试。你可以用`CassandraCommitter` 将它们存储在cassandra的一个单独表中。请注意，此表将不会被Flink清除。
 
-Flink can provide exactly-once guarantees if the query is idempotent (meaning it can be applied multiple
-times without changing the result) and checkpointing is enabled. In case of a failure the failed
-checkpoint will be replayed completely.
+如果查询是等幂的（意味着它可以多次应用而不改变结果）并且启用检查点，Flink可以提供精确一次的保证。万一出现故障，故障检查点将被完全重试。 
 
-Furthermore, for non-deterministic programs the write-ahead log has to be enabled. For such a program
-the replayed checkpoint may be completely different than the previous attempt, which may leave the
-database in an inconsistent state since part of the first attempt may already be written.
-The write-ahead log guarantees that the replayed checkpoint is identical to the first attempt.
-Note that that enabling this feature will have an adverse impact on latency.
+此外，对于非确定性程序，必须启用写前日志。对于这样的程序，重试的检查点可能与先前的尝试完全不同，这可能使数据库处于不一致状态，因为第一尝试的一部分可能已经被写入。p写前日志保证重试检查点与第一次尝试相同。请注意，启用此功能将对延迟产生不利影响。
 
-<p style="border-radius: 5px; padding: 5px" class="bg-danger"><b>Note</b>: The write-ahead log functionality is currently experimental. In many cases it is sufficient to use the connector without enabling it. Please report problems to the development mailing list.</p>
+<p style="border-radius: 5px; padding: 5px" class="bg-danger"><b>注意</b>：写前日志功能目前是实验性的。在许多情况下，在不启用连接器的情况下使用连接器是足够的。请向开发邮件列表报告问题。</p>
 
-### Checkpointing and Fault Tolerance
-With checkpointing enabled, Cassandra Sink guarantees at-least-once delivery of action requests to C* instance.
+### 检查点与失败容错
+启用检查点后，Cassandra Sink保证至少一次将动作请求传递给C*实例。
 
-More details on [checkpoints docs]({{ site.baseurl }}/dev/stream/state/checkpointing.html) and [fault tolerance guarantee docs]({{ site.baseurl }}/dev/connectors/guarantees.html)
+更多细节 [检查点文档]({{ site.baseurl }}/dev/stream/state/checkpointing.html) 和 [容错保证文档]({{ site.baseurl }}/dev/connectors/guarantees.html)。
 
-## Examples
+## 实例
 
-The Cassandra sinks currently support both Tuple and POJO data types, and Flink automatically detects which type of input is used. For general use case of those streaming data type, please refer to [Supported Data Types]({{ site.baseurl }}/dev/api_concepts.html). We show two implementations based on [SocketWindowWordCount](https://github.com/apache/flink/blob/master/flink-examples/flink-examples-streaming/src/main/java/org/apache/flink/streaming/examples/socket/SocketWindowWordCount.java), for Pojo and Tuple data types respectively.
+Cassandra  Sinks目前支持Tuple和Pojo 数据类型，Flink支持输入类型的自动检测。对于那些流数据类型的一般用例，请参阅 [支持的数据类型]({{ site.baseurl }}/dev/api_concepts.html)。我们展示了分别用于Pojo和元组数据类型基于[SocketWindowWordCount](https://github.com/apache/flink/blob/master/flink-examples/flink-examples-streaming/src/main/java/org/apache/flink/streaming/examples/socket/SocketWindowWordCount.java)的两种实现。
 
-In all these examples, we assumed the associated Keyspace `example` and Table `wordcount` have been created.
+在所有这些示例中，我们假设了关联的密钥空间示例，并创建了表单词计数。
 
 <div class="codetabs" markdown="1">
 <div data-lang="CQL" markdown="1">
@@ -123,10 +112,10 @@ CREATE TABLE IF NOT EXISTS example.wordcount (
 </div>
 </div>
 
-### Cassandra Sink Example for Streaming Tuple Data Type
-While storing the result with Java/Scala Tuple data type to a Cassandra sink, it is required to set a CQL upsert statement (via setQuery('stmt')) to persist each record back to the database. With the upsert query cached as `PreparedStatement`, each Tuple element is converted to parameters of the statement.
+### 流元组数据类型的Cassandra Sink示例
+将Java/Scala元组数据类型的结果存储到Cassandra sink时，需要设置CQL 更新插入语句（通过 setQuery('stmt')）将每个记录保存回数据库。将更新插入查询缓存为 `PreparedStatement`，将每个元组元素转换为语句的参数。
 
-For details about `PreparedStatement` and `BoundStatement`, please visit [DataStax Java Driver manual](https://docs.datastax.com/en/developer/java-driver/2.1/manual/statements/prepared/)
+有关`PreparedStatement` 和`BoundStatement`的详细信息，请访问[DataStax Java驱动程序手册](https://docs.datastax.com/en/developer/java-driver/2.1/manual/statements/prepared/)。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -195,10 +184,10 @@ result.print().setParallelism(1)
 </div>
 
 
-### Cassandra Sink Example for Streaming POJO Data Type
-An example of streaming a POJO data type and store the same POJO entity back to Cassandra. In addition, this POJO implementation needs to follow [DataStax Java Driver Manual](http://docs.datastax.com/en/developer/java-driver/2.1/manual/object_mapper/creating/) to annotate the class as each field of this entity is mapped to an associated column of the designated table using the DataStax Java Driver `com.datastax.driver.mapping.Mapper` class.
+### 流Pojo 数据类型的Cassandra Sink示例
+将Pojo 数据类型流化并将同一Pojo 实体存储回Cassandra的示例。此外，这个Pojo 实现需要遵循[DataStax Java驱动手册](http://docs.datastax.com/en/developer/java-driver/2.1/manual/object_mapper/creating/)来注释类，因为这个实体的每个字段都使用DataStax 驱动程序`com.datastax.driver.mapping.Mapper`类映射到指定表的关联列。
 
-The mapping of each table column can be defined through annotations placed on a field declaration in the Pojo class.  For details of the mapping, please refer to CQL documentation on [Definition of Mapped Classes](http://docs.datastax.com/en/developer/java-driver/3.1/manual/object_mapper/creating/) and [CQL Data types](https://docs.datastax.com/en/cql/3.1/cql/cql_reference/cql_data_types_c.html)
+每个表列的映射可以通过放置在Pojo 类中的字段声明的注释来定义。有关映射的详细信息，请参阅关于[映射类](http://docs.datastax.com/en/developer/java-driver/3.1/manual/object_mapper/creating/)和 [CQL数据类型](https://docs.datastax.com/en/cql/3.1/cql/cql_reference/cql_data_types_c.html)定义的CQL文档。 
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -227,7 +216,7 @@ DataStream<WordCount> result = text
         })
         .keyBy("word")
         .timeWindow(Time.seconds(5))
-
+    
         .reduce(new ReduceFunction<WordCount>() {
             @Override
             public WordCount reduce(WordCount a, WordCount b) {
@@ -246,33 +235,33 @@ public class WordCount {
 
     @Column(name = "word")
     private String word = "";
-
+    
     @Column(name = "count")
     private long count = 0;
-
+    
     public WordCount() {}
-
+    
     public WordCount(String word, long count) {
         this.setWord(word);
         this.setCount(count);
     }
-
+    
     public String getWord() {
         return word;
     }
-
+    
     public void setWord(String word) {
         this.word = word;
     }
-
+    
     public long getCount() {
         return count;
     }
-
+    
     public void setCount(long count) {
         this.count = count;
     }
-
+    
     @Override
     public String toString() {
         return getWord() + " : " + getCount();
