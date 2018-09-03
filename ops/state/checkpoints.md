@@ -22,10 +22,6 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-
-* toc
-{:toc}
-
 ## 概览
 
 checkpoint使Fink的状态具有非常好的容错性，通过Checkpoint，Flink可以对作业的状态和计算位置进行恢复，因此Flink作业具备高容错执行语意。
@@ -35,10 +31,10 @@ checkpoint使Fink的状态具有非常好的容错性，通过Checkpoint，Flink
 
 默认情况下，Checkpoint仅用于恢复失败的作业，是不保留的，程序结束时Checkpoints也会被删除。然而，你可以配置周期性的保留checkpoint。当作业失败或被取消时，这些checkpoints将不会被自动清除。这样，你就可以用该checkpoint来恢复失败的作业。
 
-{% highlight java %}
+```Java
 CheckpointConfig config = env.getCheckpointConfig();
 config.enableExternalizedCheckpoints(ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
-{% endhighlight %}
+```
 
 “ExternalizedCheckpointCleanup”配置项定义了当作业取消时，对作业checkpoints的操作：
 
@@ -51,15 +47,15 @@ config.enableExternalizedCheckpoints(ExternalizedCheckpointCleanup.RETAIN_ON_CAN
 
 #### 通过配置文件全局配置
 
-{% highlight yaml %}
+```yaml
 state.checkpoints.dir: hdfs:///checkpoints/
-{% endhighlight %}
+```
 
 #### 创建state backend时对单个作业进行配置
 
-{% highlight java %}
+```java
 env.setStateBackend(new RocksDBStateBackend("hdfs:///checkpoints-data/");
-{% endhighlight %}
+```
 
 ### checkpoint与savepoint的区别
 
@@ -72,8 +68,6 @@ checkpoint与[savepoint](savepoints.html)有一些区别。 他们
 同savepoint一样，作业也可以使用checkpoint的元数据文件进行错误恢复 (
 [savepoint恢复指南](../cli.html#restore-a-savepoint))。注意若元数据文件中信息不够，那么jobmanager就需要使用相关的数据文件来恢复作业(详见[目录结构](#目录结构))。
 
-{% highlight shell %}
+```shell
 $ bin/flink run -s :checkpointMetaDataPath [:runArgs]
-{% endhighlight %}
-
-{% top %}
+```
