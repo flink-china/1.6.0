@@ -36,7 +36,8 @@ Flink 社区非常感激 FlinkML 的贡献者。FlinkML 为对机器学习感兴
 
 如果你在寻找一些新点子，可以看一下我们的[计划](https://cwiki.apache.org/confluence/display/FLINK/FlinkML%3A+Vision+and+Roadmap)，然后你可以检查一下[JIRA上未解决问题的列表](https://issues.apache.org/jira/issues/?jql=component%20%3D%20%22Machine%20Learning%20Library%22%20AND%20project%20%3D%20FLINK%20AND%20resolution%20%3D%20Unresolved%20ORDER%20BY%20priority%20DESC).
 
-当你决定解决其中的一个 ISSUE，你应当承包它并且使用跟这个ISSUE跟踪你的进度。这样的话，其他贡献者就可以知道不同ISSUE的状态并且避免重复工作。
+当你决定要去解决其中的一个 ISSUE，你应当承包它并且使用跟这个ISSUE跟踪你的进度。
+这样的话，其他贡献者就可以知道每个ISSUE的状态并且避免重复工作。
 
 如果你已经知道如何让 FlinkML 变得更好，最好创建一个 JIRA ISSUE 来告诉 Flink 社区你的想法。
 
@@ -76,11 +77,11 @@ class ExampleITSuite extends FlatSpec with FlinkTestBase {
 
 ## 文档
 
-当贡献新的算法的时候，需要添加代码注释描述该种算法如何工作，同时也需要说明其参数以及参数如何控制程序的行为。
+当贡献新的算法的时候，需要添加代码注释描述该种算法如何工作，同时也需要说明其参数以及参数是如何控制程序的行为的。
 此外，我们鼓励贡献者将这些信息添加到在线文档中。
-FlinkML的在线文档可以在文件夹`docs/libs/ml`中被找到。
+FlinkML的在线文档在文件夹`docs/libs/ml`里。
 
-每个新的算法都应该被单独的 MarkDown 文件描述，这个文件至少需要包含以下要点：
+每个新的算法都应该使用单独的 MarkDown 文件描述，这个文件至少需要包含以下要点：
 
 1. 算法做了什么；
 2. 算法是如何工作的（或者使用参考描述）；
