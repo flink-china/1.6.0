@@ -1,5 +1,5 @@
 ---
-title:  "Component Stack"
+title:  "组件栈"
 nav-parent_id: internals
 nav-pos: 1
 ---
@@ -22,23 +22,17 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-As a software stack, Flink is a layered system. The different layers of the stack build on
-top of each other and raise the abstraction level of the program representations they accept:
+Flink 软件栈是一个分层的系统。每一层都依次构建在其下层的基础上，并向上层提供它们所能接受的（译注：下层）程序的抽象表示：
 
-- The **runtime** layer receives a program in the form of a *JobGraph*. A JobGraph is a generic parallel
-data flow with arbitrary tasks that consume and produce data streams.
+- **runtime** 层接收的是 *JobGraph* 格式定义的程序。JobGraph 是一个通用的并行数据流，由任意多个消费和生产数据流的任务构成。
 
-- Both the **DataStream API** and the **DataSet API** generate JobGraphs through separate compilation
-processes. The DataSet API uses an optimizer to determine the optimal plan for the program, while
-the DataStream API uses a stream builder.
+- **DataStream API** 和 **DataSet API** 通过不同的编译流程生成 JobGraph。DataSet API 使用优化器来决定（译注：JobGraph）程序的最优方案，而 DataStream API 使用的是流构建器。
 
-- The JobGraph is executed according to a variety of deployment options available in Flink (e.g., local,
-remote, YARN, etc)
+- JobGraph 可以运行在 Flink 的各种不同部署方式上（包括本地、远程、YARN等）。
 
-- Libraries and APIs that are bundled with Flink generate DataSet or DataStream API programs. These are
-Table for queries on logical tables, FlinkML for Machine Learning, and Gelly for graph processing.
+- Flink 还提供了一些专业的类库和 API 用于生成 DataSet 或者 DataStream API 程序。Table 库提供了逻辑表的查询操作，FlinkML 库用于机器学习领域，Gelly 提供了图计算功能。
 
-You can click on the components in the figure to learn more.
+更详细的信息请点击下图中的各个组件了解。
 
 <center>
   <img src="{{ site.baseurl }}/fig/stack.png" width="700px" alt="Apache Flink: Stack" usemap="#overview-stack">
