@@ -22,11 +22,11 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-Flink 软件栈是一个分层的系统。每一层都依次构建在其下层的基础上，并向上层提供它们所能接受的（译注：下层）程序的抽象表示：
+Flink 软件栈是一个分层的系统。每一层都依次构建在其下层的基础上，并向上层提供它们所能接受的程序的抽象表示：
 
 - **runtime** 层接收的是 *JobGraph* 格式定义的程序。JobGraph 是一个通用的并行数据流，由任意多个消费和生产数据流的任务构成。
 
-- **DataStream API** 和 **DataSet API** 通过不同的编译流程生成 JobGraph。DataSet API 使用优化器来决定（译注：JobGraph）程序的最优方案，而 DataStream API 使用的是流构建器。
+- **DataStream API** 和 **DataSet API** 通过不同的编译流程生成 JobGraph。DataSet API 使用优化器来决定 JobGraph 程序的最优方案，而 DataStream API 使用的是流构建器。
 
 - JobGraph 可以运行在 Flink 的各种不同部署方式上（包括本地、远程、YARN等）。
 
