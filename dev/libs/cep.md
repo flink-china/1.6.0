@@ -129,9 +129,9 @@ val result: DataStream[Alert] = patternStream.select(createAlert(_))
 
 {% warn Attention %} 模式名称**不能**包含字符 `":"`。
 
-在本节的其余部分，我们将首先介绍如何定义[个别模式（Individual Patterns）](#individual-patterns)，然后如何将个别模式组合到[复杂模式（Complex Patterns）](#combining-patterns)中。
+在本节的其余部分，我们将首先介绍如何定义[单独模式（Individual Patterns）](#individual-patterns)，然后如何将单独模式组合到[复杂模式（Complex Patterns）](#combining-patterns)中。
 
-### 个别模式 (Individual Patterns)
+### 单独模式 (Individual Patterns)
 
 **模式** 可以是单例，也可以是循环 。单例模式接受单个事件，而循环模式可以接受多个事件。在模式匹配符号中，
 
@@ -615,7 +615,7 @@ pattern.oneOrMore().greedy()
 
 ### 组合模式 （Combining Patterns）
 
-现在你已经看到了个别模式的样子，现在是时候看看如何将它们组合成一个完整的模式序列。
+现在你已经看到了单独模式的样子，现在是时候看看如何将它们组合成一个完整的模式序列。
 
 模式序列必须以初始模式开始，如下所示：
 
@@ -643,9 +643,9 @@ val start : Pattern[Event, _] = Pattern.begin("start")
 
 要在连续模式之间应用它们，您可以使用：
 
-1. `next() ` ，*strict* contiguity
-2. `followedBy()` ，*relaxed* contiguity
-3. `followedByAny()` ，*non-deterministic relaxed* contiguity
+1. `next() ` ，严格连续性
+2. `followedBy()` ，宽松连续性
+3. `followedByAny()` ，非确定的宽松连续性
 
 或者
 
@@ -708,7 +708,7 @@ val relaxedNot: Pattern[Event, _] = start.notFollowedBy("not").where(...)
 
 也可以为模式定义时间约束。 例如，您可以通过 `pattern.within()` 方法定义模式应在10秒内发生。 时间模式支持[处理时间和事件时间]({{site.baseurl}}/dev/event_time.html)。
 
-{% warn Attention %} A pattern sequence can only have one temporal constraint. If multiple such constraints are defined on different individual patterns, then the smallest is applied.
+{% warn Attention %} 模式序列只能有一个时间约束。 如果在不同的单独模式上定义了多个这样的约束，则会应用最小的约束。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -733,7 +733,7 @@ next.within(Time.seconds(10))
   3. **非确定宽松连续性（Non-Deterministic Relaxed Contiguity）**： `{a b1 c}`, `{a b1 b2 c}`, `{a b1 b3 c}`, `{a b1 b2 b3 c}`, `{a b2 c}`, `{a b2 b3 c}`, `{a b3 c}` -
     注意 `{a b1 b3 c}` ，这是放宽 `"b"` 之间连续性的结果。
 
-对于循环模式（例如 `oneOrMore()` 和 `times()`），默认是*宽松连续性（relaxed contiguity）*。 如果你想要严格连续性，你必须显式调用 `consecutive()` 方法，如果你想要非确定宽松连续性，你可以使用`allowCombinations()` 方法。
+对于循环模式（例如 `oneOrMore()` 和 `times()`），默认是*宽松连续性（relaxed contiguity）*。 如果你想要严格连续性，你必须显式调用 `consecutive()` 方法，如果你想要非确定宽松连续性，你可以使用 `allowCombinations()` 方法。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -810,8 +810,8 @@ Pattern.<Event>begin("start").where(new SimpleCondition<Event>() {
 {% endhighlight %}
                <p>将为输入序列生成以下匹配项： C D A1 A2 A3 D A4 B</p>
 
-               <p>启用combinations： {C A1 B}, {C A1 A2 B}, {C A1 A3 B}, {C A1 A4 B}, {C A1 A2 A3 B}, {C A1 A2 A4 B}, {C A1 A3 A4 B}, {C A1 A2 A3 A4 B}</p>
-               <p>不启用combinations: {C A1 B}, {C A1 A2 B}, {C A1 A2 A3 B}, {C A1 A2 A3 A4 B}</p>
+               <p>启用 combinations： {C A1 B}, {C A1 A2 B}, {C A1 A3 B}, {C A1 A4 B}, {C A1 A2 A3 B}, {C A1 A2 A4 B}, {C A1 A3 A4 B}, {C A1 A2 A3 A4 B}</p>
+               <p>不启用 combinations: {C A1 B}, {C A1 A2 B}, {C A1 A2 A3 B}, {C A1 A2 A3 A4 B}</p>
        </td>
        </tr>
   </tbody>
