@@ -274,7 +274,7 @@ stateDescriptor.enableTimeToLive(ttlConfig)
 
 - 状态后端存储上次修改的时间戳以及用户值，这意味着启用此功能会增加状态存储的消耗。堆状态后端存储一个额外的Java对象，其中包含对用户状态对象的引用和内存中的原始长值。RocksDB状态后端为每个存储值，列表条目或映射条目添加8个字节。
 
-- 目前仅支持参考*处理时间*的 TTL 。
+- 目前仅支持参考*ProcessTime*的 TTL 。
 
 - 尝试恢复先前未配置TTL的状态，使用TTL启用描述符或反之亦然将导致兼容性失败和`StateMigrationException`。
 
