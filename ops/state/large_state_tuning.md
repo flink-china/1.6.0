@@ -1,5 +1,5 @@
 ---
-title: "调整checkpoint和大状态"
+title: "大state和checkpoint调优"
 nav-parent_id: ops_state
 nav-pos: 12
 ---
@@ -22,100 +22,55 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-This page gives a guide how to configure and tune applications that use large state.  
-本文档指导如何配置和调整使用大状态的应用。
-
-* ToC
-{:toc}
+本文档指导如何配置和调整有大状态的作业。
 
 ## Overview
 ## 概览
 
-For Flink applications to run reliably at large scale, two conditions must be fulfilled:  
-为使Flink应用大规模的稳定运行，必须满足两个条件：
+为使Flink作业大规模的稳定运行，必须满足两个条件：
+  - 作业需要稳定产生checkpoint
+  - 作业失败后，可重新快速获取资源。
 
-  - The application needs to be able to take checkpoints reliably
-
-  - The resources need to be sufficient catch up with the input data streams after a failure
-  - 应用需要能够稳定获得checkpoint
-  - 作业失败后，输入数据流上的资源可以被重新高效的获取
-
-The first sections discuss how to get well performing checkpoints at scale.
-The last section explains some best practices concerning planning how many resources to use.  
-首章节讨论如何在规模上更好的获得checkpoint。最后章节解释关于规划使用多少资源的一些最佳实践。
+首章节讨论如何大规模高性能的产生checkpoint。
+最后章节对如何规划作业资源，给出了一些最佳实践。
 
 
-## Monitoring State and Checkpoints
-## 监测状态和checkpoint
+## 监测State和checkpoint
 
-The easiest way to monitor checkpoint behavior is via the UI's checkpoint section. The documentation
-for [checkpoint monitoring](../../monitoring/checkpoint_monitoring.html) shows how to access the available checkpoint
-metrics.  
-使用UI checkpoint部件是监测checkpoint行为的最简单方法。 文档 [checkpoint monitoring](../../monitoring/checkpoint_monitoring.html) 说明如何访问可用的checkpoint指标。
+使用UI上的checkpoint组建是监测checkpoint行为的最简单方法。 文档[监控checkpoint](../../monitoring/checkpoint_monitoring.html) 展示了如何访问checkpoint相关指标。
 
 The two numbers that are of particular interest when scaling up checkpoints are:  
-扩展checkpoint时有两个特别有意思的数字：
+扩展checkpoint时有两个非常重要的数字：
 
-  - The time until operators start their checkpoint: This time is currently not exposed directly, but corresponds
-    to:
+ - 算子开始做checkpoint的时间：这个时间目前没有直接暴露，但可以通过以下方式计算：
     
     `checkpoint_start_delay = end_to_end_duration - synchronous_duration - asynchronous_duration`
 
-    When the time to trigger the checkpoint is constantly very high, it means that the *checkpoint barriers* need a long
-    time to travel from the source to the operators. That typically indicates that the system is operating under a
-    constant backpressure.  
-  - 算子开始checkpoint的时间：这个时间目前不直接暴露，但对应于：
+    触发checkpoint的时间持续非常高，意味着 *checkpoint barriers* 从source传送到算子需要很久，通常这表示系统处于恒定的反压下。   
     
-    `checkpoint_start_delay = end_to_end_duration - synchronous_duration - asynchronous_duration`
+ - 对齐时缓存的数据量。对于exactly-once语义，当算子有多个输入流时，Flink通过缓存数据来*对齐*输入数据流。
+    理想情况下，缓存的数据量应该很低 — 大数据量意味着从不同的输入流中收到的checkpoint barrier的时间不同。
 
-    触发checkpoint的时间持续非常高意味着 *checkpoint barriers* 从source传送到算子需要很久，通常这表示系统处于恒定的反压下。   
-    
- - The amount of data buffered during alignments. For exactly-once semantics, Flink *aligns* the streams at
-    operators that receive multiple input streams, buffering some data for that alignment.
-    The buffered data volume is ideally low - higher amounts means that checkpoint barriers are received at
-    very different times from the different input streams.
- - 对齐时缓存的数据量。对于只处理一次的语义，当算子收到多个输入流时，Flink通过缓存数据来*对齐* 流。
-    缓存的数据量理论上应该很低——大数据量意味着从不同的输入流中收到了不同时间点的checkpoint barrier。
-
-Note that when the here indicated numbers can be occasionally high in the presence of transient backpressure, data skew,
-or network issues. However, if the numbers are constantly very high, it means that Flink puts many resources into checkpointing.  
-请注意，这里指示的数字有时可能因为存在瞬时反压、数据歪斜、或者网络问题时变高。然而，如果这些数字持续很高，意味着Flink的checkpoint消耗了大量资源。
+请注意，瞬时反压、数据倾斜、或者网络问题会导致这些指标变高。然而，如果这些指标持续很高，就意味着Flink作业做checkpoint消耗了大量资源。
 
 
-## Tuning Checkpointing
 ## 调整checkpoint
 
-Checkpoints are triggered at regular intervals that applications can configure. When a checkpoint takes longer
-to complete than the checkpoint interval, the next checkpoint is not triggered before the in-progress checkpoint
-completes. By default the next checkpoint will then be triggered immediately once the ongoing checkpoint completes.  
-程序可以配置周期性间隔触发checkpoint。当checkpoint花费超过checkpoint间隔的时间，当前checkpoint未完成前，下一个checkpoint将不会被触发。默认情况下，下一个checkpoint将在当前checkpoint完成时立刻触发。
+作业可以配置checkpoint触发周期。当做checkpoint的时间，比checkpoint触发周期还长时，只有当前checkpoint做完才会触发下一个checkpoint。默认情况下，下一个checkpoint将在当前checkpoint完成时立刻触发。
 
-When checkpoints end up frequently taking longer than the base interval (for example because state
-grew larger than planned, or the storage where checkpoints are stored is temporarily slow),
-the system is constantly taking checkpoints (new ones are started immediately once ongoing once finish).
-That can mean that too many resources are constantly tied up in checkpointing and that the operators make too
-little progress. This behavior has less impact on streaming applications that use asynchronously checkpointed state,
-but may still have an impact on overall application performance.  
-当checkpoint经常性的花费超过基本间隔时间（比如因为状态比预期的增长的更大，或者保存checkpoint的存储临时变得很慢），系统将会持续性的执行checkpoint（当前的一旦完成，新的立刻又开始）。这意味着过多的资源持续使用在checkpoint上，算子真正的计算进度将会很少。此行为对使用异步checkpoint状态的流应用的影响会相对小一些，但是仍然可能会对整个应用的效率产生影响。
+如果做checkpoint的时间，一直超过配置的checkpoint触发周期（比如因为状态比预期的增长的更大，或者保存checkpoint的存储临时变得很慢），系统将会一直做checkpoint（当前的一旦完成，新的立刻又开始）。这意味着做checkpoint会消耗大量资源，从而大大影响算子的计算速度。这种情况下，使用异步checkpoint保存状态的流作业，影响会相对小一些，但是仍然会对整个作业的性能。
 
-To prevent such a situation, applications can define a *minimum duration between checkpoints*:  
-为了阻止这种情况的发生，应用可以定义checkpoint间的最小持续时间：
+为了避免这种情况的发生，作业可以定义*checkpoint间的最短持续时间*：
 
 `StreamExecutionEnvironment.getCheckpointConfig().setMinPauseBetweenCheckpoints(milliseconds)`
 
-This duration is the minimum time interval that must pass between the end of the latest checkpoint and the beginning
-of the next. The figure below illustrates how this impacts checkpointing.  
-此持续时间是上一次checkpoint结束到下一次checkpoint开始必须保证的最小时间间隔。下图说明这将如何影响checkpoint。
+该配置是指，上一次checkpoint结束到下一次checkpoint开始之间，必须保证的最小时间间隔。下图说明这将如何影响checkpoint。
 
 <img src="../../fig/checkpoint_tuning.svg" class="center" width="80%" alt="Illustration how the minimum-time-between-checkpoints parameter affects checkpointing behavior."/>
 
-*Note:* Applications can be configured (via the `CheckpointConfig`) to allow multiple checkpoints to be in progress at
-the same time. For applications with large state in Flink, this often ties up too many resources into the checkpointing.
-When a savepoint is manually triggered, it may be in process concurrently with an ongoing checkpoint.  
-*注意：* 应用可以 (通过 `CheckpointConfig`) 配置允许多个checkpoint同时执行。对于Flink中大状态的应用，这通常使checkpoint消耗过多的资源。当手动触发savepoint时，它可能与正在进行的checkpoint同时进行。
+*注意：* 可以通过（`CheckpointConfig`) 配置，允许一个作业中，多个checkpoint同时执行。对于state很大的Flink作业，会导致checkpoint消耗过多的资源。当手动触发savepoint时，它可能与正在进行的checkpoint同时进行。
 
 
-## Tuning Network Buffers
 ## 调整网络缓存
 
 Before Flink 1.3, an increased number of network buffers also caused increased checkpointing times since
@@ -123,47 +78,27 @@ keeping more in-flight data meant that checkpoint barriers got delayed. Since Fl
 number of network buffers used per outgoing/incoming channel is limited and thus network buffers
 may be configured without affecting checkpoint times
 (see [network buffer configuration](../config.html#configuring-the-network-buffers)).  
-在Flink 1.3版本之前，网络缓存数量的增加导致checkpoint次数的增加，因为保存更多的未完成数据意味着checkpoint延时。从Flink 1.3版本开始，每个出/入通道的网路缓存的数量被限制，因而网络缓存的配置将不影响checkpoint次数，(见 [network buffer configuration](../config.html#configuring-the-network-buffers))。
+在Flink 1.3版本之前，增大网络缓存也会导致单次checkpoint时间变长，因为网络缓存中，缓存更多的未完成数据意味着checkpoint会被延时。从Flink 1.3版本开始，每个出/入通道的网路缓存的大小被限制，因而网络缓存的配置将不再影响checkpoint时间，([网络缓存配置](../config.html#configuring-the-network-buffers))。
 
-## Make state checkpointing Asynchronous where possible
-## 尽可能异步执行状态checkpoint
+## 尽可能异步执行状态的checkpoint
 
-When state is *asynchronously* snapshotted, the checkpoints scale better than when the state is *synchronously* snapshotted.
-Especially in more complex streaming applications with multiple joins, Co-functions, or windows, this may have a profound
-impact.  
-当状态被异步快照，checkpoint扩展性将比同步方式要好。尤其是在具有多个连接、共同功能或窗口的更复杂的流应用中，这可能会产生深远的影响。
-
-To get state to be snapshotted asynchronously, applications have to do two things:
-
-  1. Use state that is [managed by Flink](../../dev/stream/state/state.html): Managed state means that Flink provides the data
-     structure in which the state is stored. Currently, this is true for *keyed state*, which is abstracted behind the
-     interfaces like `ValueState`, `ListState`, `ReducingState`, ...
-
-  2. Use a state backend that supports asynchronous snapshots. In Flink 1.2, only the RocksDB state backend uses
-     fully asynchronous snapshots. Starting from Flink 1.3, heap-based state backends also support asynchronous snapshots.
+异步快照保存状态，checkpoint扩展性将比同步方式要好。尤其对具有多流join、聚合函数或窗口的更复杂的流作业，影响更为明显。
      
-为了异步快照状态，应用需要做两件事情：
+为了异步快照作业状态，需要做两件事情：
 
-  1. 使用 [Flink管理](../../dev/stream/state/state.html)状态：管理状态意味着Flink提供状态存储的数据结构。当前，*键状态*就是其中一种，它被如 `ValueState`, `ListState`, `ReducingState`等后端接口抽象。
+  1. 使用[Flink管理](../../dev/stream/state/state.html)状态：Flink管理状态，意味着Flink提供状态存储的数据结构。当前，*Keyed State*就是Flink提供的受管理的状态，其相关的接口为`ValueState`, `ListState`, `ReducingState`等。
 
-  2. 使用状态后端支持异步快照。Flink 1.2版本中，只有RocksDB状态后端使用完全的异步快照。 从Flink 1.3版本开始，基于堆的状态后端同样可以支持异步快照。
+  2. 使用支持异步快照的state backend。Flink 1.2版本中，只有RocksDB支持异步快照。 从Flink 1.3版本开始，基于内存heap的state backend也支持异步快照。
 
-The above two points imply that large state should generally be kept as keyed state, not as operator state.  
-以上两点意味着，大状态一般应保存为键状态，而不是算子状态。
+以上两点表明，大状态一般应保存为keyed state，而不是operator state。
 
 ## Tuning RocksDB
 ## 调整RocksDB
 
-The state storage workhorse of many large scale Flink streaming applications is the *RocksDB State Backend*.
-The backend scales well beyond main memory and reliably stores large [keyed state](../../dev/stream/state/state.html).  
-许多大规模FLink流应用使用*RocksDB状态后端*作为状态存储仓库负荷机器。此后端的扩展性远优于主流内存，并可稳定存储大[键状态](../../dev/stream/state/state.html)。  
+许多大规模FLink流作业使用*RocksDB状态后端*作为状态存储系统。RocketsDB的扩展性远优于内存，并可稳定存储大[Keyed State](../../dev/stream/state/state.html)。  
 
-Unfortunately, RocksDB's performance can vary with configuration, and there is little documentation on how to tune
-RocksDB properly. For example, the default configuration is tailored towards SSDs and performs suboptimal
-on spinning disks.  
-不幸的是，RocksDB状态后端的性能随配置变化，而且很少有如何合理调整RocksDB的相关文档。比如，默认配置是为SSD定制的，但对旋转式硬盘来说却不是最优的。
+不幸的是，RocksDB性能受配置影响很大，而且很少有如何调优RocksDB的文档。比如，默认配置是针对SSD磁盘的，但对Sata盘来说却不是最优的。
 
-**Incremental Checkpoints**  
 **增量checkpoint**
 
 Incremental checkpoints can dramatically reduce the checkpointing time in comparison to full checkpoints, at the cost of a (potentially) longer
@@ -427,4 +362,3 @@ Allocation-preserving scheduling does not work with Flink's legacy mode.
 分配保持调度不支持Flink的传统模式。
 
 {% top %}
-xx
