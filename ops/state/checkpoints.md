@@ -71,4 +71,3 @@ checkpoint与[savepoint](savepoints.html)有一些区别。 他们
 ```shell
 $ bin/flink run -s :checkpointMetaDataPath [:runArgs]
 ```
-XX
