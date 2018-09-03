@@ -40,7 +40,7 @@ CheckpointConfig config = env.getCheckpointConfig();
 config.enableExternalizedCheckpoints(ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
 {% endhighlight %}
 
-“ExternalizedCheckpointCleanup”配置项定义了当你取消作业时，对作业checkpoints的操作：
+“ExternalizedCheckpointCleanup”配置项定义了当作业取消时，对作业checkpoints的操作：
 
 - **`ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION`**: 作业取消时，保留作业的checkpoint。注意，这种情况下，需要手动清除该作业的checkpoint。 
 - **`ExternalizedCheckpointCleanup.DELETE_ON_CANCELLATION`**: 作业取消时，删除作业的checkpoint。仅当作业失败时，作业的checkpoint才会被使用。
@@ -69,12 +69,6 @@ checkpoint与[savepoint](savepoints.html)有一些区别。 他们
 
 ### 从checkpoint中恢复状态
 
-A job may be resumed from a checkpoint just as from a savepoint
-by using the checkpoint's meta data file instead (see the
-[savepoint restore guide](../cli.html#restore-a-savepoint)). Note that if the
-meta data file is not self-contained, the jobmanager needs to have access to
-the data files it refers to (see [Directory Structure](#directory-structure)
-above).  
 同savepoint一样，作业也可以使用checkpoint的元数据文件进行错误恢复 (
 [savepoint恢复指南](../cli.html#restore-a-savepoint))。注意若元数据文件中信息不够，那么jobmanager就需要使用相关的数据文件来恢复作业(详见[目录结构](#目录结构))。
 
