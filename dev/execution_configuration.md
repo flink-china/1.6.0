@@ -1,6 +1,6 @@
 ---
-title: "Execution Configuration"
-nav-parent_id: execution
+title: "执行配置"
+nav-parent_id: 执行
 nav-pos: 10
 ---
 <!--
@@ -22,65 +22,63 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-The `StreamExecutionEnvironment` contains the `ExecutionConfig` which allows to set job specific configuration values for the runtime.
-To change the defaults that affect all jobs, see [Configuration]({{ site.baseurl }}/ops/config.html).
+`StreamExecutionEnvironment` 包含的 `ExecutionConfig` 允许为运行的作业设置指定的配置值。通过改变默认值来影响所有的作业，请参考 [Configuration]({{ site.baseurl }}/ops/config.html) 。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
-{% highlight java %}
+```java
 StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 ExecutionConfig executionConfig = env.getConfig();
-{% endhighlight %}
+```
 </div>
 <div data-lang="scala" markdown="1">
-{% highlight scala %}
+```scala
 val env = StreamExecutionEnvironment.getExecutionEnvironment
 var executionConfig = env.getConfig
-{% endhighlight %}
+```
 </div>
 </div>
 
-The following configuration options are available: (the default is bold)
+下面是可配置的选项：（默认值是加粗的）
 
-- **`enableClosureCleaner()`** / `disableClosureCleaner()`. The closure cleaner is enabled by default. The closure cleaner removes unneeded references to the surrounding class of anonymous functions inside Flink programs.
-With the closure cleaner disabled, it might happen that an anonymous user function is referencing the surrounding class, which is usually not Serializable. This will lead to exceptions by the serializer.
+-  **`enableClosureCleaner()`** / `disableClosureCleaner()`。默认情况下启用闭包清理器。 闭包清理器删除 Flink 程序中对周围类匿名函数的不需要的引用。 禁用闭包清除程序后，可能会发生匿名用户函数引用周围的，通常不是可序列化的。 这将导致序列化程序出现异常。
+    
+- `getParallelism()` / `setParallelism(int parallelism)` 设置作业的默认并行度。
+    
+- `getMaxParallelism()` / `setMaxParallelism(int parallelism)` 设置作业的默认最大并行度。 此设置确定最大并行度并指定动态缩放的上限。
+    
+- `getNumberOfExecutionRetries()` / `setNumberOfExecutionRetries(int numberOfExecutionRetries)` 设置重新执行失败任务的次数。值为 0可禁用容错。值为 `-1` 表示应使用系统默认值（在配置中定义）。这已被弃用，使用 [restart strategies]({{ site.baseurl }}/dev/restart_strategies.html) 代替。 
+    
+- `getExecutionRetryDelay()` / `setExecutionRetryDelay(long executionRetryDelay)`  设置在重新执行作业之前系统在作业失败后等待的延迟（以毫秒为单位）。 在TaskManagers上成功停止所有任务后，延迟开始，一旦延迟过去，任务就会重新启动。 此参数对于延迟重新执行非常有用，以便在尝试重新执行之前让某些超时相关故障完全展现（例如断开的连接尚未完全超时），并且由于同样的问题而再次立即失败。 仅当执行重试次数为一次或多次时，此参数才有效。 不推荐使用，请改用 [restart strategies]({{ site.baseurl }}/dev/restart_strategies.html) 。
+    
+- `getExecutionMode()` / `setExecutionMode()`。 默认执行模式为 PIPELINED。设置执行模式来执行程序。执行模式定义数据交换是以批处理还是以流处理方式执行。
+    
+- `enableForceKryo()` / **`disableForceKryo`**。Kryo 默认情况下不强制。强制 GenericTypeInformation 将 Pryo 序列化程序用于 POJO ，即使我们认为它们是 POJO 。 在某些情况下，这可能更可取。 例如，当 Flink 的内部序列化程序无法正确处理 POJO 时。
 
-- `getParallelism()` / `setParallelism(int parallelism)` Set the default parallelism for the job.
+- `enableForceAvro()` / **`disableForceAvro()`**。 默认情况下不强制使用 Avro。强制 Flink AvroTypeInformation 使用 Avro 序列化程序，而不是 Kryo 来序列化 Avro POJO。
+    
+- `enableObjectReuse()` / **`disableObjectReuse()`** 默认情况下，对象不会在 Flink 中重复使用。启用对象重用模式将指示运行时重用用户对象以获得更好的性能。请记住，当操作的用户代码功能不知道此行为时，这可能会导致错误。
 
-- `getMaxParallelism()` / `setMaxParallelism(int parallelism)` Set the default maximum parallelism for the job. This setting determines the maximum degree of parallelism and specifies the upper limit for dynamic scaling.
+- **`enableSysoutLogging()`** / `disableSysoutLogging()` 默认情况下，JobManager 状态更新将打印到 `System.out` 。 该设置允许禁用此行为。
+    
+- `getGlobalJobParameters()` / `setGlobalJobParameters()` 此方法允许用户将自定义对象设置为作业的全局配置。 由于可以在所有用户定义的函数中访问 `ExecutionConfig` ，这是对配置进行作业中的全局可用的简单方法。
+    
+- `addDefaultKryoSerializer(Class<?> type, Serializer<?> serializer)`  为给定的 `type` 注册一个 Kyro 序列化程序的实例。
+    
+- `addDefaultKryoSerializer(Class<?> type, Class<? extends Serializer<?>> serializerClass)` 为给定的 `type` 注册一个 Kryo 序列化程序的实例。
+    
+- `registerTypeWithKryoSerializer(Class<?> type, Serializer<?> serializer)` 为给定的类型注册 Kryo 并为其指定序列化程序。通过使用 Kryo 注册类型，类型的序列化将更加高效。
+    
+- `registerKryoType(Class<?> type)` 如果类型最终被 Kryo 序列化，那么它将在 Kryo 注册以确保只写入标签（整数 ID）。 如果某个类型未在 Kryo 中注册，则其整个类名将与每个实例序列化，从而导致更高的 I/O 成本。
+    
+- `registerPojoType(Class<?> type)` 使用序列化堆栈注册给定类型。 如果类型最终被序列化为 POJO ，则该类型将在 POJO 序列化程序中注册。 如果类型最终被 Kryo 序列化，那么它将在 Kryo 注册以确保只写入标签。 如果某个类型未在 Kryo 中注册，则其整个类名将与每个实例序列化，从而导致更高的 I/O 成本。
 
-- `getNumberOfExecutionRetries()` / `setNumberOfExecutionRetries(int numberOfExecutionRetries)` Sets the number of times that failed tasks are re-executed. A value of zero effectively disables fault tolerance. A value of `-1` indicates that the system default value (as defined in the configuration) should be used. This is deprecated, use [restart strategies]({{ site.baseurl }}/dev/restart_strategies.html) instead.
+请注意，使用 `registerKryoType()` 注册的类型不适用于 Flink 的 Kryo 序列化程序实例。
 
-- `getExecutionRetryDelay()` / `setExecutionRetryDelay(long executionRetryDelay)` Sets the delay in milliseconds that the system waits after a job has failed, before re-executing it. The delay starts after all tasks have been successfully been stopped on the TaskManagers, and once the delay is past, the tasks are re-started. This parameter is useful to delay re-execution in order to let certain time-out related failures surface fully (like broken connections that have not fully timed out), before attempting a re-execution and immediately failing again due to the same problem. This parameter only has an effect if the number of execution re-tries is one or more. This is deprecated, use [restart strategies]({{ site.baseurl }}/dev/restart_strategies.html) instead.
+- `disableAutoTypeRegistration()` 默认情况下启用自动类型注册。 自动类型注册是使用Kryo和POJO序列化器注册用户代码使用的所有类型（包括子类型）。
+    
+- `setTaskCancellationInterval(long interval)` 设置在连续尝试取消正在运行的任务之间等待的间隔（以毫秒为单位）。 取消任务时，如果任务线程未在特定时间内终止，则创建一个新线程，该线程在任务线程上定期调用`interrupt()`。 此参数指的是连续调用`interrupt()`之间的时间，默认设置为 **30000** 毫秒，或 **30秒** 。
 
-- `getExecutionMode()` / `setExecutionMode()`. The default execution mode is PIPELINED. Sets the execution mode to execute the program. The execution mode defines whether data exchanges are performed in a batch or on a pipelined manner.
-
-- `enableForceKryo()` / **`disableForceKryo`**. Kryo is not forced by default. Forces the GenericTypeInformation to use the Kryo serializer for POJOs even though we could analyze them as a POJO. In some cases this might be preferable. For example, when Flink's internal serializers fail to handle a POJO properly.
-
-- `enableForceAvro()` / **`disableForceAvro()`**. Avro is not forced by default. Forces the Flink AvroTypeInformation to use the Avro serializer instead of Kryo for serializing Avro POJOs.
-
-- `enableObjectReuse()` / **`disableObjectReuse()`** By default, objects are not reused in Flink. Enabling the object reuse mode will instruct the runtime to reuse user objects for better performance. Keep in mind that this can lead to bugs when the user-code function of an operation is not aware of this behavior.
-
-- **`enableSysoutLogging()`** / `disableSysoutLogging()` JobManager status updates are printed to `System.out` by default. This setting allows to disable this behavior.
-
-- `getGlobalJobParameters()` / `setGlobalJobParameters()` This method allows users to set custom objects as a global configuration for the job. Since the `ExecutionConfig` is accessible in all user defined functions, this is an easy method for making configuration globally available in a job.
-
-- `addDefaultKryoSerializer(Class<?> type, Serializer<?> serializer)` Register a Kryo serializer instance for the given `type`.
-
-- `addDefaultKryoSerializer(Class<?> type, Class<? extends Serializer<?>> serializerClass)` Register a Kryo serializer class for the given `type`.
-
-- `registerTypeWithKryoSerializer(Class<?> type, Serializer<?> serializer)` Register the given type with Kryo and specify a serializer for it. By registering a type with Kryo, the serialization of the type will be much more efficient.
-
-- `registerKryoType(Class<?> type)` If the type ends up being serialized with Kryo, then it will be registered at Kryo to make sure that only tags (integer IDs) are written. If a type is not registered with Kryo, its entire class-name will be serialized with every instance, leading to much higher I/O costs.
-
-- `registerPojoType(Class<?> type)` Registers the given type with the serialization stack. If the type is eventually serialized as a POJO, then the type is registered with the POJO serializer. If the type ends up being serialized with Kryo, then it will be registered at Kryo to make sure that only tags are written. If a type is not registered with Kryo, its entire class-name will be serialized with every instance, leading to much higher I/O costs.
-
-Note that types registered with `registerKryoType()` are not available to Flink's Kryo serializer instance.
-
-- `disableAutoTypeRegistration()` Automatic type registration is enabled by default. The automatic type registration is registering all types (including sub-types) used by usercode with Kryo and the POJO serializer.
-
-- `setTaskCancellationInterval(long interval)` Sets the interval (in milliseconds) to wait between consecutive attempts to cancel a running task. When a task is canceled a new thread is created which periodically calls `interrupt()` on the task thread, if the task thread does not terminate within a certain time. This parameter refers to the time between consecutive calls to `interrupt()` and is set by default to **30000** milliseconds, or **30 seconds**.
-
-The `RuntimeContext` which is accessible in `Rich*` functions through the `getRuntimeContext()` method also allows to access the `ExecutionConfig` in all user defined functions.
+通过 `getRuntimeContext()` 方法在 `Rich*` 函数中访问的 `RuntimeContext` 也允许在所有用户定义的函数中访问 `ExecutionConfig` 。
 
 {% top %}
