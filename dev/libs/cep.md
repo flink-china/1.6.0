@@ -1295,7 +1295,7 @@ pattern.within(Time.seconds(10))
     </tr>
     <tr>
         <td><code>AfterMatchSkipStrategy.skipToFirst(patternName)</code></td>
-        <td>创建一个 <strong>SKIP_TO_FIRST</strong> 跳过策略 with the referenced pattern name <i>patternName</i></td>
+        <td>使用<i>模式名称</i>创建一个 <strong>SKIP_TO_FIRST</strong> 跳过策略 </td>
     </tr>
     <tr>
         <td><code>AfterMatchSkipStrategy.skipToLast(patternName)</code></td>
