@@ -25,7 +25,7 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-有状态的函数和操作在处理各个元素或者事件时存储数据，使得state称为任何类型的复杂操作的关键构建部件,例如:
+有状态的函数和操作在处理各个元素或者事件时存储数据，使得state成为任何类型的复杂操作的关键构建部件,例如:
 
 例如：
 
