@@ -22,8 +22,6 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-* This will be replaced by the TOC
-{:toc}
 
 ## 描述
 
@@ -33,7 +31,7 @@ $$x_{min} = min({x_1, x_2,..., x_n})$$
 
 最大值为：
 
-$$x_{max} = max({x_1, x_2,..., x_n})$$
+$$ x_{max} = max({x_1, x_2,..., x_n}) $$
 
 经过缩放的数据集 $z_1, z_2,...,z_n$ 为：
 
@@ -63,37 +61,14 @@ $$z_{i}= \frac{x_{i} - x_{min}}{x_{max} - x_{min}} \left ( max - min \right ) + 
 
 `最小最大值标准化` 可由下列两个参数进行控制：
 
- <table class="table table-bordered">
-  <thead>
-    <tr>
-      <th class="text-left" style="width: 20%">参数</th>
-      <th class="text-center">描述</th>
-    </tr>
-  </thead>
-
-  <tbody>
-    <tr>
-      <td><strong>Min</strong></td>
-      <td>
-        <p>
-          缩放数据集范围的最小值 (默认值:  <strong>0.0</strong>)
-        </p>
-      </td>
-    </tr>
-    <tr>
-      <td><strong>Max</strong></td>
-      <td>
-        <p>
-          缩放数据集范围的最大值 (默认值: <strong>1.0</strong>)
-        </p>
-      </td>
-    </tr>
-  </tbody>
-</table>
+|参数|描述|
+|:--:|:--:|
+|Min|缩放数据集范围的最小值 (默认值:**0.0**)|
+|Max|缩放数据集范围的最大值 (默认值:**1.0**)|
 
 ## 示例
 
-{% highlight scala %}
+```scala
 // Create MinMax scaler transformer
 val minMaxscaler = MinMaxScaler()
     .setMin(-1.0)
@@ -106,6 +81,4 @@ minMaxscaler.fit(dataSet)
 
 // Scale the provided data set to have min=-1.0 and max=1.0
 val scaledDS = minMaxscaler.transform(dataSet)
-{% endhighlight %}
-
-{% top %}
+```
