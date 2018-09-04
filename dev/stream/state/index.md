@@ -25,16 +25,16 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-有状态函数和运算符在各个元素/事件的处理中存储数据，使状态成为任何类型的更复杂操作的关键构建块。
+有状态的函数和操作在处理各个元素或者事件时存储数据，使得state称为任何类型的复杂操作的关键构建部件,例如:
 
 例如：
 
   - 当应用程序搜索某些事件模式时，状态将存储到目前为止遇到的事件序列。
   - 在每分钟/小时/天聚合事件时，状态保留待处理的聚合。
-  - 当在数据点流上训练机器学习模型时，状态保持模型参数的当前版本。
+  - 当在数据点流上训练机器学习模型时，状态会保存当前版本的模型参数。
   - 当需要管理历史数据时，状态允许有效访问过去发生的事件。
 
-Flink需要了解状态，以便使用[检查点](checkpointing.html)使状态容错，并允许流应用程序的[保存点]({{ site.baseurl }}/ops/state/savepoints.html)。
+需要了解Flink状态，以便使用[检查点](checkpointing.html)使状态容错，并允许流应用程序的[保存点]({{ site.baseurl }}/ops/state/savepoints.html)。
 
 有关状态的知识还允许重新调整Flink应用程序，这意味着Flink负责跨并行实例重新分配状态。
 
