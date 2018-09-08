@@ -1,29 +1,4 @@
----
-title: "广播状态模式"
-nav-parent_id: streaming_state
-nav-pos: 2
----
-<!--
-Licensed to the Apache Software Foundation (ASF) under one
-or more contributor license agreements.  See the NOTICE file
-distributed with this work for additional information
-regarding copyright ownership.  The ASF licenses this file
-to you under the Apache License, Version 2.0 (the
-"License"); you may not use this file except in compliance
-with the License.  You may obtain a copy of the License at
-
-  http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing,
-software distributed under the License is distributed on an
-"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, either express or implied.  See the License for the
-specific language governing permissions and limitations
-under the License.
--->
-
-* ToC
-{:toc}
+# 广播状态模式
 
 我们在[状态使用](state.html)文档中介绍了两类算子状态（operator state）。第一类在任务恢复时会将所有状态平均分配给算子的每一个并行任务；第二类会首先对全部状态执行一个并操作，然后对于每一个需要恢复的并行任务，都利用该结果进行初始化。
 
@@ -40,16 +15,15 @@ under the License.
 
 首先来看 `Item` 流，由于我们只关心颜色相同的对象所组成的模式，因此需要根据 `Color` 字段对它进行 *keyby* 操作，这样就能保证颜色相同的元素被发往相同的物理机器。
 
-{% highlight java %}
+```java 
 // key the shapes by color
 KeyedStream<Item, Color> colorPartitionedStream = shapeStream
                         .keyBy(new KeySelector<Shape, Color>(){...});
-{% endhighlight %}
+```
 
 至于包含 `Rules` 的规则流，我们需要将其广播至下游任务全部实例并在每个实例中存储一份本地化副本。这样就允许将规则和每一个进入系统的 `Item` 进行计算。以下的代码片段首先将规则流进行广播，然后利用一个 `MapStateDescriptor` 来初始化一个广播状态，用以存储广播的规则。
 
-{% highlight java %}
-
+```java
 // a map descriptor to store the name of the rule (string) and the rule itself.
 MapStateDescriptor<String, Rule> ruleStateDescriptor = new MapStateDescriptor<>(
 			"RulesBroadcastState",
@@ -59,7 +33,7 @@ MapStateDescriptor<String, Rule> ruleStateDescriptor = new MapStateDescriptor<>(
 // broadcast the rules and create the broadcast state
 BroadcastStream<Rule> ruleBroadcastStream = ruleStream
                         .broadcast(ruleStateDescriptor);
-{% endhighlight %}
+```
 
 最后为了将匹配规则应用于 `Item` 流中的每个元素，我们需要：1）对两条流执行connect操作；2）指定匹配检测逻辑。
 
@@ -74,7 +48,7 @@ BroadcastStream<Rule> ruleBroadcastStream = ruleStream
 
 示例中的非广播流是 keyed 的，以下代码片段包含了上述介绍中相应的方法调用：
 
-{% highlight java %}
+```java 
 DataStream<Match> output = colorPartitionedStream
                  .connect(ruleBroadcastStream)
                  .process(
@@ -89,22 +63,22 @@ DataStream<Match> output = colorPartitionedStream
                          // my matching logic
                      }
                  )
-{% endhighlight %}
+```
 
 ### BroadcastProcessFunction 和 KeyedBroadcastProcessFunction
 
 接下来我们介绍 `BroadcastProcessFunction` 和 `KeyedBroadcastProcessFunction`。这两个函数中都包含两个需要用户实现的方法： `processBroadcastElement()` 和 `processElement()`。其中前者负责处理广播流中的元素，而后者负责处理非广播流中的元素。两个函数的完整方法头如下所示：
 
-{% highlight java %}
+```java
 public abstract class BroadcastProcessFunction<IN1, IN2, OUT> extends BaseBroadcastProcessFunction {
 
     public abstract void processElement(IN1 value, ReadOnlyContext ctx, Collector<OUT> out) throws Exception;
 
     public abstract void processBroadcastElement(IN2 value, Context ctx, Collector<OUT> out) throws Exception;
 }
-{% endhighlight %}
+```
 
-{% highlight java %}
+``` java
 public abstract class KeyedBroadcastProcessFunction<KS, IN1, IN2, OUT> {
 
     public abstract void processElement(IN1 value, ReadOnlyContext ctx, Collector<OUT> out) throws Exception;
@@ -113,7 +87,7 @@ public abstract class KeyedBroadcastProcessFunction<KS, IN1, IN2, OUT> {
 
     public void onTimer(long timestamp, OnTimerContext ctx, Collector<OUT> out) throws Exception;
 }
-{% endhighlight %}
+```
 
 如前所述，针对广播流和非广播流，两个函数都需要实现 `processBroadcastElement()` 和 `processElement()` 方法。这两个方法的主要区别在于通过参数传入的 `context` 对象有所不同：在非广播一侧是 `ReadOnlyContext`，而在广播一侧是普通的 `Context`。这两个 context 对象（以下用ctx表示）都有以下功能：
  1. 利用 `ctx.getBroadcastState(MapStateDescriptor<K, V> stateDescriptor)` 访问广播状态；
@@ -145,7 +119,7 @@ public abstract class KeyedBroadcastProcessFunction<KS, IN1, IN2, OUT> {
   
 回到之前的例子，其中的 `KeyedBroadcastProcessFunction` 可能会被定义如下：
 
-{% highlight java %}
+```java
 new KeyedBroadcastProcessFunction<Color, Item, Rule, String>() {
 
     // store partial matches, i.e. first elements of the pair waiting for their second element
@@ -208,7 +182,7 @@ new KeyedBroadcastProcessFunction<Color, Item, Rule, String>() {
         }
 	}
 }
-{% endhighlight %}
+```
 
 ## 要点问题 
 
