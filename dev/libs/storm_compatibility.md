@@ -23,25 +23,24 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-[Flink streaming]({{ site.baseurl }}/dev/datastream_api.html) is compatible with Apache Storm interfaces and therefore allows
-reusing code that was implemented for Storm.
+[Flink streaming]({{ site.baseurl }}/dev/datastream_api.html) 兼容Apache Storm的接口并且正因为这样允许复用在Storm上实现的代码
 
-You can:
+你能够:
 
-- execute a whole Storm `Topology` in Flink.
-- use Storm `Spout`/`Bolt` as source/operator in Flink streaming programs.
+- 在Flink中执行整个Storm的 `Topology`.
+- 在Flink的流式程序中使用Storm的`Spout`或`Bolt` 作为source或operator.
 
-This document shows how to use existing Storm code with Flink.
+本篇文档展示了Flink怎么使用已有的Storm代码.
 
 * This will be replaced by the TOC
 {:toc}
 
-# Project Configuration
+# 项目配置
 
-Support for Storm is contained in the `flink-storm` Maven module.
-The code resides in the `org.apache.flink.storm` package.
+Storm的支持在`flink-storm`的Maven module中
+所有代码在`org.apache.flink.storm`这个包下
 
-Add the following dependency to your `pom.xml` if you want to execute Storm code in Flink.
+如果你想在Flink中执行Storm的代码,需要在你的`pom.xml`中添加如下的依赖
 
 {% highlight xml %}
 <dependency>
@@ -51,26 +50,26 @@ Add the following dependency to your `pom.xml` if you want to execute Storm code
 </dependency>
 {% endhighlight %}
 
-**Please note**: Do not add `storm-core` as a dependency. It is already included via `flink-storm`.
+**注意**: 不要把`storm-core` 作为依赖单独添加. 它已经被包含在`flink-storm`中.
 
-**Please note**: `flink-storm` is not part of the provided binary Flink distribution.
-Thus, you need to include `flink-storm` classes (and their dependencies) in your program jar (also called uber-jar or fat-jar) that is submitted to Flink's JobManager.
-See *WordCount Storm* within `flink-storm-examples/pom.xml` for an example how to package a jar correctly.
+**注意**: `flink-storm` 并不是Flink提供的分布式二进制版本中的一部分.
+因此, 你需要导入`flink-storm`的类(和它们的依赖)到你的项目jar包中(通常叫uber-jar或者fat-jar), 这个jar包会被提交到Flink的JobManager.
+参考 `flink-storm-examples/pom.xml` 中的 *WordCount Storm* 示例展示了如何正确的打出jar包
 
-If you want to avoid large uber-jars, you can manually copy `storm-core-0.9.4.jar`, `json-simple-1.1.jar` and `flink-storm-{{site.version}}.jar` into Flink's `lib/` folder of each cluster node (*before* the cluster is started).
-For this case, it is sufficient to include only your own Spout and Bolt classes (and their internal dependencies) into the program jar.
+哪像你想避免出现大容量的uber-jar包, 你可以手动的将`storm-core-0.9.4.jar`, `json-simple-1.1.jar` 和 `flink-storm-{{site.version}}.jar` 拷贝到Flink集群节点的 `lib/` 目录下 (在集群启动之前).
+这种情况下, 只导入你自己的Spout和Bolt类(还有它们内部的依赖)到你的jar包中就足够了.
 
-# Execute Storm Topologies
+# 执行Storm Topology
 
-Flink provides a Storm compatible API (`org.apache.flink.storm.api`) that offers replacements for the following classes:
+Flink提供了兼容Storm的API(`org.apache.flink.storm.api`) 使用如下的类:
 
-- `StormSubmitter` replaced by `FlinkSubmitter`
-- `NimbusClient` and `Client` replaced by `FlinkClient`
-- `LocalCluster` replaced by `FlinkLocalCluster`
+- 使用`FlinkSubmitter`替换`StormSubmitter`
+- 使用`FlinkClient`替换`NimbusClient`和`Client`
+- 使用`FlinkLocalCluster`替换`LocalCluster`
 
-In order to submit a Storm topology to Flink, it is sufficient to replace the used Storm classes with their Flink replacements in the Storm *client code that assembles* the topology.
-The actual runtime code, ie, Spouts and Bolts, can be used *unmodified*.
-If a topology is executed in a remote cluster, parameters `nimbus.host` and `nimbus.thrift.port` are used as `jobmanger.rpc.address` and `jobmanger.rpc.port`, respectively.  If a parameter is not specified, the value is taken from `flink-conf.yaml`.
+为了提交Storm的topology到Flink, 使用Flink提供的替代方式去替换掉Storm的类就足够了.
+而真正运行的代码, 比如, Spout和Bolt, 可以 *不用修改* 直接使用
+如果一个topology执行在远程的集群, `nimbus.host` 和 `nimbus.thrift.port` 参数用于 `jobmanger.rpc.address` 和 `jobmanger.rpc.port`. 如果没有指定这些参数, 这些参数的值会从 `flink-conf.yaml` 中获取.
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -99,22 +98,22 @@ if(runLocal) { // submit to test cluster
 </div>
 </div>
 
-# Embed Storm Operators in Flink Streaming Programs
+# 将Storm操作内嵌到Flink流式计算中
 
-As an alternative, Spouts and Bolts can be embedded into regular streaming programs.
-The Storm compatibility layer offers a wrapper classes for each, namely `SpoutWrapper` and `BoltWrapper` (`org.apache.flink.storm.wrappers`).
+另一种替代方案是, Spout和Bolt能够内嵌到Flink常规的流式程序中.
+Storm的兼容层提供了命名为`SpoutWrapper` 和 `BoltWrapper` (`org.apache.flink.storm.wrappers`) 的包装类
 
-Per default, both wrappers convert Storm output tuples to Flink's [Tuple]({{site.baseurl}}/dev/api_concepts.html#tuples-and-case-classes) types (ie, `Tuple0` to `Tuple25` according to the number of fields of the Storm tuples).
-For single field output tuples a conversion to the field's data type is also possible (eg, `String` instead of `Tuple1<String>`).
+它们中的每个包装类默认情况下, 都会将Storm的输出tuple转换成Flink的[Tuple]({{site.baseurl}}/dev/api_concepts.html#tuples-and-case-classes) 类型 (例, 从 `Tuple0` 到 `Tuple25` 根据Storm中tuple的数量提供的不同支持).
+对于只有一个字段的输出, tuple会尽可能转换成字段的数据类型 (比如, 用`String`替代`Tuple1<String>`).
 
-Because Flink cannot infer the output field types of Storm operators, it is required to specify the output type manually.
-In order to get the correct `TypeInformation` object, Flink's `TypeExtractor` can be used.
+因为Flink不能推断出Storm操作的输入字段类型, 它需要手动的指定输出类型
+为了能得到正确的 `TypeInformation` 对象, 可以使用Flink的 `TypeExtractor`
 
-## Embed Spouts
+## 内嵌的Spouts
 
-In order to use a Spout as Flink source, use `StreamExecutionEnvironment.addSource(SourceFunction, TypeInformation)`.
-The Spout object is handed to the constructor of `SpoutWrapper<OUT>` that serves as first argument to `addSource(...)`.
-The generic type declaration `OUT` specifies the type of the source output stream.
+为了使用Spout作为Flink的source, 使用`StreamExecutionEnvironment.addSource(SourceFunction, TypeInformation)`.
+Spout对象交给了 `SpoutWrapper<OUT>` 的构造器(译者注: IRichSpout为构造方法的一个成员变量), 它是作为 `addSource(...)` 方法的第一个参数.
+泛型类型声明 `OUT` 指定source的输出类型
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -132,16 +131,16 @@ DataStream<String> rawInput = env.addSource(
 </div>
 </div>
 
-If a Spout emits a finite number of tuples, `SpoutWrapper` can be configures to terminate automatically by setting `numberOfInvocations` parameter in its constructor.
-This allows the Flink program to shut down automatically after all data is processed.
-Per default the program will run until it is [canceled]({{site.baseurl}}/ops/cli.html) manually.
+如果Spout发射的是有限数量的tuple, 可以在 `SpoutWrapper` 构造器中设置 `numberOfInvocations` 参数使其(Spout)自动停止.
+这让Flink程序处理完所有数据以后自动关闭.
+默认情况下程序会运行直到手动 [停止]({{site.baseurl}}/ops/cli.html)
 
 
-## Embed Bolts
+## 内嵌的Bolt
 
-In order to use a Bolt as Flink operator, use `DataStream.transform(String, TypeInformation, OneInputStreamOperator)`.
-The Bolt object is handed to the constructor of `BoltWrapper<IN,OUT>` that serves as last argument to `transform(...)`.
-The generic type declarations `IN` and `OUT` specify the type of the operator's input and output stream, respectively.
+为了能使用Bolt做作Flink的算子, 使用 `DataStream.transform(String, TypeInformation, OneInputStreamOperator)`.
+Bolt对象交给了 `BoltWrapper<IN,OUT>` 的构造器(译者注: IRichBolt为构造方法的一个成员变量), 它是作为 `transform(...)` 方法的最后一个参数.
+泛型类型声明 `IN` 和 `OUT` 分别指明了算子的输入输出的类型.
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -160,35 +159,35 @@ DataStream<Tuple2<String, Integer>> counts = text.transform(
 </div>
 </div>
 
-### Named Attribute Access for Embedded Bolts
+### 内嵌Blot的命名参数访问
 
-Bolts can accesses input tuple fields via name (additionally to access via index).
-To use this feature with embedded Bolts, you need to have either a
+Blot可以通过name访问输入tuple字段 (还有一种方式是通过索引访问)
+想在内嵌的Bolt中使用这个特性, 你需要有如下中的一种
 
- 1. [POJO]({{site.baseurl}}/dev/api_concepts.html#pojos) type input stream or
- 2. [Tuple]({{site.baseurl}}/dev/api_concepts.html#tuples-and-case-classes) type input stream and specify the input schema (i.e. name-to-index-mapping)
+ 1. [POJO]({{site.baseurl}}/dev/api_concepts.html#pojos) 输入流类型 或者
+ 2. [Tuple]({{site.baseurl}}/dev/api_concepts.html#tuples-and-case-classes) 输入流类型并指定输入的schema (比如. name与index的映射关系)
 
-For POJO input types, Flink accesses the fields via reflection.
-For this case, Flink expects either a corresponding public member variable or public getter method.
-For example, if a Bolt accesses a field via name `sentence` (eg, `String s = input.getStringByField("sentence");`), the input POJO class must have a member variable `public String sentence;` or method `public String getSentence() { ... };` (pay attention to camel-case naming).
+对于POJO的输入类型, Flink是通过反射去访问具体的字段
+这种情况, Flink期望有一个与其相关的公有成员变量或者具有公有访问权限的getter方法
+举个例子, 如果Bolt通过成员变量名`sentence`进行访问 (例, `String s = input.getStringByField("sentence");`), 那么输入的POJO类必须有一个成员变量`public String sentence;` 或者`public String getSentence() { ... };`方法 (注意驼峰命名的方式).
 
-For `Tuple` input types, it is required to specify the input schema using Storm's `Fields` class.
-For this case, the constructor of `BoltWrapper` takes an additional argument: `new BoltWrapper<Tuple1<String>, ...>(..., new Fields("sentence"))`.
-The input type is `Tuple1<String>` and `Fields("sentence")` specify that `input.getStringByField("sentence")` is equivalent to `input.getString(0)`.
+对于`Tuple`的输入类型, 需要指定的输入schema使用Storm的`Fields` 类.
+这种情况下, `BoltWrapper`的构造器里需要添加额外的参数: `new BoltWrapper<Tuple1<String>, ...>(..., new Fields("sentence"))`.
+输入类型是 `Tuple1<String>` , 并且 `Fields("sentence")` 指定了 `input.getStringByField("sentence")` 和 `input.getString(0)` 是等价的.
 
-See [BoltTokenizerWordCountPojo](https://github.com/apache/flink/tree/master/flink-contrib/flink-storm-examples/src/main/java/org/apache/flink/storm/wordcount/BoltTokenizerWordCountPojo.java) and [BoltTokenizerWordCountWithNames](https://github.com/apache/flink/tree/master/flink-contrib/flink-storm-examples/src/main/java/org/apache/flink/storm/wordcount/BoltTokenizerWordCountWithNames.java) for examples.
+参考 [BoltTokenizerWordCountPojo](https://github.com/apache/flink/tree/master/flink-contrib/flink-storm-examples/src/main/java/org/apache/flink/storm/wordcount/BoltTokenizerWordCountPojo.java) 和 [BoltTokenizerWordCountWithNames](https://github.com/apache/flink/tree/master/flink-contrib/flink-storm-examples/src/main/java/org/apache/flink/storm/wordcount/BoltTokenizerWordCountWithNames.java) 中的示例.
 
-## Configuring Spouts and Bolts
+## 配置Spout和Bolt
 
-In Storm, Spouts and Bolts can be configured with a globally distributed `Map` object that is given to `submitTopology(...)` method of `LocalCluster` or `StormSubmitter`.
-This `Map` is provided by the user next to the topology and gets forwarded as a parameter to the calls `Spout.open(...)` and `Bolt.prepare(...)`.
-If a whole topology is executed in Flink using `FlinkTopologyBuilder` etc., there is no special attention required &ndash; it works as in regular Storm.
+在Storm中, Spout和Bolt能使用一个分布式的全局 `Map` 对象进行配置, 它会提交给`LocalCluster` 或者 `StormSubmitter` 的 `submitTopology(...)` 方法
+这个 `Map` 由用户提供传递给topology, 并且作为一个参数转发给 `Spout.open(...)` and `Bolt.prepare(...)`.
+如果整个topology使用Flink的 `FlinkTopologyBuilder` 来提交. 那就没有特别需要注意的 &ndash; 它运行起来和普通的Storm差不多.
 
-For embedded usage, Flink's configuration mechanism must be used.
-A global configuration can be set in a `StreamExecutionEnvironment` via `.getConfig().setGlobalJobParameters(...)`.
-Flink's regular `Configuration` class can be used to configure Spouts and Bolts.
-However, `Configuration` does not support arbitrary key data types as Storm does (only `String` keys are allowed).
-Thus, Flink additionally provides `StormConfig` class that can be used like a raw `Map` to provide full compatibility to Storm.
+对使用内嵌方式来说, 可以使用Flink的配置方法.
+全局的配置可以在 `StreamExecutionEnvironment` 中通过 `.getConfig().setGlobalJobParameters(...)` 来设置.
+Flink常规的 `Configuration` 类可以配置Spout和Bolt.
+尽管如此, 和Storm一样, `Configuration` 不支持任意类型的key (只支持 `String` 类型的key)
+因此, Flink额外提供了 `StormConfig` 类, 它使用起来像一个原生的 `Map`. 对Storm提供了完整的兼容性.
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -208,14 +207,14 @@ env.getConfig().setGlobalJobParameters(config);
 </div>
 </div>
 
-## Multiple Output Streams
+## 多类型输出流
 
-Flink can also handle the declaration of multiple output streams for Spouts and Bolts.
-If a whole topology is executed in Flink using `FlinkTopologyBuilder` etc., there is no special attention required &ndash; it works as in regular Storm.
+Flink能够操作多种输出类型声明的Spout和Bolt.
+如果整个topology使用Flink的 `FlinkTopologyBuilder` 来提交. 那就没有特别需要注意的 &ndash; 它运行起来和普通的Storm差不多.
 
-For embedded usage, the output stream will be of data type `SplitStreamType<T>` and must be split by using `DataStream.split(...)` and `SplitStream.select(...)`.
-Flink provides the predefined output selector `StormStreamSelector<T>` for `.split(...)` already.
-Furthermore, the wrapper type `SplitStreamTuple<T>` can be removed using `SplitStreamMapper<T>`.
+对使用内嵌方式来说, 输出流数据类型会是 `SplitStreamType<T>` 并且必须使用 `DataStream.split(...)` 和 `SplitStream.select(...)` 来分割.
+对 `.split(...)` 来说, Flink已经提供了预定义输出类型选择器 `StormStreamSelector<T>`.
+此外, 外装类型 `SplitStreamTuple<T>` 可以移除, 使用 `SplitStreamMapper<T>` 替代.
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -237,25 +236,25 @@ DataStream<SomeType> s2 = splitStream.select("s2").map(new SplitStreamMapper<Som
 </div>
 </div>
 
-See [SpoutSplitExample.java](https://github.com/apache/flink/tree/master/flink-contrib/flink-storm-examples/src/main/java/org/apache/flink/storm/split/SpoutSplitExample.java) for a full example.
+完整示例参考 [SpoutSplitExample.java](https://github.com/apache/flink/tree/master/flink-contrib/flink-storm-examples/src/main/java/org/apache/flink/storm/split/SpoutSplitExample.java).
 
-# Flink Extensions
+# Flink扩展
 
-## Finite Spouts
+## 有限流Spout
 
-In Flink, streaming sources can be finite, ie, emit a finite number of records and stop after emitting the last record. However, Spouts usually emit infinite streams.
-The bridge between the two approaches is the `FiniteSpout` interface which, in addition to `IRichSpout`, contains a `reachedEnd()` method, where the user can specify a stopping-condition.
-The user can create a finite Spout by implementing this interface instead of (or additionally to) `IRichSpout`, and implementing the `reachedEnd()` method in addition.
-In contrast to a `SpoutWrapper` that is configured to emit a finite number of tuples, `FiniteSpout` interface allows to implement more complex termination criteria.
+在Flink中, streaming的source可以是有限的, 比如, 发射有限数量的数据, 在发射完以后停止. 但不管怎样, Spout通常是发射无限流.
+这两种方式(译者注: 有限流和无限流)之间可以通过 `FiniteSpout` 来衔接, 它比 `IRichSpout` 多包含一个 `reachedEnd()` 方法, 用户可以指定终止条件.
+用户可以创建一个有限的Spout通过实现 `FiniteSpout` 接口替代() `IRichSpout`, 此外还需要实现 `reachedEnd()` 方法.
+相比 `SpoutWrapper` 通过配置发射有限的tuple, `FiniteSpout` 接口提供了实现更复杂的终止规则.
 
-Although finite Spouts are not necessary to embed Spouts into a Flink streaming program or to submit a whole Storm topology to Flink, there are cases where they may come in handy:
+尽管有限流的Spout不需要将Spout内嵌到Flink的流式计算中或者提交整个Storm的topology到Flink集群, 但下面这些情况却可能会派上用场:
 
- * to achieve that a native Spout behaves the same way as a finite Flink source with minimal modifications
- * the user wants to process a stream only for some time; after that, the Spout can stop automatically
- * reading a file into a stream
- * for testing purposes
+ * 仅对有限流的Flink的source做少量的改动, 便可达到原生的Spout的功能
+ * 用户只想偶尔运行流式任务; 在那之后, Spout可以自动停止
+ * 将一个文件读到流中
+ * 仅用于测试
 
-An example of a finite Spout that emits records for 10 seconds only:
+下面是一个Spout只发射10秒tuple的有限流示例:
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -273,17 +272,17 @@ public class TimedFiniteSpout extends BaseRichSpout implements FiniteSpout {
 </div>
 </div>
 
-# Storm Compatibility Examples
+# 兼容Storm的示例
 
-You can find more examples in Maven module `flink-storm-examples`.
-For the different versions of WordCount, see [README.md](https://github.com/apache/flink/tree/master/flink-contrib/flink-storm-examples/README.md).
-To run the examples, you need to assemble a correct jar file.
-`flink-storm-examples-{{ site.version }}.jar` is **no** valid jar file for job execution (it is only a standard maven artifact).
+你能在Maven 模块`flink-storm-examples`找到更多的示例
+对于不同版本的WordCount示例, 参考 [README.md](https://github.com/apache/flink/tree/master/flink-contrib/flink-storm-examples/README.md).
+你需要打出正确的集成jar包才能运行这些示例
+`flink-storm-examples-{{ site.version }}.jar` 并 **不是** 可执行的jar文件 (它只是一个标准的maven artifact)
 
-There are example jars for embedded Spout and Bolt, namely `WordCount-SpoutSource.jar` and `WordCount-BoltTokenizer.jar`, respectively.
-Compare `pom.xml` to see how both jars are built.
-Furthermore, there is one example for whole Storm topologies (`WordCount-StormTopology.jar`).
+这有一些内嵌的Spout和Blot示例的jar文件, 分别叫 `WordCount-SpoutSource.jar` 和 `WordCount-BoltTokenizer.jar`
+通过比较 `pom.xml` 可以看到这些jar包是如何构建的.
+此外, 还有一个完整的Storm topology的示例 (`WordCount-StormTopology.jar`).
 
-You can run each of those examples via `bin/flink run <jarname>.jar`. The correct entry point class is contained in each jar's manifest file.
+你能通过执行 `bin/flink run <jarname>.jar` 来运行这些示例程序. 正确的入口类声明都被包含在jar的manifest文件中.
 
 {% top %}
