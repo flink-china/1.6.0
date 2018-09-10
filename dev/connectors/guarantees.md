@@ -40,37 +40,37 @@ Flink仅当源参与快照机制时才能保证对用户定义的状态进行一
    <tbody>
         <tr>
             <td>Apache Kafka</td>
-            <td>恰好一次</td>
-            <td>为您的版本使用合适的Kafka连接器</td>
+            <td>只处理一次</td>
+            <td>为您的版本使用合适的Kafka connector</td>
         </tr>
         <tr>
             <td>AWS Kinesis Streams</td>
-            <td>恰好一次</td>
+            <td>只处理一次</td>
             <td></td>
         </tr>
         <tr>
             <td>RabbitMQ</td>
-            <td>至多一次(v 0.10) / 恰好一次 (v 1.0) </td>
+            <td>最多处理一次 (v 0.10) / 只处理一次 (v 1.0) </td>
             <td></td>
         </tr>
         <tr>
             <td>Twitter Streaming API</td>
-            <td>至多一次</td>
+            <td>最多处理一次</td>
             <td></td>
         </tr>
         <tr>
             <td>Collections</td>
-            <td>恰好一次</td>
+            <td>只处理一次</td>
             <td></td>
         </tr>
         <tr>
             <td>Files</td>
-            <td>恰好一次</td>
+            <td>只处理一次</td>
             <td></td>
         </tr>
         <tr>
             <td>Sockets</td>
-            <td>至多一次</td>
+            <td>最多处理一次</td>
             <td></td>
         </tr>
   </tbody>
@@ -94,42 +94,42 @@ Flink仅当源参与快照机制时才能保证对用户定义的状态进行一
     </tr>
     <tr>
         <td>Elasticsearch</td>
-        <td>至少一次</td>
+        <td>至少处理一次</td>
         <td></td>
     </tr>
     <tr>
         <td>Kafka producer</td>
-        <td>至少一次</td>
+        <td>至少处理一次</td>
         <td></td>
     </tr>
     <tr>
         <td>Cassandra sink</td>
-        <td>至少一次 / 恰好一次</td>
-        <td>仅一次用于幂等更新</td>
+        <td>至少处理一次 / 只处理一次</td>
+        <td>只处理一次用于幂等更新</td>
     </tr>
     <tr>
         <td>AWS Kinesis Streams</td>
-        <td>至少一次</td>
+        <td>至少处理一次</td>
         <td></td>
     </tr>
     <tr>
         <td>File sinks</td>
-        <td>至少一次</td>
+        <td>至少处理一次</td>
         <td></td>
     </tr>
     <tr>
         <td>Socket sinks</td>
-        <td>至少一次</td>
+        <td>至少处理一次</td>
         <td></td>
     </tr>
     <tr>
         <td>Standard output</td>
-        <td>至少一次</td>
+        <td>至少处理一次</td>
         <td></td>
     </tr>
     <tr>
         <td>Redis sink</td>
-        <td>至少一次</td>
+        <td>至少处理一次</td>
         <td></td>
     </tr>
   </tbody>
