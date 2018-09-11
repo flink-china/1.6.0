@@ -72,7 +72,7 @@ TaskManagers连接到JobManagers后，会通知JobManagers自己已可用，接�
 
  - Flink集群需要的slots的数量和job的最高并行度一样，不需要计算总共包含多少个tasks（具有不同并行度）。
 
- - 更易获取更好的资源利用率。没有slot sharing，非集中型subtasks（*source/map()*）将会占用和集中型subtasks（*window*）一样多的资源。在我们的示例中，允许slot sharing增加了基础的并发度，从2到6，从而可以充分利用资源，同时保证在TaskManagers中可以均衡分配subtasks。
+ - 更易获取更好的资源利用率。没有slot sharing，非集中型subtasks（*source/map()*）将会占用和集中型subtasks （*window*）一样多的资源。在我们的示例中，允许slot sharing增加了基础的并发度，从2到6，从而可以充分利用资源，同时保证在TaskManagers中可以均衡分配subtasks。
 
 <img src="../fig/slot_sharing.svg" alt="TaskManagers with shared Task Slots" class="offset" width="80%" />
 
