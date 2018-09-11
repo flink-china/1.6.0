@@ -76,7 +76,7 @@ TaskManagers连接到JobManagers后，会通知JobManagers自己已可用，接�
 
 <img src="../fig/slot_sharing.svg" alt="TaskManagers with shared Task Slots" class="offset" width="80%" />
 
-APIs还包含了一种 *[resource group](../dev/stream/operators/#task-chaining-and-resource-groups)*机制，用来防止不需要的slot sharing。
+APIs还包含了一种 *[resource group](../dev/stream/operators/#task-chaining-and-resource-groups)*机制，用来防止不必要的slot sharing。
 
 经验来讲，task slots的默认值应该与CPU核数一致。在使用超线程下，一个slot将会占用2个或更多的硬件资源。
 
