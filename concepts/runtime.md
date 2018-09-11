@@ -43,13 +43,10 @@ Flink运行时包含两类处理流程：
   - **JobManagers** （也称为 *masters*）用来协调分布式计算。它们进行任务调度，协调checkpoints，协调错误恢复等等。
 
     至少需要一个JobManager。高可用部署下会有多个JobManagers，其中一个作为*leader*，其余处于*standby*状态。
-    There is always at least one Job Manager. A high-availability setup will have multiple JobManagers, one of
-    which one is always the *leader*, and the others are *standby*.
 
   - **TaskManagers**（也称为 *workers*）真正执行dataflow中的*tasks*（更准确的描述是，subtasks），并且对 *streams*进行缓存和交换。
 
     至少需要一个TaskManager。
-    There must always be at least one TaskManager.
 
 有多种方式可以启动JobManagers和TaskManagers：直接在计算机上启动作为 [standalone cluster](../ops/deployment/cluster_setup.html)，在容器中或者由资源管理器[YARN](../ops/deployment/yarn_setup.html) 或者 [Mesos](../ops/deployment/mesos.html)启动。
 TaskManagers连接到JobManagers后，会通知JobManagers自己已可用，接着被分配工作。
