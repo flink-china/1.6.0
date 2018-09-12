@@ -30,8 +30,6 @@ under the License.
 
 ### 通过计划打包程序
 
-Additionally, we support packaging programs as Plans. Instead of defining a program in the main method and calling execute() on the environment, plan packaging returns the Program Plan, which is a description of the program’s data flow. To do that, the program must implement the org.apache.flink.api.common.Program interface, defining the getPlan(String...) method. The strings passed to that method are the command line arguments. The program’s plan can be created from the environment via the ExecutionEnvironment#createProgramPlan() method. When packaging the program’s plan, the JAR manifest must point to the class implementing the org.apache.flink.api.common.Program interface, instead of the class with the main method.
-
 此外，我们支持 *计划（Plans）* 打包程序。与在环境中调用 `execute()`的方式，执行main方法中定义程序的方式不同，计划打包（plan packing）返回 *Program Plan* ，这是程序对数据流的描述。为此，程序必须实现 `org.apache.flink.api.common.Program` 接口，定义 `getPlan(String...)` 方法。将命令行参数传递给该方法。可以通过 `ExecutionEnvironment#createProgramPlan()` 方法生成该程序的计划。当通过程序的计划打包时，JAR 清单（manifest）必须指向实现 `org.apache.flink.api.common.Program` 接口的类，而不是使用 main 方法的类。
 
 ### 总结
