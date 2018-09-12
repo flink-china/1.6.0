@@ -22,7 +22,7 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-根据集群中数据大小、机器数目等参数，Flink 的优化器会自动为程序选择一种执行策略。在大多数情况下，了解 Flink 如何执行你的程序是有用的。
+根据数据大小和集群机器数目等参数，Flink 的优化器会自动为程序选择一种执行策略。在大多数情况下，了解 Flink 如何执行你的程序是有用的。
 
 __计划可视化工具__
 
