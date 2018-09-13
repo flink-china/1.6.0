@@ -82,4 +82,3 @@ key/values索引存储的准确数据结构取决于选择的 [state backend](..
 [Savepoints](../ops/state/savepoints.html) 是**手动触发的checkpoints**，它依赖常规的checkpointing机制，生成程序快照并将其写入到状态后端。在运行期间，worker节点周期性的生成程序快照并产生checkpoints。在恢复重启时只会使用最后成功的checkpoint。并且只要有一个新的checkpoint生成时，旧的checkpoints将会被安全地丢弃。
 
 Savepoints与周期性触发的checkpoints很类似，但是其式由**由用户触发**的，且当更新的checkpoints完成时，老的checkpoint**不会自动失效**。可以通过[命令行](../ops/cli.html#savepoints)或者在取消一个job时调用[REST API](../monitoring/rest_api.html#cancel-job-with-savepoint)的方式创建Savepoints。
-

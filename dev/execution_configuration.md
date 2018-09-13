@@ -33,7 +33,7 @@ var executionConfig = env.getConfig
 
 下面是可配置的选项：（默认值是加粗的）
 
--  **`enableClosureCleaner()`** / `disableClosureCleaner()`。默认情况下启用闭包清理器（closure cleaner）。 闭包清理器删除 Flink 程序中对周围类匿名函数的不需要的引用。 禁用闭包清除程序后，可能会发生匿名用户函数引用周围的，通常不是可序列化的类。 这将导致序列化程序出现异常。
+-  **`enableClosureCleaner()`** / `disableClosureCleaner()`。默认情况下启用闭包清理器（closure cleaner）。 闭包清理器删除 Flink 程序中对周围类匿名函数的不需要的引用。 禁用闭包清除程序后，可能会发生匿名用户函数引用周围的，通常是不可序列化的类。 这将导致程序序列化出现异常。
     
 - `getParallelism()` / `setParallelism(int parallelism)` 设置作业的默认并发度。
     
