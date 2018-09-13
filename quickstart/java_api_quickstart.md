@@ -1,6 +1,6 @@
 ---
-title: "Project Template for Java"
-nav-title: Project Template for Java
+title: "Java 项目模板"
+nav-title: Java 项目模板
 nav-parent_id: start
 nav-pos: 0
 ---
@@ -26,20 +26,21 @@ under the License.
 * This will be replaced by the TOC
 {:toc}
 
-Start working on your Flink Java program in a few simple steps.
+
+通过简单地几步来开始编写你的 Flink Java 程序。
 
 
-## Requirements
+## 要求
 
-The only requirements are working __Maven 3.0.4__ (or higher) and __Java 8.x__ installations.
+唯一的要求是安装 __Maven 3.0.4__（或更高版本）和 __Java 8.x__ 。
 
-## Create Project
+## 创建项目
 
-Use one of the following commands to __create a project__:
+使用下面的其中一个命令来 __创建项目__：
 
 <ul class="nav nav-tabs" style="border-bottom: none;">
-    <li class="active"><a href="#maven-archetype" data-toggle="tab">Use <strong>Maven archetypes</strong></a></li>
-    <li><a href="#quickstart-script" data-toggle="tab">Run the <strong>quickstart script</strong></a></li>
+    <li class="active"><a href="#maven-archetype" data-toggle="tab">使用 <strong>Maven 脚手架</strong></a></li>
+    <li><a href="#quickstart-script" data-toggle="tab">运行 <strong>快速开始脚本</strong></a></li>
 </ul>
 <div class="tab-content">
     <div class="tab-pane active" id="maven-archetype">
@@ -50,7 +51,7 @@ Use one of the following commands to __create a project__:
       -DarchetypeCatalog=https://repository.apache.org/content/repositories/snapshots/ \{% endunless %}
       -DarchetypeVersion={{site.version}}
     {% endhighlight %}
-        This allows you to <strong>name your newly created project</strong>. It will interactively ask you for the groupId, artifactId, and package name.
+        这种方式允许你<strong>为新建的项目命名</strong>。将以交互式地方式询问你为 groupId，artifactId 以及 package 命名。
     </div>
     <div class="tab-pane" id="quickstart-script">
     {% highlight bash %}
@@ -65,15 +66,14 @@ Use one of the following commands to __create a project__:
     {% unless site.is_stable %}
     <p style="border-radius: 5px; padding: 5px" class="bg-danger">
         <b>Note</b>: For Maven 3.0 or higher, it is no longer possible to specify the repository (-DarchetypeCatalog) via the command line. If you wish to use the snapshot repository, you need to add a repository entry to your settings.xml. For details about this change, please refer to <a href="http://maven.apache.org/archetype/maven-archetype-plugin/archetype-repository.html">Maven official document</a>
+        <b>注意</b>: 对于 Maven 3.0 或更高版本，不再可以通过命令行指定仓库 (-DarchetypeCatalog)。如果你想使用快照仓库，则需要在setting.xml里添加一个仓库配置。对于这个改变的详情，请参阅 <a href="http://maven.apache.org/archetype/maven-archetype-plugin/archetype-repository.html">Maven 官方文档</a>
     </p>
     {% endunless %}
 </div>
 
-## Inspect Project
+## 检查项目
 
-There will be a new directory in your working directory. If you've used
-the _curl_ approach, the directory is called `quickstart`. Otherwise,
-it has the name of your `artifactId`:
+在你的工作目录下将会有一个新的目录。如果你试用 _curl_ 来创建，这个目录的名字为 `quickstart`。否则名字为你命名的 `artifactId`：
 
 {% highlight bash %}
 $ tree quickstart/
@@ -91,52 +91,34 @@ quickstart/
             └── log4j.properties
 {% endhighlight %}
 
-The sample project is a __Maven project__, which contains two classes: _StreamingJob_ and _BatchJob_ are the basic skeleton programs for a *DataStream* and *DataSet* program.
-The _main_ method is the entry point of the program, both for in-IDE testing/execution and for proper deployments.
+示例项目是一个 __Maven 项目__，包含两个类： _StreamingJob_ 和 _BatchJob_ 是 *DataStream* 和 *DataSet* 的基本框架程序。_main_ 方法是程序的入口，既可以用 IDE 测试/执行，也可用于正确的部署。
 
-We recommend you __import this project into your IDE__ to develop and
-test it. IntelliJ IDEA supports Maven projects out of the box.
-If you use Eclipse, the [m2e plugin](http://www.eclipse.org/m2e/)
-allows to [import Maven projects](http://books.sonatype.com/m2eclipse-book/reference/creating-sect-importing-projects.html#fig-creating-import).
-Some Eclipse bundles include that plugin by default, others require you
-to install it manually. 
+我们建议你 __把这个项目导入到你的 IDE__ 来开发和测试一下。IntelliJ IDEA 支持开箱即用的 Maven 项目。如果您使用 Eclipse，使用 [m2e 插件](http://www.eclipse.org/m2e/)可以[导入 Maven 项目](http://books.sonatype.com/m2eclipse-book/reference/creating-sect-importing-projects.html#fig-creating-import)。
+一些 Eclipse 默认捆绑该插件，其他的需要手动安装。
 
-*A note to Mac OS X users*: The default JVM heapsize for Java may be too
-small for Flink. You have to manually increase it.
-In Eclipse, choose
-`Run Configurations -> Arguments` and write into the `VM Arguments`
-box: `-Xmx800m`.
-In IntelliJ IDEA recommended way to change JVM options is from the `Help | Edit Custom VM Options` menu. See [this article](https://intellij-support.jetbrains.com/hc/en-us/articles/206544869-Configuring-JVM-options-and-platform-properties) for details. 
+*给 Mac OS X 用户的说明*：给 Flink 分配的默认 JVM 堆内存太小。你需要手动增加堆内存。在 Eclipse中，选择 `Run Configurations -> Arguments` 并且写入 `VM Arguments` 框中：`-Xmx800m` 。
+在 IntelliJ IDEA 中建议通过菜单 `Help | Edit Custom VM Options` 改变 JVM 的选项。 详情见 [这篇文章](https://intellij-support.jetbrains.com/hc/en-us/articles/206544869-Configuring-JVM-options-and-platform-properties)。
 
-## Build Project
+## 构建项目
 
-If you want to __build/package your project__, go to your project directory and
-run the '`mvn clean package`' command.
-You will __find a JAR file__ that contains your application, plus connectors and libraries
-that you may have added as dependencies to the application: `target/<artifact-id>-<version>.jar`.
+如果你想 __构建/打包你的项目__，进入到你的项目目录并且执行 '`mvn clean package`' 命令。
+你将 __找到一个 JAR 文件__，包含了您的应用、扩展的 connectors ，并且您需要添加应用的依赖包：`target/<artifact-id>-<version>.jar`。
 
-__Note:__ If you use a different class than *StreamingJob* as the application's main class / entry point,
-we recommend you change the `mainClass` setting in the `pom.xml` file accordingly. That way, the Flink
-can run time application from the JAR file without additionally specifying the main class.
+__注意：__ 如果您使用和 *StreamingJob* 不同的类作为应用程序的主类/入口，我们建议您相应的修改 `pom.xml` 中的 `mainClass` 设置。那样，Flink 在运行应用程序的 JAR 文件的时候不需要再指定主类。
 
-## Next Steps
+## 下一步
 
-Write your application!
+编写您的应用！
 
-If you are writing a streaming application and you are looking for inspiration what to write,
-take a look at the [Stream Processing Application Tutorial]({{ site.baseurl }}/quickstart/run_example_quickstart.html#writing-a-flink-program).
+如果您正在编写流处理应用程序，并且您在寻找编写的灵感，可以看看 [流处理应用程序教程]({{ site.baseurl }}/quickstart/run_example_quickstart.html#writing-a-flink-program)。
 
-If you are writing a batch processing application and you are looking for inspiration what to write,
-take a look at the [Batch Application Examples]({{ site.baseurl }}/dev/batch/examples.html).
+如果您正在编写批处理的应用程序，并且您在寻找编写的灵感，可以看看 [批处理应用示例]({{ site.baseurl }}/dev/batch/examples.html)。
 
-For a complete overview over the APIs, have a look at the
-[DataStream API]({{ site.baseurl }}/dev/datastream_api.html) and
-[DataSet API]({{ site.baseurl }}/dev/batch/index.html) sections.
+有关 API 的完整概述，请查看 [DataStream API]({{ site.baseurl }}/dev/datastream_api.html) 和 [DataSet API]({{ site.baseurl }}/dev/batch/index.html) 章节。
 
-[Here]({{ site.baseurl }}/quickstart/setup_quickstart.html) you can find out how to run an application outside the IDE on a local cluster.
+在[这里]({{ site.baseurl }}/quickstart/setup_quickstart.html)你可以找到怎么在 IDE 之外的集群上运行应用。
 
-If you have any trouble, ask on our
-[Mailing List](http://mail-archives.apache.org/mod_mbox/flink-user/).
-We are happy to provide help.
+如果您有任何问题，请在我们的[邮箱列表](http://mail-archives.apache.org/mod_mbox/flink-user/)上询问。
+我们很乐意提供帮助。
 
 {% top %}
