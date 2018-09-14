@@ -1,5 +1,5 @@
 ---
-title: Building Flink from Source
+title: 使用源码构建 Flink
 nav-parent_id: start
 nav-pos: 20
 ---
@@ -22,53 +22,52 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-This page covers how to build Flink {{ site.version }} from sources.
+此页面介绍了如何从源码构建 Flink {{ site.version }}。
 
 * This will be replaced by the TOC
 {:toc}
 
-## Build Flink
+## 构建 FLink
 
-In order to build Flink you need the source code. Either [download the source of a release]({{ site.download_url }}) or [clone the git repository]({{ site.github_url }}).
+为了构建 Flink 你需要源码。可以[下载发行版源码]({{ site.download_url }}) 或这 [从 git 仓库复制]({{ site.github_url }})。
 
-In addition you need **Maven 3** and a **JDK** (Java Development Kit). Flink requires **at least Java 8** to build.
+此外，您需要 **Maven 3** 和 **JDK** (Java 开发工具包)。Flink 要求 **至少在 Java 8** 来构建。
 
-*NOTE: Maven 3.3.x can build Flink, but will not properly shade away certain dependencies. Maven 3.2.5 creates the libraries properly.
-To build unit tests use Java 8u51 or above to prevent failures in unit tests that use the PowerMock runner.*
+*注意：Maven 3.3.x 可以构建 Flink，但是不能的屏蔽某些依赖。Maven 3.2.5 可以正确的创建库。要构建单元测试，请使用 Java 8u51 或更高版本来防止使用 PowerMock 运行单元测试失败。*
 
-To clone from git, enter:
+要从 git 克隆，请输入：
 
 {% highlight bash %}
 git clone {{ site.github_url }}
 {% endhighlight %}
 
-The simplest way of building Flink is by running:
+构建 Flink 最简单的方法是运行：
 
 {% highlight bash %}
 mvn clean install -DskipTests
 {% endhighlight %}
 
-This instructs [Maven](http://maven.apache.org) (`mvn`) to first remove all existing builds (`clean`) and then create a new Flink binary (`install`).
+这个 [Maven](http://maven.apache.org) (`mvn`) 指令是首先删除所有已有的构建 (`clean`) ，然后创建一个新的 Flink 二进制文件 (`install`)。
 
-To speed up the build you can skip tests, QA plugins, and JavaDocs:
+要加快构建速度你可以跳过测试、QA 插件 和 JavaDocs：
 
 {% highlight bash %}
 mvn clean install -DskipTests -Dfast
 {% endhighlight %}
 
-The default build adds a Flink-specific JAR for Hadoop 2, to allow using Flink with HDFS and YARN.
+默认构建为 Hadoop 2 添加了 Flink 特定的 JAR，以允许 Flink 与 HDFS 和 YARN 一起使用。
 
-## Dependency Shading
+## 依赖消除
 
-Flink [shades away](https://maven.apache.org/plugins/maven-shade-plugin/) some of the libraries it uses, in order to avoid version clashes with user programs that use different versions of these libraries. Among the shaded libraries are *Google Guava*, *Asm*, *Apache Curator*, *Apache HTTP Components*, *Netty*, and others.
+Flink [消除](https://maven.apache.org/plugins/maven-shade-plugin/) 了部分使用的依赖包，为了避免与用户程序的依赖包出现版本冲突。这部分依赖包有：*Google Guava*， *Asm*， *Apache Curator*， *Apache HTTP Components*， *Netty*，以及其他。
 
-The dependency shading mechanism was recently changed in Maven and requires users to build Flink slightly differently, depending on their Maven version:
+依赖消除机制在最近的 Maven 版本中有所变化， 这就要求用户依据自己的 Maven 版本在构建 Flink 时操作上略有不同。
 
 **Maven 3.0.x, 3.1.x, and 3.2.x**
-It is sufficient to call `mvn clean install -DskipTests` in the root directory of Flink code base.
+直接在 Flink 源码根目录下运行 `mvn clean install -DskipTests` 即可。
 
 **Maven 3.3.x**
-The build has to be done in two steps: First in the base directory, then in the distribution project:
+构建过程必须分为两步：首先在根目录构建，然后在分布式的项目目录下构建：
 
 {% highlight bash %}
 mvn clean install -DskipTests
@@ -76,52 +75,52 @@ cd flink-dist
 mvn clean install
 {% endhighlight %}
 
-*Note:* To check your Maven version, run `mvn --version`.
+*注意：* 要检查你的 Maven 版本，运行 `mvn --version`。
 
 {% top %}
 
-## Hadoop Versions
+## Hadoop 版本
 
-{% info %} Most users do not need to do this manually. The [download page]({{ site.download_url }}) contains binary packages for common Hadoop versions.
+{% info %} 大多数的用户不需要手动执行此操作。 [下载页面]({{ site.download_url }}) 包含了对应常见 Hadoop 版本的二进制包。
 
-Flink has dependencies to HDFS and YARN which are both dependencies from [Apache Hadoop](http://hadoop.apache.org). There exist many different versions of Hadoop (from both the upstream project and the different Hadoop distributions). If you are using a wrong combination of versions, exceptions can occur.
+Flink 所依赖的 HDFS 和 YARN 都来自于  [Apache Hadoop](http://hadoop.apache.org)。目前存在许多不同的 Hadoop 版本（包括上游项目和不同的 Hadoop 发行版）。如果使用错误的版本组合，可能会产生异常。
 
-Hadoop is only supported from version 2.4.0 upwards.
-You can also specify a specific Hadoop version to build against:
+Hadoop 最早从 2.4.0 版本开始支持。
+你也可以指定构建特定的 Hadoop 版本：
 
 {% highlight bash %}
 mvn clean install -DskipTests -Dhadoop.version=2.6.1
 {% endhighlight %}
 
-### Vendor-specific Versions
+### 发行商特定版本
 
-To build Flink against a vendor specific Hadoop version, issue the following command:
+要针对特定发行商的 Hadoop 版本来构建 Flink，请执行以下命令：
 
 {% highlight bash %}
 mvn clean install -DskipTests -Pvendor-repos -Dhadoop.version=2.6.1-cdh5.0.0
 {% endhighlight %}
 
-The `-Pvendor-repos` activates a Maven [build profile](http://maven.apache.org/guides/introduction/introduction-to-profiles.html) that includes the repositories of popular Hadoop vendors such as Cloudera, Hortonworks, or MapR.
+使用 `-Pvendor-repos` 启用  Maven [build profile](http://maven.apache.org/guides/introduction/introduction-to-profiles.html) 表示包含了流行的 Hadoop 发行商版本，例如：Cloudera，Hortonworks 和 MapR。
 
 {% top %}
 
-## Scala Versions
+## Scala 版本
 
-{% info %} Users that purely use the Java APIs and libraries can *ignore* this section.
+{% info %} 单纯使用 Java API 和 库的用户可以 *忽略* 本章节。
 
-Flink has APIs, libraries, and runtime modules written in [Scala](http://scala-lang.org). Users of the Scala API and libraries may have to match the Scala version of Flink with the Scala version of their projects (because Scala is not strictly backwards compatible).
+Flink 已有 [Scala](http://scala-lang.org) 编写的 API 、库和运行时模块。用户使用 Scala API 和库可能需要和 Flink 的 Scala 版本相匹配（因为 Scala 不是向下完全兼容的）。
 
-Flink 1.4 currently builds only with Scala version 2.11.
+Flink 1.4 目前仅使用 Scala 2.11 版本构建。
 
-We are working on supporting Scala 2.12, but certain breaking changes in Scala 2.12 make this a more involved effort. Please check out [this JIRA issue](https://issues.apache.org/jira/browse/FLINK-7811) for updates.
+我们正在努力支持 Scala 2.12，但是 Scala 2.12 中的某些重大更改使这更加复杂。请查看 [这个 JIRA 问题](https://issues.apache.org/jira/browse/FLINK-7811)了解更新。
 
 {% top %}
 
-## Encrypted File Systems
+## 加密文件系统
 
-If your home directory is encrypted you might encounter a `java.io.IOException: File name too long` exception. Some encrypted file systems, like encfs used by Ubuntu, do not allow long filenames, which is the cause of this error.
+如果您的主目录已经加密，您可能会遇到 `java.io.IOException: File name too long` 的异常。一些加密文件系统（像 Ubuntu 使用的 encfs）不允许长文件名，这是导致错误的原因。
 
-The workaround is to add:
+解决方法是添加：
 
 {% highlight xml %}
 <args>
@@ -130,7 +129,7 @@ The workaround is to add:
 </args>
 {% endhighlight %}
 
-in the compiler configuration of the `pom.xml` file of the module causing the error. For example, if the error appears in the `flink-yarn` module, the above code should be added under the `<configuration>` tag of `scala-maven-plugin`. See [this issue](https://issues.apache.org/jira/browse/FLINK-2003) for more information.
+在导致错误的模块的 `pom.xml` 文件的编译配置中。例如：如果错误出现在 `flink-yarn` 模块中，上面的代码应该在 `scala-maven-plugin` 的 `<configuration>` 标签下添加。有关详细信息，请查阅[这个问题](https://issues.apache.org/jira/browse/FLINK-2003)。
 
 {% top %}
 
