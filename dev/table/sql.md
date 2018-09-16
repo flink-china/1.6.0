@@ -22,21 +22,21 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-SQL queries are specified with the `sqlQuery()` method of the `TableEnvironment`. The method returns the result of the SQL query as a `Table`. A `Table` can be used in [subsequent SQL and Table API queries](common.html#mixing-table-api-and-sql), be [converted into a DataSet or DataStream](common.html#integration-with-datastream-and-dataset-api), or [written to a TableSink](common.html#emit-a-table)). SQL and Table API queries can seamlessly mixed and are holistically optimized and translated into a single program.
+用户可以通过 `TableEnvironment` 类中的 `sqlQuery()` 方法执行SQL查询，查询结果会以 `Table` 形式返回。用户可将 `Table` 用于[后续的 SQL 及 Table 查询](common.html#mixing-table-api-and-sql)，或将其[转换成 DataSet 或 DataStream](common.html#integration-with-datastream-and-dataset-api)，亦可将它[写入到某个 TableSink 中](common.html#emit-a-table)。无论是通过 SQL 还是 Table API 提交的查询都可以进行无缝衔接，系统内部会对它们进行整体优化，并最终转换成一个 Flink 程序执行。
 
-In order to access a table in a SQL query, it must be [registered in the TableEnvironment](common.html#register-tables-in-the-catalog). A table can be registered from a [TableSource](common.html#register-a-tablesource), [Table](common.html#register-a-table), [DataStream, or DataSet](common.html#register-a-datastream-or-dataset-as-table). Alternatively, users can also [register external catalogs in a TableEnvironment](common.html#register-an-external-catalog) to specify the location of the data sources.
+为了在 SQL 查询中使用某个 `Table`，用户必须先[在 TableEnvironment 中对其进行注册](common.html#register-tables-in-the-catalog)。`Table` 的注册来源可以是某个 [TableSource](common.html#register-a-tablesource)，某个现有的 [Table](common.html#register-a-table)，或某个[DataStream 或 DataSet](common.html#register-a-datastream-or-dataset-as-table)。此外，用户还可以通过[在 TableEnvironment 中注册外部 Catalog](common.html#register-an-external-catalog) 的方式来指定数据源位置。
 
-For convenience `Table.toString()` automatically registers the table under a unique name in its `TableEnvironment` and returns the name. Hence, `Table` objects can be directly inlined into SQL queries (by string concatenation) as shown in the examples below.
+为方便使用，在执行 `Table.toString()` 方法时，系统会自动以一个唯一名称在当前 `TableEnvironment` 中注册该 `Table` 并返回该唯一名称。因此，在以下示例中，`Table` 对象都可以直接以内联（字符串拼接）方式出现在 SQL 语句中。
 
-**Note:** Flink's SQL support is not yet feature complete. Queries that include unsupported SQL features cause a `TableException`. The supported features of SQL on batch and streaming tables are listed in the following sections.
+**注意：** 现阶段Flink对于SQL的支持还并不完善。如果在查询中使用了系统尚不支持的功能，会引发 `TableException` 。以下章节将对批环境和流环境下 SQL 功能支持情况做出相应说明。
 
 * This will be replaced by the TOC
 {:toc}
 
-Specifying a Query
+执行查询
 ------------------
 
-The following examples show how to specify a SQL queries on registered and inlined tables.
+以下示例展示了如何通过内联方式以及注册 table 的方式执行 SQL 查询。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -106,12 +106,12 @@ tableEnv.sqlUpdate(
 
 {% top %}
 
-Supported Syntax
+语法支持
 ----------------
 
-Flink parses SQL using [Apache Calcite](https://calcite.apache.org/docs/reference.html), which supports standard ANSI SQL. DDL statements are not supported by Flink.
+Flink 内部借助另一个开源项目 [Apache Calcite](https://calcite.apache.org/docs/reference.html) 来解析 SQL 。Calcite 支持标准的 ANSI SQL，但在Flink内部暂时还不支持 DDL 语句。
 
-The following BNF-grammar describes the superset of supported SQL features in batch and streaming queries. The [Operations](#operations) section shows examples for the supported features and indicates which features are only supported for batch or streaming queries.
+以下是利用 BNF-范式给出的针对批和流查询的SQL语法支持情况。我们在[操作支持](#操作支持)章节会以示例形式展示现有功能，并详细说明哪些功能仅适用于流或批环境。
 
 {% highlight sql %}
 
@@ -198,15 +198,16 @@ windowSpec:
 
 {% endhighlight %}
 
-Flink SQL uses a lexical policy for identifier (table, attribute, function names) similar to Java:
+Flink SQL 中对待表名、属性名及函数名等标识符都采用类似Java的规则，具体而言：
 
-- The case of identifiers is preserved whether or not they are quoted.
-- After which, identifiers are matched case-sensitively.
-- Unlike Java, back-ticks allow identifiers to contain non-alphanumeric characters (e.g. <code>"SELECT a AS `my field` FROM t"</code>).
+- 无论是否用引号引起来，标识符的大小写都会保留；
+- 标识符在进行匹配时是大小写敏感的；
+- 和Java不同的是，Flink SQL 可以利用反引号在标识符中加入非数字和字母的符号，例如“SELECT a AS `my field` FROM t”。
+
 
 {% top %}
 
-Operations
+操作支持
 --------------------
 
 ### Scan, Projection, and Filter
@@ -222,7 +223,7 @@ Operations
   <tbody>
   	<tr>
   		<td>
-        <strong>Scan / Select / As</strong><br>
+        <strong>Scan / Select / As</strong><br/>
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
   		<td>
@@ -235,7 +236,7 @@ SELECT a, c AS d FROM Orders
   	</tr>
     <tr>
       <td>
-        <strong>Where / Filter</strong><br>
+        <strong>Where / Filter</strong><br/>
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
       <td>
@@ -248,11 +249,11 @@ SELECT * FROM Orders WHERE a % 2 = 0
     </tr>
     <tr>
       <td>
-        <strong>User-defined Scalar Functions (Scalar UDF)</strong><br>
+        <strong>User-Defined Scalar Functions (Scalar UDF)</strong><br/>
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
       <td>
-      <p>UDFs must be registered in the TableEnvironment. See the <a href="udfs.html">UDF documentation</a> for details on how to specify and register scalar UDFs.</p>
+      <p>和 Table 类似，用户在使用某个 Scalar UDF 之前必须在 TableEnvironment 中对其进行注册。欲了解更多有关定义和注册 Scalar UDF 的详情，请参阅 <a href="udfs.html">UDF 文档</a> 。</p>
 {% highlight sql %}
 SELECT PRETTY_PRINT(user) FROM Orders
 {% endhighlight %}
@@ -277,27 +278,27 @@ SELECT PRETTY_PRINT(user) FROM Orders
   <tbody>
     <tr>
       <td>
-        <strong>GroupBy Aggregation</strong><br>
-        <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span><br>
+        <strong>GroupBy Aggregation</strong><br/>
+        <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span><br/>
         <span class="label label-info">Result Updating</span>
       </td>
       <td>
-        <p><b>Note:</b> GroupBy on a streaming table produces an updating result. See the <a href="streaming.html">Streaming Concepts</a> page for details.
-        </p>
 {% highlight sql %}
 SELECT a, SUM(b) as d
 FROM Orders
 GROUP BY a
 {% endhighlight %}
+        <p><b>注意：</b> 在流环境中使用 groupBy 将会产生一个持续更新的结果。详情请参阅 <a href="streaming.html">Streaming Concepts</a> 。
+        </p>
       </td>
     </tr>
     <tr>
     	<td>
-        <strong>GroupBy Window Aggregation</strong><br>
+        <strong>GroupBy Window Aggregation</strong><br/>
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
     	<td>
-        <p>Use a group window to compute a single result row per group. See <a href="#group-windows">Group Windows</a> section for more details.</p>
+        <p>利用窗口对数据进行分组计算，每组产生一个结果。详情请参阅 <a href="#group-windows">Group Windows</a> 章节。</p>
 {% highlight sql %}
 SELECT user, SUM(amount)
 FROM Orders
@@ -307,11 +308,10 @@ GROUP BY TUMBLE(rowtime, INTERVAL '1' DAY), user
     </tr>
     <tr>
     	<td>
-        <strong>Over Window aggregation</strong><br>
+        <strong>Over Window Aggregation</strong><br/>
         <span class="label label-primary">Streaming</span>
       </td>
     	<td>
-        <p><b>Note:</b> All aggregates must be defined over the same window, i.e., same partitioning, sorting, and range. Currently, only windows with PRECEDING (UNBOUNDED and bounded) to CURRENT ROW range are supported. Ranges with FOLLOWING are not supported yet. ORDER BY must be specified on a single <a href="streaming.html#time-attributes">time attribute</a></p>
 {% highlight sql %}
 SELECT COUNT(amount) OVER (
   PARTITION BY user
@@ -326,24 +326,25 @@ WINDOW w AS (
   ORDER BY proctime
   ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)  
 {% endhighlight %}
+        <p><b>注意：</b> 所有聚合操作都必须基于相同的窗口（即相同的划分、排序及范围策略）进行。目前，Flink SQL 只支持 PRECEDING (UNBOUNDED and BOUNDED) to CURRENT ROW 的范围定义（暂不支持 FOLLOWING）。此外，ORDER BY 目前只支持定义于单个<a href="streaming.html#time-attributes">时间属性</a>上。</p>
       </td>
     </tr>
     <tr>
       <td>
-        <strong>Distinct</strong><br>
-        <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span> <br>
+        <strong>Distinct</strong><br/>
+        <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span> <br/>
         <span class="label label-info">Result Updating</span>
       </td>
       <td>
 {% highlight sql %}
 SELECT DISTINCT users FROM Orders
 {% endhighlight %}
-       <p><b>Note:</b> For streaming queries the required state to compute the query result might grow infinitely depending on the number of distinct fields. Please provide a query configuration with valid retention interval to prevent excessive state size. See <a href="streaming.html">Streaming Concepts</a> for details.</p>
+       <p><b>注意：</b> 在需要状态存储的流查询中使用 DISTINCT 可能会导致状态数据随数据基数增加而无限增长 。针对该情况，用户可以通过设置“保留时间”参数来定期清理状态数据。详情请见 <a href="streaming.html">Streaming Concepts</a> 页。</p>
       </td>
     </tr>
     <tr>
       <td>
-        <strong>Grouping sets, Rollup, Cube</strong><br>
+        <strong>Grouping Sets, Rollup, Cube</strong><br/>
         <span class="label label-primary">Batch</span>
       </td>
       <td>
@@ -356,7 +357,7 @@ GROUP BY GROUPING SETS ((user), (product))
     </tr>
     <tr>
       <td>
-        <strong>Having</strong><br>
+        <strong>Having</strong><br/>
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
       <td>
@@ -370,11 +371,11 @@ HAVING SUM(amount) > 50
     </tr>
     <tr>
       <td>
-        <strong>User-defined Aggregate Functions (UDAGG)</strong><br>
+        <strong>User-Defined Aggregate Functions (UDAGG)</strong><br/>
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
       <td>
-        <p>UDAGGs must be registered in the TableEnvironment. See the <a href="udfs.html">UDF documentation</a> for details on how to specify and register UDAGGs.</p>
+        <p>用户在使用某个 UDAGG 之前同样需要在 TableEnvironment 中对其进行注册。欲了解更多有关定义和注册 UDAGG 的详情，请参阅 <a href="udfs.html">UDF documentation</a> 文档。</p>
 {% highlight sql %}
 SELECT MyAggregate(amount)
 FROM Orders
@@ -400,29 +401,27 @@ GROUP BY users
   </thead>
   <tbody>
     <tr>
-      <td><strong>Inner Equi-join</strong><br>
+      <td><strong>Inner Equi-Join</strong><br/>
         <span class="label label-primary">Batch</span>
         <span class="label label-primary">Streaming</span>
       </td>
       <td>
-        <p>Currently, only equi-joins are supported, i.e., joins that have at least one conjunctive condition with an equality predicate. Arbitrary cross or theta joins are not supported.</p>
-        <p><b>Note:</b> The order of joins is not optimized. Tables are joined in the order in which they are specified in the FROM clause. Make sure to specify tables in an order that does not yield a cross join (Cartesian product) which are not supported and would cause a query to fail.</p>
+        <p>目前 Flink SQL 只支持 equi-join，即用户至少需要在某个合取表达式中提供一个等值条件。Cross join 和 theta-join 暂不支持。</p>
 {% highlight sql %}
 SELECT *
 FROM Orders INNER JOIN Product ON Orders.productId = Product.id
 {% endhighlight %}
-        <p><b>Note:</b> For streaming queries the required state to compute the query result might grow infinitely depending on the number of distinct input rows. Please provide a query configuration with valid retention interval to prevent excessive state size. See <a href="streaming.html">Streaming Concepts</a> for details.</p>
+        <p><b>注意：</b>Flink SQL 暂未对多表 join 进行优化，实际 join 的顺序等同于 FROM 子句中表出现的顺序。所以在指定表顺序的时候要避免出现 cross join（笛卡尔积），以防查询执行失败。此外，在双流 join 等需要存储状态的查询中，随着输入数据条数的不断增加，状态可能会无限增长。为避免出现该情况，请在查询配置中设定一个合适的状态“保留时间”。详情请见 <a href="streaming.html">Streaming Concepts</a> 页。</p>
       </td>
     </tr>
     <tr>
-      <td><strong>Outer Equi-join</strong><br>
+      <td><strong>Outer Equi-Join</strong><br/>
         <span class="label label-primary">Batch</span>
         <span class="label label-primary">Streaming</span>
         <span class="label label-info">Result Updating</span>
       </td>
       <td>
-        <p>Currently, only equi-joins are supported, i.e., joins that have at least one conjunctive condition with an equality predicate. Arbitrary cross or theta joins are not supported.</p>
-        <p><b>Note:</b> The order of joins is not optimized. Tables are joined in the order in which they are specified in the FROM clause. Make sure to specify tables in an order that does not yield a cross join (Cartesian product) which are not supported and would cause a query to fail.</p>
+        <p>目前 Flink SQL 只支持 equi-join，即用户至少需要在某个合取表达式中提供一个等值条件。Cross join 和 theta-join 暂不支持。</p>
 {% highlight sql %}
 SELECT *
 FROM Orders LEFT JOIN Product ON Orders.productId = Product.id
@@ -433,19 +432,16 @@ FROM Orders RIGHT JOIN Product ON Orders.productId = Product.id
 SELECT *
 FROM Orders FULL OUTER JOIN Product ON Orders.productId = Product.id
 {% endhighlight %}
-        <p><b>Note:</b> For streaming queries the required state to compute the query result might grow infinitely depending on the number of distinct input rows. Please provide a query configuration with valid retention interval to prevent excessive state size. See <a href="streaming.html">Streaming Concepts</a> for details.</p>
+        <p><b>注意：</b>Flink SQL 暂未对多表 join 进行优化，实际 join 的顺序等同于 FROM 子句中表出现的顺序。所以在指定表顺序的时候要避免出现 cross join（笛卡尔积），以防查询执行失败。此外，在双流 join 等需要存储状态的查询中，随着输入数据条数的不断增加，状态可能会无限增长。为避免出现该情况，请在查询配置中设定一个合适的状态“保留时间”。详情请见 <a href="streaming.html">Streaming Concepts</a> 页。</p>
       </td>
     </tr>
     <tr>
-      <td><strong>Time-windowed Join</strong><br>
+      <td><strong>Time-Windowed Join</strong><br/>
         <span class="label label-primary">Batch</span>
         <span class="label label-primary">Streaming</span>
       </td>
       <td>
-        <p><b>Note:</b> Time-windowed joins are a subset of regular joins that can be processed in a streaming fashion.</p>
-
-        <p>A time-windowed join requires at least one equi-join predicate and a join condition that bounds the time on both sides. Such a condition can be defined by two appropriate range predicates (<code>&lt;, &lt;=, &gt;=, &gt;</code>), a <code>BETWEEN</code> predicate, or a single equality predicate that compares <a href="streaming.html#time-attributes">time attributes</a> of the same type (i.e., processing time or event time) of both input tables.</p> 
-        <p>For example, the following predicates are valid window join conditions:</p>
+        <p>Time-windowd join 的触发条件是用户至少提供一个等值条件和一个对双流<a href="streaming.html#time-attributes">时间属性</a>的相互约束。其中后者可以通过在两侧时间属性（必须同为 row-time 或 processing-time）上应用两个范围约束 （<code>&lt;, &lt;=, &gt;=, &gt;</code>）、一个 <code>BETWEEN</code> 表达式、或是一个等值条件来实现。以下列出了几个常见的时间属性约束条件： </p>
           
         <ul>
           <li><code>ltime = rtime</code></li>
@@ -460,16 +456,16 @@ WHERE o.id = s.orderId AND
       o.ordertime BETWEEN s.shiptime - INTERVAL '4' HOUR AND s.shiptime
 {% endhighlight %}
 
-The example above will join all orders with their corresponding shipments if the order was shipped four hours after the order was received.
+上述例子展示了如何将订单（orders）和收到订单后4小时之内的运输记录（shipments）进行 join。
       </td>
     </tr>
     <tr>
     	<td>
-        <strong>Expanding arrays into a relation</strong><br>
+        <strong>Expanding arrays into a relation</strong><br/>
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
     	<td>
-        <p>Unnesting WITH ORDINALITY is not supported yet.</p>
+        <p>目前还不支持 WITH ORDINALITY 子句。</p>
 {% highlight sql %}
 SELECT users, tag
 FROM Orders CROSS JOIN UNNEST(tags) AS t (tag)
@@ -478,11 +474,11 @@ FROM Orders CROSS JOIN UNNEST(tags) AS t (tag)
     </tr>
     <tr>
     	<td>
-        <strong>Join with User Defined Table Functions (UDTF)</strong><br>
+        <strong>Join with User Defined Table Functions (UDTF)</strong><br/>
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
     	<td>
-        <p>UDTFs must be registered in the TableEnvironment. See the <a href="udfs.html">UDF documentation</a> for details on how to specify and register UDTFs. </p>
+        <p>用户在使用某个 UDTF 之前同样需要在 TableEnvironment 中对其进行注册。欲了解更多有关定义和注册 UDTF 的详情，请参阅 <a href="udfs.html">UDF documentation</a> 文档。</p>
         <p>Inner Join</p>
 {% highlight sql %}
 SELECT users, tag
@@ -494,7 +490,7 @@ SELECT users, tag
 FROM Orders LEFT JOIN LATERAL TABLE(unnest_udtf(tags)) t AS tag ON TRUE
 {% endhighlight %}
 
-        <p><b>Note:</b> Currently, only literal <code>TRUE</code> is supported as predicate for a left outer join against a lateral table.</p>
+        <p><b>注意：</b>当前版本 Left outer lateral join 仅支持以常量 <code>TRUE</code> 为 join 条件。</p>
       </td>
     </tr>
   </tbody>
@@ -516,7 +512,7 @@ FROM Orders LEFT JOIN LATERAL TABLE(unnest_udtf(tags)) t AS tag ON TRUE
   <tbody>
   	<tr>
       <td>
-        <strong>Union</strong><br>
+        <strong>Union</strong><br/>
         <span class="label label-primary">Batch</span>
       </td>
       <td>
@@ -532,7 +528,7 @@ FROM (
     </tr>
     <tr>
       <td>
-        <strong>UnionAll</strong><br>
+        <strong>UnionAll</strong><br/>
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
       <td>
@@ -549,7 +545,7 @@ FROM (
 
     <tr>
       <td>
-        <strong>Intersect / Except</strong><br>
+        <strong>Intersect / Except</strong><br/>
         <span class="label label-primary">Batch</span>
       </td>
       <td>
@@ -574,11 +570,11 @@ FROM (
 
     <tr>
       <td>
-        <strong>In</strong><br>
+        <strong>In</strong><br/>
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
       <td>
-        <p>Returns true if an expression exists in a given table sub-query. The sub-query table must consist of one column. This column must have the same data type as the expression.</p>
+        <p>如果某个表达式的值出现在给定的子查询中则返回 true。目标子查询只允许包含一列，且该列的类型必须和表达式所求值的类型相同。</p>
 {% highlight sql %}
 SELECT user, amount
 FROM Orders
@@ -586,17 +582,17 @@ WHERE product IN (
     SELECT product FROM NewProducts
 )
 {% endhighlight %}
-        <p><b>Note:</b> For streaming queries the operation is rewritten in a join and group operation. The required state to compute the query result might grow infinitely depending on the number of distinct input rows. Please provide a query configuration with valid retention interval to prevent excessive state size. See <a href="streaming.html">Streaming Concepts</a> for details.</p>
+        <p><b>注意：</b>In 操作在流式查询中会被重写为 join + groupBy 的形式。在执行时所需存储的状态量可能会随着输入行数的增加而增长。为避免该情况，请在查询配置中为状态设置“保留时间”。详情请见 <a href="streaming.html">Streaming Concepts</a> 页。</p>
       </td>
     </tr>
 
     <tr>
       <td>
-        <strong>Exists</strong><br>
+        <strong>Exists</strong><br/>
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
       <td>
-        <p>Returns true if the sub-query returns at least one row. Only supported if the operation can be rewritten in a join and group operation.</p>
+        <p>如果目标子查询中至少包含一行则返回 true。</p>
 {% highlight sql %}
 SELECT user, amount
 FROM Orders
@@ -604,7 +600,7 @@ WHERE product EXISTS (
     SELECT product FROM NewProducts
 )
 {% endhighlight %}
-        <p><b>Note:</b> For streaming queries the operation is rewritten in a join and group operation. The required state to compute the query result might grow infinitely depending on the number of distinct input rows. Please provide a query configuration with valid retention interval to prevent excessive state size. See <a href="streaming.html">Streaming Concepts</a> for details.</p>
+        <p><b>注意：</b> 在流式查询中，系统需要将 Exists 操作重写为 join + groupBy 的形式，对于无法重写的 Exists 操作，Flink SQL 暂不支持。查询执行期间所需存储的状态量可能会随着输入行数的增加而无限增长。为避免该情况，请在查询配置中为状态设置“保留时间”。详情请见 <a href="streaming.html">Streaming Concepts</a> 页。</p>
       </td>
     </tr>
   </tbody>
@@ -626,22 +622,21 @@ WHERE product EXISTS (
   <tbody>
   	<tr>
       <td>
-        <strong>Order By</strong><br>
+        <strong>Order By</strong><br/>
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
       <td>
-<b>Note:</b> The result of streaming queries must be primarily sorted on an ascending <a href="streaming.html#time-attributes">time attribute</a>. Additional sorting attributes are supported.
-
 {% highlight sql %}
 SELECT *
 FROM Orders
 ORDER BY orderTime
 {% endhighlight %}
+<p><b>注意：</b> 如果要对流式查询的结果进行排序，必须首先按照<a href="streaming.html#time-attributes">时间属性</a>升序进行。除此之外用户还可以指定一些额外的排序属性。</p>     
       </td>
     </tr>
 
     <tr>
-      <td><strong>Limit</strong><br>
+      <td><strong>Limit</strong><br/>
         <span class="label label-primary">Batch</span>
       </td>
       <td>
@@ -672,11 +667,11 @@ LIMIT 3
   <tbody>
     <tr>
       <td>
-        <strong>Insert Into</strong><br>
+        <strong>Insert Into</strong><br/>
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
       <td>
-        <p>Output tables must be registered in the TableEnvironment (see <a href="common.html#register-a-tablesink">Register a TableSink</a>). Moreover, the schema of the registered table must match the schema of the query.</p>
+        <p>结果输出表在使用之前需先在 TableEnvironment 中进行注册，详情请见<a href="common.html#register-a-tablesink">注册 TableSink</a> 章节。此外用户需要保证输出表的 schema 和查询结果的 schema 保持一致。</p>
 
 {% highlight sql %}
 INSERT INTO OutputTable
@@ -694,7 +689,7 @@ FROM Orders
 
 ### Group Windows
 
-Group windows are defined in the `GROUP BY` clause of a SQL query. Just like queries with regular `GROUP BY` clauses, queries with a `GROUP BY` clause that includes a group window function compute a single result row per group. The following group windows functions are supported for SQL on batch and streaming tables.
+用户可以像定义普通分组一样，利用 `GROUP BY` 子句在查询中定义 Group Window。子句中的 group window function 会对每个分组中的数据进行计算并生成一个只包含一行记录的结果。下列 group window function 同时适用于批场景和流场景下的表查询。
 
 <table class="table table-bordered">
   <thead>
@@ -707,29 +702,29 @@ Group windows are defined in the `GROUP BY` clause of a SQL query. Just like que
   <tbody>
     <tr>
       <td><code>TUMBLE(time_attr, interval)</code></td>
-      <td>Defines a tumbling time window. A tumbling time window assigns rows to non-overlapping, continuous windows with a fixed duration (<code>interval</code>). For example, a tumbling window of 5 minutes groups rows in 5 minutes intervals. Tumbling windows can be defined on event-time (stream + batch) or processing-time (stream).</td>
+      <td>定义一个滚动时间窗口（tumbling time window）。滚动时间窗口会将记录分配到连续、不重叠且具有固定时间长度的窗口中。例如一个长度为5分钟滚动时间窗口会将记录按照每5分钟进行分组。滚动时间窗口允许定义在 row-time 和 processing-time 之上，但只有流场景下才支持 processing-time 。</td>
     </tr>
     <tr>
       <td><code>HOP(time_attr, interval, interval)</code></td>
-      <td>Defines a hopping time window (called sliding window in the Table API). A hopping time window has a fixed duration (second <code>interval</code> parameter) and hops by a specified hop interval (first <code>interval</code> parameter). If the hop interval is smaller than the window size, hopping windows are overlapping. Thus, rows can be assigned to multiple windows. For example, a hopping window of 15 minutes size and 5 minute hop interval assigns each row to 3 different windows of 15 minute size, which are evaluated in an interval of 5 minutes. Hopping windows can be defined on event-time (stream + batch) or processing-time (stream).</td>
+	  <td>定义一个跳跃时间窗口 （hopping time window，在Table API 中称为滑动时间窗口）。每个跳跃时间窗口都有一个固定大小的时间长度（通过第一个 <code>interval</code> 参数定义）和一个跳跃间隔（通过第二个 <code>interval</code> 参数定义）。如果跳跃间隔小于窗口长度，则不同窗口实例之间会出现重叠，即每条数据可能都会被分配到多个窗口实例中。例如对一个长度为15分钟，跳跃间隔为5分钟窗口，每行记录都会被分配到3个长度为15分钟的不同窗口实例中，它们之间的处理间隔是5分钟。跳跃时间窗口允许定义在 row-time 和 processing-time 之上，但只有流场景下才允许使用 processing-time</td>
     </tr>
     <tr>
       <td><code>SESSION(time_attr, interval)</code></td>
-      <td>Defines a session time window. Session time windows do not have a fixed duration but their bounds are defined by a time <code>interval</code> of inactivity, i.e., a session window is closed if no event appears for a defined gap period. For example a session window with a 30 minute gap starts when a row is observed after 30 minutes inactivity (otherwise the row would be added to an existing window) and is closed if no row is added within 30 minutes. Session windows can work on event-time (stream + batch) or processing-time (stream).</td>
+      <td>定义一个会话时间窗口 （session time window）。会话时间窗口没有固定长度，其边界是通过一个“非活动时间间隔”来指定，即如果超过一段时间没有满足现有窗口条件的数据到来，则判定窗口结束。例如给定一个时间间隔为30分钟的会话时间窗口，如果某条记录到来之前已经有超过30分钟没有记录，则会开启一个新的窗口实例（否则该记录会被加到已有窗口实例中）。同样，如果再出现连续30分钟的记录真空期，则当前窗口实例会被关闭。会话时间窗口允许定义在 row-time 和 processing-time 之上，但同样只有流场景下才允许使用 processing-time。</td>
     </tr>
   </tbody>
 </table>
 
 
-#### Time Attributes
+#### 时间属性
 
-For SQL queries on streaming tables, the `time_attr` argument of the group window function must refer to a valid time attribute that specifies the processing time or event time of rows. See the [documentation of time attributes](streaming.html#time-attributes) to learn how to define time attributes.
+对于流场景下的SQL，group window function 中的 `time_attr` 参数必须是某个有效的 processing-time 或 row-time 属性。有关如何定义时间属性，请参照[时间属性说明文档](streaming.html#time-attributes)。
 
-For SQL on batch tables, the `time_attr` argument of the group window function must be an attribute of type `TIMESTAMP`.
+对于批场景下的SQL，group window function 中的 `time_attr` 参数必须是某个 `TIMESTAMP` 类型的属性。
 
-#### Selecting Group Window Start and End Timestamps
+#### 访问 Group Window 的开始和结束时间
 
-The start and end timestamps of group windows as well as time attributes can be selected with the following auxiliary functions:
+用户可以通过以下辅助函数来访问 Group Window 的开始、结束时间以及可以用于后续计算的时间属性。
 
 <table class="table table-bordered">
   <thead>
@@ -746,7 +741,7 @@ The start and end timestamps of group windows as well as time attributes can be 
         <code>HOP_START(time_attr, interval, interval)</code><br/>
         <code>SESSION_START(time_attr, interval)</code><br/>
       </td>
-      <td><p>Returns the timestamp of the inclusive lower bound of the corresponding tumbling, hopping, or session window.</p></td>
+      <td><p>返回对应滚动、跳跃或会话时间窗口的时间下限（<i>包含边界值</i>）。</p></td>
     </tr>
     <tr>
       <td>
@@ -754,8 +749,9 @@ The start and end timestamps of group windows as well as time attributes can be 
         <code>HOP_END(time_attr, interval, interval)</code><br/>
         <code>SESSION_END(time_attr, interval)</code><br/>
       </td>
-      <td><p>Returns the timestamp of the <i>exclusive</i> upper bound of the corresponding tumbling, hopping, or session window.</p>
-        <p><b>Note:</b> The exclusive upper bound timestamp <i>cannot</i> be used as a <a href="streaming.html#time-attributes">rowtime attribute</a> in subsequent time-based operations, such as <a href="#joins">time-windowed joins</a> and <a href="#aggregations">group window or over window aggregations</a>.</p></td>
+      <td><p>返回对应滚动、跳跃或会话时间窗口的时间上限（<i>不含边界值</i>）。</p>
+        <p><b>注意：</b> 该窗口时间上限值的类型是 timestamp，因此<i>不允许</i>作为 <a href="streaming.html#time-attributes">rowtime 属性</a>用于后续其他基于时间的计算中（如  <a href="#joins">time-windowed joins</a> 、 <a href="#aggregations">group window 或 over window aggregations</a>）。</p>
+		</td>
     </tr>
     <tr>
       <td>
@@ -763,8 +759,9 @@ The start and end timestamps of group windows as well as time attributes can be 
         <code>HOP_ROWTIME(time_attr, interval, interval)</code><br/>
         <code>SESSION_ROWTIME(time_attr, interval)</code><br/>
       </td>
-      <td><p>Returns the timestamp of the <i>inclusive</i> upper bound of the corresponding tumbling, hopping, or session window.</p>
-      <p>The resulting attribute is a <a href="streaming.html#time-attributes">rowtime attribute</a> that can be used in subsequent time-based operations such as <a href="#joins">time-windowed joins</a> and <a href="#aggregations">group window or over window aggregations</a>.</p></td>
+      <td><p>返回对应滚动、跳跃或会话时间窗口的时间上限（<i>不含边界值</i>）。</p>
+      <p><b>注意：</b> 该窗口时间上限值是一个 <a href="streaming.html#time-attributes">rowtime 属性</a>，因此可以用于后续其他基于时间的计算中（如  <a href="#joins">time-windowed joins</a> 、 <a href="#aggregations">group window 或 over window aggregations</a>）。</p>
+	  </td>
     </tr>
     <tr>
       <td>
@@ -772,14 +769,15 @@ The start and end timestamps of group windows as well as time attributes can be 
         <code>HOP_PROCTIME(time_attr, interval, interval)</code><br/>
         <code>SESSION_PROCTIME(time_attr, interval)</code><br/>
       </td>
-      <td><p>Returns a <a href="streaming.html#time-attributes">proctime attribute</a> that can be used in subsequent time-based operations such as <a href="#joins">time-windowed joins</a> and <a href="#aggregations">group window or over window aggregations</a>.</p></td>
+      <td><p>返回一个 <a href="streaming.html#time-attributes">proctime 属性</a>，可用于后续其他基于时间的计算中（如  <a href="#joins">time-windowed joins</a> 、 <a href="#aggregations">group window 或 over window aggregations</a>）。</p>
+	  </td>
     </tr>
   </tbody>
 </table>
 
-*Note:* Auxiliary functions must be called with exactly same arguments as the group window function in the `GROUP BY` clause.
+*注意：* 在使用上述辅助函数时必须保证其参数与 `GROUP BY` 子句中 group window function 的参数完全相同。
 
-The following examples show how to specify SQL queries with group windows on streaming tables.
+以下是在流场景中使用 group windows 查询的示例。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -792,7 +790,7 @@ DataStream<Tuple3<Long, String, Integer>> ds = env.addSource(...);
 // register the DataStream as table "Orders"
 tableEnv.registerDataStream("Orders", ds, "user, product, amount, proctime.proctime, rowtime.rowtime");
 
-// compute SUM(amount) per day (in event-time)
+// compute SUM(amount) per day (in row-time)
 Table result1 = tableEnv.sqlQuery(
   "SELECT user, " +
   "  TUMBLE_START(rowtime, INTERVAL '1' DAY) as wStart,  " +
@@ -803,11 +801,11 @@ Table result1 = tableEnv.sqlQuery(
 Table result2 = tableEnv.sqlQuery(
   "SELECT user, SUM(amount) FROM Orders GROUP BY TUMBLE(proctime, INTERVAL '1' DAY), user");
 
-// compute every hour the SUM(amount) of the last 24 hours in event-time
+// compute every hour the SUM(amount) of the last 24 hours in row-time
 Table result3 = tableEnv.sqlQuery(
   "SELECT product, SUM(amount) FROM Orders GROUP BY HOP(rowtime, INTERVAL '1' HOUR, INTERVAL '1' DAY), product");
 
-// compute SUM(amount) per session with 12 hour inactivity gap (in event-time)
+// compute SUM(amount) per session with 12 hour inactivity gap (in row-time)
 Table result4 = tableEnv.sqlQuery(
   "SELECT user, " +
   "  SESSION_START(rowtime, INTERVAL '12' HOUR) AS sStart, " +
@@ -829,7 +827,7 @@ val ds: DataStream[(Long, String, Int)] = env.addSource(...)
 // register the DataStream under the name "Orders"
 tableEnv.registerDataStream("Orders", ds, 'user, 'product, 'amount, 'proctime.proctime, 'rowtime.rowtime)
 
-// compute SUM(amount) per day (in event-time)
+// compute SUM(amount) per day (in row-time)
 val result1 = tableEnv.sqlQuery(
     """
       |SELECT
@@ -844,11 +842,11 @@ val result1 = tableEnv.sqlQuery(
 val result2 = tableEnv.sqlQuery(
   "SELECT user, SUM(amount) FROM Orders GROUP BY TUMBLE(proctime, INTERVAL '1' DAY), user")
 
-// compute every hour the SUM(amount) of the last 24 hours in event-time
+// compute every hour the SUM(amount) of the last 24 hours in row-time
 val result3 = tableEnv.sqlQuery(
   "SELECT product, SUM(amount) FROM Orders GROUP BY HOP(rowtime, INTERVAL '1' HOUR, INTERVAL '1' DAY), product")
 
-// compute SUM(amount) per session with 12 hour inactivity gap (in event-time)
+// compute SUM(amount) per session with 12 hour inactivity gap (in row-time)
 val result4 = tableEnv.sqlQuery(
     """
       |SELECT
@@ -866,10 +864,10 @@ val result4 = tableEnv.sqlQuery(
 
 {% top %}
 
-Data Types
+数据类型
 ----------
 
-The SQL runtime is built on top of Flink's DataSet and DataStream APIs. Internally, it also uses Flink's `TypeInformation` to define data types. Fully supported types are listed in `org.apache.flink.table.api.Types`. The following table summarizes the relation between SQL Types, Table API types, and the resulting Java class.
+Flink SQL 运行时逻辑是基于 DataSet 和 DataStream API 构建的，因此它内部也采用 `TypeInformation` 来指定数据类型。用户可以从源码中的 `org.apache.flink.table.api.Types` 类查看所有支持的数据类型。在此我们给出 SQL 类型、Table API 类型以及相应 Java 类型的对照关系表。
 
 | Table API              | SQL                         | Java type              |
 | :--------------------- | :-------------------------- | :--------------------- |
@@ -892,22 +890,16 @@ The SQL runtime is built on top of Flink's DataSet and DataStream APIs. Internal
 | `Types.MAP`            | `MAP`                       | `java.util.HashMap`    |
 | `Types.MULTISET`       | `MULTISET`                  | e.g. `java.util.HashMap<String, Integer>` for a multiset of `String` |
 
-Generic types and composite types (e.g., POJOs or Tuples) can be fields of a row as well. Generic types are treated as a black box and can be passed on or processed by [user-defined functions](udfs.html). Composite types can be accessed with [built-in functions](#built-in-functions) (see *Value access functions* section).
+除上述类型之外，Flink SQL 中的字段也允许是普通类型（generic type）及复合类型（例如 POJO 或 Tuple）。对普通类型，Flink SQL 会把它们看做“黑盒”一般，允许其作为 [UDF](udfs.html) 的参数或处理对象；而对复合类型，Flink SQL 允许用户通过[内置函数](#内置函数)对其进行访问（详见下文[值访问函数](#值访问函数)章节）。
 
 {% top %}
 
-Built-In Functions
+内置函数
 ------------------
 
-Flink's SQL support comes with a set of built-in functions for data transformations. This section gives a brief overview of the available functions.
+Flink SQL为用户内置了很多用于数据转换的常用函数，本章会对它们进行简要概述。如果您发现某个所需函数暂不支持，可以自己利用 [UDF 机制](udfs.html) 实现，亦或是如果您认为该函数比较通用，欢迎为其[创建一个详细的 JIRA issue](https://issues.apache.org/jira/secure/CreateIssue!default.jspa) 。
 
-<!--
-This list of SQL functions should be kept in sync with SqlExpressionTest to reduce confusion due to the large amount of SQL functions.
-The documentation is split up and ordered like the tests in SqlExpressionTest.
--->
-
-The Flink SQL functions (including their syntax) are a subset of Apache Calcite's built-in functions. Most of the documentation has been adopted from the [Calcite SQL reference](https://calcite.apache.org/docs/reference.html).
-
+### 比较函数
 
 <table class="table table-bordered">
   <thead>
@@ -925,7 +917,7 @@ value1 = value2
 {% endhighlight %}
       </td>
       <td>
-        <p>Equals.</p>
+        <p>如果 <i>value1</i> 等于 <i>value2</i>，返回 TRUE；如果 <i>value1</i> 或 <i>value2</i> 为 NULL 返回 UNKNOWN。</p>
       </td>
     </tr>
 
@@ -936,7 +928,7 @@ value1 <> value2
 {% endhighlight %}
       </td>
       <td>
-        <p>Not equal.</p>
+        <p>如果 <i>value1</i> 不等 <i>value2</i>，返回 TRUE；如果 <i>value1</i> 或 <i>value2</i> 为 NULL 返回 UNKNOWN。</p>
       </td>
     </tr>
 
@@ -947,7 +939,7 @@ value1 > value2
 {% endhighlight %}
       </td>
       <td>
-        <p>Greater than.</p>
+        <p>如果 <i>value1</i> 大于 <i>value2</i>，返回 TRUE；如果<i>value1</i> 或 <i>value2</i> 为 NULL 返回 UNKNOWN。</p>
       </td>
     </tr>
 
@@ -958,7 +950,7 @@ value1 >= value2
 {% endhighlight %}
       </td>
       <td>
-        <p>Greater than or equal.</p>
+        <p>如果 <i>value1</i> 大于或等于 <i>value2</i>，返回 TRUE；如果 <i>value1</i> 或 <i>value2</i> 为 NULL 返回 UNKNOWN。</p>
       </td>
     </tr>
 
@@ -969,7 +961,7 @@ value1 < value2
 {% endhighlight %}
       </td>
       <td>
-        <p>Less than.</p>
+        <p>如果 <i>value1</i> 小于 <i>value2</i>，返回 TRUE；如果 <i>value1</i> 或 <i>value2</i> 为 NULL 返回 UNKNOWN。</p>
       </td>
     </tr>
 
@@ -980,7 +972,7 @@ value1 <= value2
 {% endhighlight %}
       </td>
       <td>
-        <p>Less than or equal.</p>
+        <p>如果 <i>value1</i> 小于或等于 <i>value2</i>，返回 TRUE；如 <i>value1</i> 或 <i>value2</i> 为 NULL 返回 UNKNOWN。</p>
       </td>
     </tr>
 
@@ -991,7 +983,7 @@ value IS NULL
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns TRUE if <i>value</i> is null.</p>
+        <p>如果 <i>value</i> 为 NULL，返回 TRUE。</p>
       </td>
     </tr>
 
@@ -1002,7 +994,7 @@ value IS NOT NULL
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns TRUE if <i>value</i> is not null.</p>
+        <p>如果 <i>value</i> 不为 NULL，返回 TRUE。</p>
       </td>
     </tr>
 
@@ -1013,7 +1005,9 @@ value1 IS DISTINCT FROM value2
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns TRUE if two values are not equal, treating null values as the same.</p>
+        <p>如 <i>value1</i> 和 <i>value2</i> 不同，返回 TRUE。此处所有 NULL 值都被看做相同。</p>
+		<p>例如：<code>1 IS DISTINCT FROM NULL</code> 返回 TRUE；
+        <code>NULL IS DISTINCT FROM NULL</code> 返回 FALSE。</p>
       </td>
     </tr>
 
@@ -1024,62 +1018,81 @@ value1 IS NOT DISTINCT FROM value2
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns TRUE if two values are equal, treating null values as the same.</p>
+        <p>如果 <i>value1</i> 和 <i>value2</i> 相同，返回 TRUE。此处所有 NULL 值都被看做相同。</p>
+		<p>例如：<code>1 IS NOT DISTINCT FROM NULL</code> 返回 FALSE；
+        <code>NULL IS NOT DISTINCT FROM NULL</code> 返回 TRUE。</p>
       </td>
     </tr>
 
     <tr>
       <td>
         {% highlight text %}
-value1 BETWEEN [ASYMMETRIC | SYMMETRIC] value2 AND value3
+value1 BETWEEN [ ASYMMETRIC | SYMMETRIC ] value2 AND value3
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns TRUE if <i>value1</i> is greater than or equal to <i>value2</i> and less than or equal to <i>value3</i>.</p>
+        <p>在默认情况下 (或使用 ASYMMETRIC 关键字), 如果 <i>value1</i> 大于等于 <i>value2</i> 且小于等于 <i>value3</i>，则返回 TRUE。
+          在使用 SYMMETRIC 关键字的情况下, 如果 <i>value1</i> 在 <i>value2</i> 和 <i>value3</i> 之间（包含边界），则返回 TRUE。 
+          如果 <i>value2</i> 或 <i>value3</i> 为 NULL， 根据情况返回 FALSE 或 UNKNOWN。</p>
+          <p>例如： <code>12 BETWEEN 15 AND 12</code> 返回 FALSE；
+          <code>12 BETWEEN SYMMETRIC 15 AND 12</code> 返回 TRUE；
+          <code>12 BETWEEN 10 AND NULL</code> 返回 UNKNOWN；
+          <code>12 BETWEEN NULL AND 10</code> 返回 FALSE；
+          <code>12 BETWEEN SYMMETRIC NULL AND 12</code> 返回 UNKNOWN。</p>
+		  </td>
+    </tr>
+
+    <tr>
+      <td>
+        {% highlight text %}
+value1 NOT BETWEEN [ ASYMMETRIC | SYMMETRIC ] value2 AND value3
+{% endhighlight %}
+      </td>
+      <td>
+        <p>在默认情况下 (或使用 ASYMMETRIC 关键字), 如果 <i>value1</i> 小于 <i>value2</i> 或大于 <i>value3</i>，则返回 TRUE。
+          在使用 SYMMETRIC 关键字的情况下, 如果 <i>value1</i> 不在 <i>value2</i> 和 <i>value3</i> 之间（包含边界），则返回 TRUE。 
+          如果 <i>value2</i> 或 <i>value3</i> 为 NULL， 根据情况返回 TRUE 或 UNKNOWN。</p>
+         <p>例如： <code>12 NOT BETWEEN 15 AND 12</code> 返回 TRUE；
+         <code>12 NOT BETWEEN SYMMETRIC 15 AND 12</code> 返回 FALSE；
+         <code>12 NOT BETWEEN NULL AND 15</code> 返回 UNKNOWN；
+         <code>12 NOT BETWEEN 15 AND NULL</code> 返回 TRUE；
+         <code>12 NOT BETWEEN SYMMETRIC 12 AND NULL</code> 返回 UNKNOWN。</p>
       </td>
     </tr>
 
     <tr>
       <td>
         {% highlight text %}
-value1 NOT BETWEEN value2 AND value3
+string1 LIKE string2 [ ESCAPE char ]
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns TRUE if <i>value1</i> is less than <i>value2</i> or greater than <i>value3</i>.</p>
-      </td>
+       <p>如果 <i>string1</i> 满足模式串 <i>string2</i>，则返回 TRUE。当 <i>string1</i> 或 <i>string2</i> 为 NULL，返回 UNKNOWN。如有需要可自定义一个转义字符 <i>char</i>。</p>
+       <p><b>注意：</b> 当前版本暂不支持自定义转义字符。</p>
+	  </td>
     </tr>
 
     <tr>
       <td>
         {% highlight text %}
-string1 LIKE string2 [ ESCAPE string3 ]
+string1 NOT LIKE string2 [ ESCAPE char ]
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns TRUE if <i>string1</i> matches pattern <i>string2</i>. An escape character can be defined if necessary.</p>
-      </td>
+       <p>如果 <i>string1</i> 不满足模式串 <i>string2</i>，则返回 TRUE。当 <i>string1</i> 或 <i>string2</i> 为 NULL，返回 UNKNOWN。如有需要可自定义一个转义字符 <i>char</i>。</p>
+       <p><b>注意：</b> 当前版本暂不支持自定义转义字符。</p>
+     </td>
     </tr>
 
     <tr>
       <td>
         {% highlight text %}
-string1 NOT LIKE string2 [ ESCAPE string3 ]
+string1 SIMILAR TO string2 [ ESCAPE char ]
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns TRUE if <i>string1</i> does not match pattern <i>string2</i>. An escape character can be defined if necessary.</p>
-      </td>
-    </tr>
-
-    <tr>
-      <td>
-        {% highlight text %}
-string1 SIMILAR TO string2 [ ESCAPE string3 ]
-{% endhighlight %}
-      </td>
-      <td>
-        <p>Returns TRUE if <i>string1</i> matches regular expression <i>string2</i>. An escape character can be defined if necessary.</p>
+        <p>如果 <i>string1</i> 满足SQL正则串 <i>string2</i>，则返回 TRUE。当 <i>string1</i> 或 <i>string2</i> 为 NULL，返回 UNKNOWN。如有需要可自定义一个转义字符 <i>char</i>。</p>
+       <p><b>注意：</b> 当前版本暂不支持自定义转义字符。</p>
       </td>
     </tr>
 
@@ -1091,7 +1104,8 @@ string1 NOT SIMILAR TO string2 [ ESCAPE string3 ]
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns TRUE if <i>string1</i> does not match regular expression <i>string2</i>. An escape character can be defined if necessary.</p>
+        <p>如果 <i>string1</i> 不满足SQL正则串 <i>string2</i>，则返回 TRUE。当 <i>string1</i> 或 <i>string2</i> 为 NULL，返回 UNKNOWN。如有需要可自定义一个转义字符 <i>char</i>。</p>
+       <p><b>注意：</b> 当前版本暂不支持自定义转义字符。</p>
       </td>
     </tr>
 
@@ -1099,22 +1113,30 @@ string1 NOT SIMILAR TO string2 [ ESCAPE string3 ]
     <tr>
       <td>
         {% highlight text %}
-value IN (value [, value]* )
+value1 IN (value2 [, value3]* )
 {% endhighlight %}
       </td>
       <td>
-        <p> Returns TRUE if an expression exists in a given list of expressions. This is a shorthand for multiple OR conditions. If the testing set contains NULL, the result will be NULL if the element can not be found and TRUE if it can be found. If the element is NULL, the result is always NULL. E.g. "42 IN (1, 2, 3)" leads to FALSE.</p>
+        <p> 如果 <i>value1</i> 出现在给定列表 <i>(value2, value3, ...)</i> 里，则返回 TRUE。 
+        当 <i>(value2, value3, ...)</i> 包含 NULL, 如果元素可以被找到则返回 TRUE，否则返回 UNKNOWN。如果 <i>value1</i> 为 NULL，总是返回 UNKNOWN。</p>
+        <p>例如： <code>4 IN (1, 2, 3)</code> 返回 FALSE；
+        <code>1 IN (1, 2, NULL)</code> 返回 TRUE；
+        <code>4 IN (1, 2, NULL)</code> 返回 UNKNOWN。</p>
       </td>
     </tr>
 
     <tr>
       <td>
         {% highlight text %}
-value NOT IN (value [, value]* )
+value1 NOT IN (value2 [, value3]* )
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns TRUE if <i>value</i> is not equal to every value in a list.</p>
+         <p> 如果 <i>value1</i> 未出现在给定列表 <i>(value2, value3, ...)</i> 里，则返回 TRUE。 
+        当 <i>(value2, value3, ...)</i> 包含 NULL, 如果元素可以被找到则返回 FALSE，否则返回 UNKNOWN。如果 <i>value1</i> 为 NULL，总是返回 UNKNOWN。</p>
+        <p>例如： <code>4 NOT IN (1, 2, 3)</code> 返回 TRUE；
+        <code>1 NOT IN (1, 2, NULL)</code> 返回 FALSE；
+        <code>4 NOT IN (1, 2, NULL)</code> 返回 UNKNOWN。</p>
       </td>
     </tr>
 
@@ -1125,9 +1147,9 @@ EXISTS (sub-query)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns TRUE if <i>sub-query</i> returns at least one row. Only supported if the operation can be rewritten in a join and group operation.</p>
-        <p><b>Note:</b> For streaming queries the operation is rewritten in a join and group operation. The required state to compute the query result might grow infinitely depending on the number of distinct input rows. Please provide a query configuration with valid retention interval to prevent excessive state size. See <a href="streaming.html">Streaming Concepts</a> for details.</p>
-      </td>
+        <p>如果给定子查询 <i>sub-query</i> 至少包含一行结果，返回 TRUE。只支持可以被重写为 join + groupBy 形式的查询。</p>
+        <p><b>注意：</b> 在流式查询中，系统需要将 Exists 操作重写为 join + groupBy 的形式，对于无法重写的 Exists 操作，Flink SQL 暂不支持。查询执行期间所需存储的状态量可能会随着输入行数的增加而无限增长。为避免该情况，请在查询配置中为状态设置“保留时间”。详情请见 <a href="streaming.html">Streaming Concepts</a> 页。</p>
+	  </td>
     </tr>
 
     <tr>
@@ -1137,8 +1159,8 @@ value IN (sub-query)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns TRUE if <i>value</i> is equal to a row returned by sub-query.</p>
-        <p><b>Note:</b> For streaming queries the operation is rewritten in a join and group operation. The required state to compute the query result might grow infinitely depending on the number of distinct input rows. Please provide a query configuration with valid retention interval to prevent excessive state size. See <a href="streaming.html">Streaming Concepts</a> for details.</p>
+        <p>如果 <i>value</i> 包含在 <i>sub-query</i> 的结果集中，则返回 TRUE。</p>
+        <p><b>注意：</b>IN 在流式查询中会被重写为 join + groupBy 的形式。在执行时所需存储的状态量可能会随着输入行数的增加而增长。为避免该情况，请在查询配置中为状态设置“保留时间”。详情请见 <a href="streaming.html">Streaming Concepts</a> 页。</p>
       </td>
     </tr>
 
@@ -1149,13 +1171,15 @@ value NOT IN (sub-query)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns TRUE if <i>value</i> is not equal to every row returned by sub-query.</p>
-        <p><b>Note:</b> For streaming queries the operation is rewritten in a join and group operation. The required state to compute the query result might grow infinitely depending on the number of distinct input rows. Please provide a query configuration with valid retention interval to prevent excessive state size. See <a href="streaming.html">Streaming Concepts</a> for details.</p>
+        <p>如果 <i>value</i> 没包含在 <i>sub-query</i> 的结果集中，则返回 TRUE。</p>
+        <p><b>注意：</b>NOT IN 在流式查询中会被重写为 join + groupBy 的形式。在执行时所需存储的状态量可能会随着输入行数的增加而增长。为避免该情况，请在查询配置中为状态设置“保留时间”。详情请见 <a href="streaming.html">Streaming Concepts</a> 页。</p>
       </td>
     </tr>
 
   </tbody>
 </table>
+
+### 逻辑函数
 
 <table class="table table-bordered">
   <thead>
@@ -1173,7 +1197,8 @@ boolean1 OR boolean2
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns TRUE if <i>boolean1</i> is TRUE or <i>boolean2</i> is TRUE. Supports three-valued logic.</p>
+        <p>如果 <i>boolean1</i> 或 <i>boolean2</i> 为 TRUE，返回 TRUE。支持三值逻辑。</p>
+        <p>例如： <code>TRUE OR UNKNOWN</code> 返回 TRUE.</p>
       </td>
     </tr>
 
@@ -1184,7 +1209,8 @@ boolean1 AND boolean2
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns TRUE if <i>boolean1</i> and <i>boolean2</i> are both TRUE. Supports three-valued logic.</p>
+        <p>如果 <i>boolean1</i> 和 <i>boolean2</i> 都为 TRUE，返回 TRUE。支持三值逻辑。</p>
+        <p>例如： <code>TRUE AND UNKNOWN</code> 返回 UNKNOWN.</p>
       </td>
     </tr>
 
@@ -1195,7 +1221,7 @@ NOT boolean
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns TRUE if <i>boolean</i> is not TRUE; returns UNKNOWN if <i>boolean</i> is UNKNOWN.</p>
+        <p>如果 <i>boolean</i> 为 FALSE，返回 TRUE；如果 <i>boolean</i> 为 TRUE，返回 FALSE；如果 <i>boolean</i> 为 UNKNOWN，返回 UNKNOWN。</p>
       </td>
     </tr>
 
@@ -1206,7 +1232,7 @@ boolean IS FALSE
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns TRUE if <i>boolean</i> is FALSE; returns FALSE if <i>boolean</i> is UNKNOWN.</p>
+        <p>如果 <i>boolean</i> 为 FALSE，返回 TRUE；如果 <i>boolean</i> 为 TRUE 或 UNKNOWN，返回 FALSE。</p>
       </td>
     </tr>
 
@@ -1217,7 +1243,7 @@ boolean IS NOT FALSE
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns TRUE if <i>boolean</i> is not FALSE; returns TRUE if <i>boolean</i> is UNKNOWN.</p>
+        <p>如果 <i>boolean</i> 为 TRUE 或 UNKNOWN，返回 TRUE；如果 <i>boolean</i> 为 FALSE，返回 FALSE。</p>
       </td>
     </tr>
 
@@ -1228,7 +1254,7 @@ boolean IS TRUE
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns TRUE if <i>boolean</i> is TRUE; returns FALSE if <i>boolean</i> is UNKNOWN.</p>
+        <p>如果 <i>boolean</i> 为 TRUE，返回 TRUE；如果 <i>boolean</i> 为 FALSE 或 UNKNOWN，返回 FALSE。</p>
       </td>
     </tr>
 
@@ -1239,7 +1265,7 @@ boolean IS NOT TRUE
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns TRUE if <i>boolean</i> is not TRUE; returns TRUE if <i>boolean</i> is UNKNOWN.</p>
+        <p>如果 <i>boolean</i> 为 FALSE 或 UNKNOWN，返回 TRUE；如果 <i>boolean</i> 为 TRUE，返回 FALSE。</p>
       </td>
     </tr>
 
@@ -1250,7 +1276,7 @@ boolean IS UNKNOWN
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns TRUE if <i>boolean</i> is UNKNOWN.</p>
+        <p>如果 <i>boolean</i> 为 UNKNOWN，返回 TRUE；如果 <i>boolean</i> 为 TRUE 或 FALSE，返回 FALSE。</p>
       </td>
     </tr>
 
@@ -1261,12 +1287,14 @@ boolean IS NOT UNKNOWN
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns TRUE if <i>boolean</i> is not UNKNOWN.</p>
+        <p>如果 <i>boolean</i> 为 TRUE 或 FALSE，返回 TRUE；如果 <i>boolean</i> 为 UNKNOWN，返回 FALSE。</p>
       </td>
     </tr>
 
   </tbody>
 </table>
+
+### 算数运算函数
 
 <table class="table table-bordered">
   <thead>
@@ -1284,7 +1312,7 @@ boolean IS NOT UNKNOWN
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns <i>numeric</i>.</p>
+        <p>返回 <i>numeric</i>。</p>
       </td>
     </tr>
 
@@ -1295,7 +1323,7 @@ boolean IS NOT UNKNOWN
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns negative <i>numeric</i>.</p>
+        <p>返回负 <i>numeric</i>。</p>
       </td>
     </tr>
 
@@ -1306,7 +1334,7 @@ numeric1 + numeric2
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns <i>numeric1</i> plus <i>numeric2</i>.</p>
+        <p>返回 <i>numeric1</i> 加 <i>numeric2</i> 的结果。</p>
       </td>
     </tr>
 
@@ -1317,7 +1345,7 @@ numeric1 - numeric2
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns <i>numeric1</i> minus <i>numeric2</i>.</p>
+        <p>返回 <i>numeric1</i> 减 <i>numeric2</i> 的结果。</p>
       </td>
     </tr>
 
@@ -1328,7 +1356,7 @@ numeric1 * numeric2
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns <i>numeric1</i> multiplied by <i>numeric2</i>.</p>
+        <p>返回 <i>numeric1</i> 乘 <i>numeric2</i> 的结果。</p>
       </td>
     </tr>
 
@@ -1339,7 +1367,7 @@ numeric1 / numeric2
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns <i>numeric1</i> divided by <i>numeric2</i>.</p>
+        <p>返回 <i>numeric1</i> 除以 <i>numeric2</i> 的结果。</p>
       </td>
     </tr>
 
@@ -1350,7 +1378,7 @@ POWER(numeric1, numeric2)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns <i>numeric1</i> raised to the power of <i>numeric2</i>.</p>
+        <p>返回 <i>numeric1</i> 的 <i>numeric2</i> 次幂。</p>
       </td>
     </tr>
 
@@ -1361,7 +1389,7 @@ ABS(numeric)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the absolute value of <i>numeric</i>.</p>
+        <p>返回 <i>numeric</i> 的绝对值。</p>
       </td>
     </tr>
 
@@ -1372,7 +1400,7 @@ MOD(numeric1, numeric2)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the remainder (modulus) of <i>numeric1</i> divided by <i>numeric2</i>. The result is negative only if <i>numeric1</i> is negative.</p>
+        <p>返回 <i>numeric1</i> 除以 <i>numeric2</i> 的余数。只有当 <i>numeric1</i> 为负，结果才为负。</p>
       </td>
     </tr>
 
@@ -1383,7 +1411,7 @@ SQRT(numeric)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the square root of <i>numeric</i>.</p>
+        <p>返回 <i>numeric</i> 的平方根。</p>
       </td>
     </tr>
 
@@ -1394,7 +1422,7 @@ LN(numeric)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the natural logarithm (base e) of <i>numeric</i>.</p>
+        <p>返回 <i>numeric</i> 的自然对数（以e为底）。</p>
       </td>
     </tr>
 
@@ -1405,20 +1433,20 @@ LOG10(numeric)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the base 10 logarithm of <i>numeric</i>.</p>
+        <p>返回以10为底 <i>numeric</i> 的对数。</p>
       </td>
     </tr>
 
     <tr>
       <td>
        {% highlight text %}
-LOG(x numeric)
-LOG(b numeric, x numeric)
+LOG(numeric2)
+LOG(numeric1, numeric2)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the logarithm of a <i>numeric</i>.</p>
-        <p>If called with one parameter, this function returns the natural logarithm of <code>x</code>. If called with two parameters, this function returns the logarithm of <code>x</code> to the base <code>b</code>. <code>x</code> must be greater than 0. <code>b</code> must be greater than 1.</p>
+        <p>以一个参数进行调用时返回 <i>numeric2</i> 的自然对数；以两个参数进行调用时返回以 <i>numeric1</i> 为底 <i>numeric2</i> 的对数。</p>
+        <p><b>注意：</b> 目前版本 <i>numeric2</i> 必须大于0，且 <i>numeric1</i> 必须大于1。</p>
       </td>
     </tr>
 
@@ -1429,7 +1457,7 @@ EXP(numeric)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns e raised to the power of <i>numeric</i>.</p>
+        <p>返回 e 的 <i>numeric</i> 次幂。</p>
       </td>
     </tr>   
 
@@ -1441,7 +1469,7 @@ CEILING(numeric)
 {% endhighlight %}
       </td>
       <td>
-        <p>Rounds <i>numeric</i> up, and returns the smallest number that is greater than or equal to <i>numeric</i>.</p>
+        <p>对 <i>numeric</i> 向上取整，返回一个大于或等于 <i>numeric</i> 的最小整数。</p>
       </td>
     </tr>  
 
@@ -1452,7 +1480,7 @@ FLOOR(numeric)
 {% endhighlight %}
       </td>
       <td>
-        <p>Rounds <i>numeric</i> down, and returns the largest number that is less than or equal to <i>numeric</i>.</p>
+        <p>对 <i>numeric</i> 向下取整，返回一个小于或等于 <i>numeric</i> 的最大整数。</p>
       </td>
     </tr>
 
@@ -1463,7 +1491,7 @@ SIN(numeric)
 {% endhighlight %}
       </td>
       <td>
-        <p>Calculates the sine of a given number.</p>
+        <p>返回 <i>numeric</i> 的正弦。</p>
       </td>
     </tr>
 
@@ -1474,7 +1502,7 @@ COS(numeric)
 {% endhighlight %}
       </td>
       <td>
-        <p>Calculates the cosine of a given number.</p>
+        <p>返回 <i>numeric</i> 的余弦。</p>
       </td>
     </tr>
 
@@ -1485,7 +1513,7 @@ TAN(numeric)
 {% endhighlight %}
       </td>
       <td>
-        <p>Calculates the tangent of a given number.</p>
+        <p>返回 <i>numeric</i> 的正切。</p>
       </td>
     </tr>
 
@@ -1496,7 +1524,7 @@ COT(numeric)
 {% endhighlight %}
       </td>
       <td>
-        <p>Calculates the cotangent of a given number.</p>
+        <p>返回 <i>numeric</i> 的余切。</p>
       </td>
     </tr>
 
@@ -1507,7 +1535,7 @@ ASIN(numeric)
 {% endhighlight %}
       </td>
       <td>
-        <p>Calculates the arc sine of a given number.</p>
+        <p>返回 <i>numeric</i> 的反正弦。</p>
       </td>
     </tr>
 
@@ -1518,7 +1546,7 @@ ACOS(numeric)
 {% endhighlight %}
       </td>
       <td>
-        <p>Calculates the arc cosine of a given number.</p>
+        <p>返回 <i>numeric</i> 的反余弦。</p>
       </td>
     </tr>
 
@@ -1529,7 +1557,7 @@ ATAN(numeric)
 {% endhighlight %}
       </td>
       <td>
-        <p>Calculates the arc tangent of a given number.</p>
+        <p>返回 <i>numeric</i> 的反正切。</p>
       </td>
     </tr>
 
@@ -1540,7 +1568,7 @@ DEGREES(numeric)
 {% endhighlight %}
       </td>
       <td>
-        <p>Converts <i>numeric</i> from radians to degrees.</p>
+        <p>返回某个弧度 <i>numeric</i> 的对应角度值。</p>
       </td>
     </tr>
 
@@ -1551,7 +1579,7 @@ RADIANS(numeric)
 {% endhighlight %}
       </td>
       <td>
-        <p>Converts <i>numeric</i> from degrees to radians.</p>
+        <p>返回某个角度 <i>numeric</i> 的对应弧度值。</p>
       </td>
     </tr>
 
@@ -1562,29 +1590,29 @@ SIGN(numeric)
 {% endhighlight %}
       </td>
       <td>
-        <p>Calculates the signum of a given number.</p>
+        <p>返回 <i>numeric</i> 的正负。</p>
       </td>
     </tr>
 
     <tr>
       <td>
         {% highlight text %}
-ROUND(numeric, int)
+ROUND(numeric, integer)
 {% endhighlight %}
       </td>
       <td>
-        <p>Rounds the given number to <i>integer</i> places right to the decimal point.</p>
+        <p>返回 <i>numeric</i> 四舍五入后的值，保留 <i>integer</i> 位小数。</p>
       </td>
     </tr>
 
     <tr>
       <td>
         {% highlight text %}
-PI()
+PI
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns a value that is closer than any other value to pi.</p>
+        <p>返回一个非常接近圆周率 pi 的值。</p>
       </td>
     </tr>
     <tr>
@@ -1594,7 +1622,7 @@ E()
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns a value that is closer than any other value to e.</p>
+        <p>返回一个非常接近自然底数 e 的值。</p>
       </td>
     </tr>
 
@@ -1605,56 +1633,59 @@ RAND()
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns a pseudorandom double value between 0.0 (inclusive) and 1.0 (exclusive).</p>
+        <p>返回一个 0.0 (包含) 到 1.0 (不包含)之间的伪随机数。</p>
       </td>
     </tr>
 
     <tr>
       <td>
         {% highlight text %}
-RAND(seed integer)
+RAND(integer)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns a pseudorandom double value between 0.0 (inclusive) and 1.0 (exclusive) with a initial seed. Two RAND functions will return identical sequences of numbers if they have same initial seed.</p>
+        <p>利用种子值 <i>integer</i> 返回一个 0.0 (包含) 到 1.0 (不含)之间的伪随机数。如果种子值相同，两个 RAND 函数会返回完全相同的伪随机数序列。</p>
       </td>
     </tr>
 
     <tr>
      <td>
        {% highlight text %}
-RAND_INTEGER(bound integer)
+RAND_INTEGER(integer)
 {% endhighlight %}
      </td>
     <td>
-      <p>Returns a pseudorandom integer value between 0.0 (inclusive) and the specified value (exclusive).</p>
+      <p>返回一个 0 (包含) 到 <i>integer</i>（不含）之间的伪随机整数。</p>
     </td>
    </tr>
 
     <tr>
      <td>
        {% highlight text %}
-RAND_INTEGER(seed integer, bound integer)
+RAND_INTEGER(integer1, integer2)
 {% endhighlight %}
      </td>
     <td>
-      <p>Returns a pseudorandom integer value between 0.0 (inclusive) and the specified value (exclusive) with a initial seed. Two RAND_INTEGER functions will return identical sequences of numbers if they have same initial seed and same bound.</p>
+        <p>利用种子值 <i>integer1</i> 返回一个 0 (包含) 到 <i>integer2</i>（不含）之间的伪随机整数。如果种子值和上限相同，两个 RAND_INTEGER 函数会返回完全相同的伪随机数序列。</p>
     </td>
    </tr>
 
     <tr>
       <td>
 {% highlight text %}
-BIN(numeric)
+BIN(integer)
       {% endhighlight %}
       </td>
       <td>
-        <p>Returns a string representation of an integer numeric value in binary format. Returns null if numeric is null. E.g. "4" leads to "100", "12" leads to "1100".</p>
+        <p>返回 <i>integer</i> 的二进制字符串。</p>
+        <p>例如： <code>BIN(4)</code> 返回 '100'； <code>BIN(12)</code> 返回 '1100'。</p>
       </td>
     </tr>
 
   </tbody>
 </table>
+
+### 字符串函数
 
 <table class="table table-bordered">
   <thead>
@@ -1668,22 +1699,11 @@ BIN(numeric)
     <tr>
       <td>
         {% highlight text %}
-string || string
+string1 || string2
 {% endhighlight %}
       </td>
       <td>
-        <p>Concatenates two character strings.</p>
-      </td>
-    </tr>
-
-    <tr>
-      <td>
-        {% highlight text %}
-CHAR_LENGTH(string)
-{% endhighlight %}
-      </td>
-      <td>
-        <p>Returns the number of characters in a character string.</p>
+        <p>返回字符串 <i>string1</i> 和 <i>string2</i> 连接后的值。</p>
       </td>
     </tr>
 
@@ -1691,10 +1711,11 @@ CHAR_LENGTH(string)
       <td>
         {% highlight text %}
 CHARACTER_LENGTH(string)
+CHAR_LENGTH(string)
 {% endhighlight %}
       </td>
       <td>
-        <p>As CHAR_LENGTH(<i>string</i>).</p>
+        <p>返回 <i>string</i> 中所含的字符数。</p>
       </td>
     </tr>
 
@@ -1705,7 +1726,7 @@ UPPER(string)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns a character string converted to upper case.</p>
+        <p>返回 <i>string</i> 的大写形式。</p>
       </td>
     </tr>
 
@@ -1716,7 +1737,7 @@ LOWER(string)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns a character string converted to lower case.</p>
+        <p>返回 <i>string</i> 的小写形式。</p>
       </td>
     </tr>
 
@@ -1727,18 +1748,18 @@ POSITION(string1 IN string2)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the position of the first occurrence of <i>string1</i> in <i>string2</i>.</p>
+        <p>返回 <i>string1</i> 在 <i>string2</i> 中首次出现的位置（从1开始计算）；如果没有出现，返回0。</p>
       </td>
     </tr>
 
     <tr>
       <td>
         {% highlight text %}
-TRIM( { BOTH | LEADING | TRAILING } string1 FROM string2)
+TRIM([ BOTH | LEADING | TRAILING ] string1 FROM string2)
 {% endhighlight %}
       </td>
       <td>
-        <p>Removes leading and/or trailing characters from <i>string2</i>. By default, whitespaces at both sides are removed.</p>
+        <p>返回一个将 <i>string1</i> 从 <i>string2</i> 首部或（和）尾部移除的新字符串。默认情况下会移除两端空白字符。</p>
       </td>
     </tr>
 
@@ -1749,29 +1770,19 @@ OVERLAY(string1 PLACING string2 FROM integer [ FOR integer2 ])
 {% endhighlight %}
       </td>
       <td>
-        <p>Replaces a substring of <i>string1</i> with <i>string2</i>.</p>
+        <p>返回一个利用 <i>string2</i> 替换 <i>string1</i> 中从 <i>integer1</i> 位置开始长度为 <i>integer2</i> （默认为 <i>string2</i> 的长度）个字符的新字符串。</p>
+       <p>例如： <code>OVERLAY('This is an old string' PLACING ' new' FROM 10 FOR 5)</code> 返回 "This is a new string"</p>
       </td>
     </tr>
 
     <tr>
       <td>
         {% highlight text %}
-SUBSTRING(string FROM integer)
+SUBSTRING(string FROM integer1 [ FOR integer2 ])
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns a substring of a character string starting at a given point.</p>
-      </td>
-    </tr>
-
-    <tr>
-      <td>
-        {% highlight text %}
-SUBSTRING(string FROM integer FOR integer)
-{% endhighlight %}
-      </td>
-      <td>
-        <p>Returns a substring of a character string starting at a given point with a given length.</p>
+        <p>返回一个从 <i>integer1</i> 位置开始、长度为 <i>integer2</i>（默认到结尾）的 <i>string</i> 的子串。</p>
       </td>
     </tr>
 
@@ -1782,55 +1793,62 @@ INITCAP(string)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns string with the first letter of each word converter to upper case and the rest to lower case. Words are sequences of alphanumeric characters separated by non-alphanumeric characters.</p>
+        <p>返回一个将 <i>string</i> 中每个单词首字母都转为大写，其余字母都转为小写的新字符串。这里的单词指的是一连串不间断的字母序列。</p>
       </td>
     </tr>
 
     <tr>
       <td>
         {% highlight text %}
-CONCAT(string1, string2,...)
+CONCAT(string1, string2, ...)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the string that results from concatenating the arguments. Returns NULL if any argument is NULL. E.g. <code>CONCAT("AA", "BB", "CC")</code> returns <code>AABBCC</code>.</p>
+        <p>返回一个将 <i>string1</i>、<i>string2</i> 等按顺序连接起来的新字符串。如果其中任一字符串为 NULL，返回 NULL。</p>
+		<p>例如：<code>CONCAT("AA", "BB", "CC")</code> 返回 "AABBCC"。</p>
       </td>
     </tr>
 
     <tr>
       <td>
         {% highlight text %}
-CONCAT_WS(separator, string1, string2,...)
+CONCAT_WS(string1, string2, string3,...)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the string that results from concatenating the arguments using a separator. The separator is added between the strings to be concatenated. Returns NULL If the separator is NULL. CONCAT_WS() does not skip empty strings. However, it does skip any NULL argument. E.g. <code>CONCAT_WS("~", "AA", "BB", "", "CC")</code> returns <code>AA~BB~~CC</code></p>
-  </td>
+        <p>返回一个利用分隔符 <i>string1</i> 将 <i>string2</i>、<i>string3</i> 等按顺序连接起来的新字符串。分隔符 <i>string1</i> 会被加到连接的字符串之间。如果 <i>string1</i> 为 NULL，返回 NULL。和 <code>CONCAT()</code> 相比，<code>CONCAT_WS()</code> 会自动跳过值为 NULL 的字符串。</p>
+		<p>例如：<code>CONCAT_WS("~", "AA", "BB", "", "CC")</code> 返回 "AA~BB~~CC"。</p>
+      </td>
     </tr>
 
-        <tr>
-      <td>
-        {% highlight text %}
-LPAD(text string, len integer, pad string)
-{% endhighlight %}
-      </td>
-      <td>
-        <p>Returns the string text left-padded with the string pad to a length of len characters. If text is longer than len, the return value is shortened to len characters. E.g. <code>LPAD('hi',4,'??')</code> returns <code>??hi</code>, <code>LPAD('hi',1,'??')</code> returns <code>h</code>.</p>
-      </td>
-    </tr>
     <tr>
       <td>
         {% highlight text %}
-RPAD(text string, len integer, pad string)
+LPAD(string1, integer, string2)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the string text right-padded with the string pad to a length of len characters. If text is longer than len, the return value is shortened to len characters. E.g. <code>RPAD('hi',4,'??')</code> returns <code>hi??</code>, <code>RPAD('hi',1,'??')</code> returns <code>h</code>.</p>
+        <p>返回一个利用 <i>string2</i> 从左侧对 <i>string1</i> 进行填充直到其长度达到 <i>integer</i> 的新字符串。如果 <i>integer</i> 小于 <i>string1</i> 的长度，则 <i>string1</i> 会被缩减至长度 <i>integer</i>。</p>
+        <p>例如： <code>LPAD('hi',4,'??')</code> 返回 "??hi"；<code>LPAD('hi',1,'??')</code> 返回 "h"。</p>
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        {% highlight text %}
+RPAD(string1, integer, string2)
+{% endhighlight %}
+      </td>
+      <td>
+        <p>返回一个利用 <i>string2</i> 从右侧对 <i>string1</i> 进行填充直到其长度达到 <i>integer</i> 的新字符串。如果 <i>integer</i> 小于 <i>string1</i> 的长度，则 <i>string1</i> 会被缩减至长度 <i>integer</i>。</p>
+        <p>例如： <code>RPAD('hi',4,'??')</code> 返回 "hi??"；<code>RPAD('hi',1,'??')</code> 返回 "h"。</p>
       </td>
     </tr>
 
   </tbody>
 </table>
+
+### 条件函数
 
 <table class="table table-bordered">
   <thead>
@@ -1845,14 +1863,14 @@ RPAD(text string, len integer, pad string)
       <td>
         {% highlight text %}
 CASE value
-WHEN value1 [, value11 ]* THEN result1
-[ WHEN valueN [, valueN1 ]* THEN resultN ]*
+WHEN value1_1 [, value1_2 ]* THEN result1
+[ WHEN value2_1 [, value2_2 ]* THEN result2 ]*
 [ ELSE resultZ ]
 END
 {% endhighlight %}
       </td>
       <td>
-        <p>Simple case.</p>
+        <p>返回 <i>value</i> 第一次出现在集合 (<i>valueX_1, valueX_2, ...</i>) 中时对应 <i>resultX</i> 的值。如果 <i>value</i> 没有出现在任何给定集合中则根据 <i>resultZ</i> 的给定情况返回 <i>resultZ</i> 或 NULL。</p>
       </td>
     </tr>
 
@@ -1867,7 +1885,7 @@ END
 {% endhighlight %}
       </td>
       <td>
-        <p>Searched case.</p>
+        <p>返回条件 <i>conditionX</i> 首次满足时其对应的 <i>resultX</i> 值。如果所有条件均不满足则根据 <i>resultZ</i> 的给定情况返回 <i>resultZ</i> 或 NULL。</p>
       </td>
     </tr>
 
@@ -1878,23 +1896,27 @@ NULLIF(value, value)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns NULL if the values are the same. For example, <code>NULLIF(5, 5)</code> returns NULL; <code>NULLIF(5, 0)</code> returns 5.</p>
+        <p>当 <i>value1</i> 等于 <i>value2</i> 时返回 NULL，否则返回 <i>value1</i>。</p>
+        <p>例如： <code>NULLIF(5, 5)</code> 返回 NULL；<code>NULLIF(5, 0)</code> 返回5。</p>
       </td>
     </tr>
 
     <tr>
       <td>
         {% highlight text %}
-COALESCE(value, value [, value ]* )
+COALESCE(value1, value2 [, value3 ]* )
 {% endhighlight %}
       </td>
       <td>
-        <p>Provides a value if the first value is null. For example, <code>COALESCE(NULL, 5)</code> returns 5.</p>
+        <p>返回 <i>value1, value2, ...</i> 中首个不为 NULL 的值。</p>
+        <p>例如：<code>COALESCE(NULL, 5)</code> 返回5。</p>
       </td>
     </tr>
 
   </tbody>
 </table>
+
+### 类型转换函数
 
 <table class="table table-bordered">
   <thead>
@@ -1912,11 +1934,13 @@ CAST(value AS type)
 {% endhighlight %}
       </td>
       <td>
-        <p>Converts a value to a given type.</p>
+        <p>返回一个将 <i>value</i> 转换为 <i>type</i> 类型后的值。有关支持的类型请参考<a href="#数据类型">数据类型章节</a>。</p>
       </td>
     </tr>
   </tbody>
 </table>
+
+### 时间函数
 
 <table class="table table-bordered">
   <thead>
@@ -1934,7 +1958,7 @@ DATE string
 {% endhighlight %}
       </td>
       <td>
-        <p>Parses a date string in the form "yy-mm-dd" to a SQL date.</p>
+        <p>返回一个由 "yyyy-MM-dd" 格式的字符串 <i>string</i> 解析得到的 SQL 日期。</p>
       </td>
     </tr>
 
@@ -1945,7 +1969,7 @@ TIME string
 {% endhighlight %}
       </td>
       <td>
-        <p>Parses a time <i>string</i> in the form "hh:mm:ss" to a SQL time.</p>
+        <p>返回一个由 "HH:mm:ss" 格式的字符串 <i>string</i> 解析得到的 SQL 时间。</p>
       </td>
     </tr>
 
@@ -1956,7 +1980,7 @@ TIMESTAMP string
 {% endhighlight %}
       </td>
       <td>
-        <p>Parses a timestamp <i>string</i> in the form "yy-mm-dd hh:mm:ss.fff" to a SQL timestamp.</p>
+        <p>返回一个由 "yyy-MM-dd HH:mm:ss[.SSS]" 格式的字符串 <i>string</i> 解析得到的 SQL 时间戳。</p>
       </td>
     </tr>
 
@@ -1967,7 +1991,8 @@ INTERVAL string range
 {% endhighlight %}
       </td>
       <td>
-        <p>Parses an interval <i>string</i> in the form "dd hh:mm:ss.fff" for SQL intervals of milliseconds or "yyyy-mm" for SQL intervals of months. An interval range might be e.g. <code>DAY</code>, <code>MINUTE</code>, <code>DAY TO HOUR</code>, or <code>DAY TO SECOND</code> for intervals of milliseconds; <code>YEAR</code> or <code>YEAR TO MONTH</code> for intervals of months. E.g. <code>INTERVAL '10 00:00:00.004' DAY TO SECOND</code>, <code>INTERVAL '10' DAY</code>, or <code>INTERVAL '2-10' YEAR TO MONTH</code> return intervals.</p>
+        <p>返回一个由 <i>string</i> 解析出的 SQL 时间区间，如果 <i>string</i> 的格式为 "dd hh:mm:ss.fff" 则以毫秒为单位，如果格式为 "yyyy-mm" 则以月为单位。支持的 <i>range</i> 有： <code>DAY</code>、 <code>MINUTE</code>、 <code>DAY TO HOUR</code>、<code>DAY TO SECOND</code>（以毫秒为单位）、 <code>YEAR</code> 以及 <code>YEAR TO MONTH</code> （以月为单位）。</p> 
+		<p>例如：<code>INTERVAL '10 00:00:00.004' DAY TO SECOND</code>； <code>INTERVAL '10' DAY</code>； <code>INTERVAL '2-10' YEAR TO MONTH</code> 。</p>
       </td>
     </tr>
 
@@ -1978,7 +2003,7 @@ CURRENT_DATE
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the current SQL date in UTC time zone.</p>
+        <p>返回当前UTC日期。</p>
       </td>
     </tr>
 
@@ -1989,7 +2014,7 @@ CURRENT_TIME
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the current SQL time in UTC time zone.</p>
+        <p>以 SQL 时间形式返回UTC的当前时间。</p>
       </td>
     </tr>
 
@@ -2000,7 +2025,7 @@ CURRENT_TIMESTAMP
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the current SQL timestamp in UTC time zone.</p>
+        <p>以 SQL 时间戳形式返回UTC的当前时间。</p>
       </td>
     </tr>
 
@@ -2011,7 +2036,7 @@ LOCALTIME
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the current SQL time in local time zone.</p>
+        <p>以 SQL 时间形式返回本地区的当前时间。</p>
       </td>
     </tr>
 
@@ -2022,7 +2047,7 @@ LOCALTIMESTAMP
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the current SQL timestamp in local time zone.</p>
+        <p>以 SQL 时间戳格式返回本地区的当前时间。</p>
       </td>
     </tr>
 
@@ -2033,7 +2058,8 @@ EXTRACT(timeintervalunit FROM temporal)
 {% endhighlight %}
       </td>
       <td>
-        <p>Extracts parts of a time point or time interval. Returns the part as a long value. E.g. <code>EXTRACT(DAY FROM DATE '2006-06-05')</code> leads to 5.</p>
+        <p>从某个时间点或时间区间 <i>temporal</i> 内以 long 类型返回指定时间字段 <i>timeintervalunit</i>的对应值。</p>
+        <p>例如：<code>EXTRACT(DAY FROM DATE '2006-06-05')</code> 返回5。</p>
       </td>
     </tr>
 
@@ -2044,7 +2070,8 @@ YEAR(date)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the year from a SQL date. Equivalent to <code>EXTRACT(YEAR FROM date)</code>. E.g. <code>YEAR(DATE '1994-09-27')</code> leads to 1994.</p>
+        <p>从给定日期 <i>date</i> 内提取年份，等价于 <code>EXTRACT(YEAR FROM date)</code>。</p>
+        <p>例如：<code>YEAR(DATE '1994-09-27')</code> 返回1994。</p>
       </td>
     </tr>
 
@@ -2055,7 +2082,8 @@ FLOOR(timepoint TO timeintervalunit)
 {% endhighlight %}
       </td>
       <td>
-        <p>Rounds a time point down to the given unit. E.g. <code>FLOOR(TIME '12:44:31' TO MINUTE)</code> leads to 12:44:00.</p>
+        <p>返回一个将时间 <i>timepoint</i> 向下取整到指定时间单位 <i>timeintervalunit</i> 的值。</p>
+		<p>例如：<code>FLOOR(TIME '12:44:31' TO MINUTE)</code> 返回 12:44:00。</p>
       </td>
     </tr>
 
@@ -2066,7 +2094,8 @@ CEIL(timepoint TO timeintervalunit)
 {% endhighlight %}
       </td>
       <td>
-        <p>Rounds a time point up to the given unit. E.g. <code>CEIL(TIME '12:44:31' TO MINUTE)</code> leads to 12:45:00.</p>
+        <p>返回一个将时间 <i>timepoint</i> 向上取整到指定时间单位 <i>timeintervalunit</i> 的值。</p>
+		<p>例如：<code>CEIL(TIME '12:44:31' TO MINUTE)</code> 返回 12:45:00。</p>
       </td>
     </tr>
 
@@ -2077,7 +2106,8 @@ QUARTER(date)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the quarter of a year from a SQL date (an integer between 1 and 4). Equivalent to <code>EXTRACT(QUARTER FROM date)</code>. E.g. <code>QUARTER(DATE '1994-09-27')</code> leads to 3. </p>
+        <p>从给定日期 <i>date</i> 内提取季度（取值从1到4），等价于 <code>EXTRACT(QUARTER FROM date)</code>。</p>
+        <p>例如：<code>QUARTER(DATE '1994-09-27')</code> 返回3。</p>
       </td>
     </tr>
 
@@ -2088,7 +2118,8 @@ MONTH(date)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the month of a year from a SQL date (an integer between 1 and 12). Equivalent to <code>EXTRACT(MONTH FROM date)</code>. E.g. <code>MONTH(DATE '1994-09-27')</code> leads to 9. </p>
+        <p>从给定日期 <i>date</i> 内提取月份（取值从1到12），等价于 <code>EXTRACT(MONTH FROM date)</code>。</p>
+        <p>例如：<code>MONTH(DATE '1994-09-27')</code> 返回9。</p>
       </td>
     </tr>
 
@@ -2099,7 +2130,8 @@ WEEK(date)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the week of a year from a SQL date (an integer between 1 and 53). Equivalent to <code>EXTRACT(WEEK FROM date)</code>. E.g. <code>WEEK(DATE '1994-09-27')</code> leads to 39. </p>
+        <p>从给定日期 <i>date</i> 内提取周数（取值从1到53），等价于 <code>EXTRACT(WEEK FROM date)</code>。</p>
+        <p>例如：<code>WEEK(DATE '1994-09-27')</code> 返回39。</p>
       </td>
     </tr>
 
@@ -2110,7 +2142,8 @@ DAYOFYEAR(date)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the day of a year from a SQL date (an integer between 1 and 366). Equivalent to <code>EXTRACT(DOY FROM date)</code>. E.g. <code>DAYOFYEAR(DATE '1994-09-27')</code> leads to 270. </p>
+        <p>从给定日期 <i>date</i> 内提取当年已过天数（取值从1到366），等价于 <code>EXTRACT(DOY FROM date)</code>。</p>
+        <p>例如：<code>DAYOFYEAR(DATE '1994-09-27')</code> 返回270。</p>
       </td>
     </tr>
 
@@ -2121,7 +2154,8 @@ DAYOFMONTH(date)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the day of a month from a SQL date (an integer between 1 and 31). Equivalent to <code>EXTRACT(DAY FROM date)</code>. E.g. <code>DAYOFMONTH(DATE '1994-09-27')</code> leads to 27. </p>
+        <p>从给定日期 <i>date</i> 内提取当月已过天数（取值从1到31），等价于 <code>EXTRACT(DAY FROM date)</code>。</p>
+        <p>例如：<code>DAYOFMONTH(DATE '1994-09-27')</code> 返回27。</p>
       </td>
     </tr>
 
@@ -2132,7 +2166,8 @@ DAYOFWEEK(date)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the day of a week from a SQL date (an integer between 1 and 7; Sunday = 1). Equivalent to <code>EXTRACT(DOW FROM date)</code>. E.g. <code>DAYOFWEEK(DATE '1994-09-27')</code> leads to 3. </p>
+        <p>从给定日期 <i>date</i> 内提取当周已过天数（取值从1到7，周日 = 1），等价于 <code>EXTRACT(DOW FROM date)</code>。</p>
+        <p>例如：<code>DAYOFWEEK(DATE '1994-09-27')</code> 返回3。</p>
       </td>
     </tr>
 
@@ -2143,7 +2178,8 @@ HOUR(timestamp)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the hour of a day from a SQL timestamp (an integer between 0 and 23). Equivalent to <code>EXTRACT(HOUR FROM timestamp)</code>. E.g. <code>HOUR(TIMESTAMP '1994-09-27 13:14:15')</code> leads to 13. </p>
+        <p>从给定时间戳 <i>timestamp</i> 内提取当日已过小时数（取值从0到23），等价于 <code>EXTRACT(HOUR FROM timestamp)</code>。</p>
+        <p>例如：<code>HOUR(TIMESTAMP '1994-09-27 13:14:15')</code> 返回13。</p>
       </td>
     </tr>
 
@@ -2154,7 +2190,8 @@ MINUTE(timestamp)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the minute of an hour from a SQL timestamp (an integer between 0 and 59). Equivalent to <code>EXTRACT(MINUTE FROM timestamp)</code>. E.g. <code>MINUTE(TIMESTAMP '1994-09-27 13:14:15')</code> leads to 14. </p>
+        <p>从给定时间戳 <i>timestamp</i> 内提取当小时已过分钟数（取值从0到59），等价于 <code>EXTRACT(MINUTE FROM timestamp)</code>。</p>
+        <p>例如：<code>MINUTE(TIMESTAMP '1994-09-27 13:14:15')</code> 返回13。</p>
       </td>
     </tr>
 
@@ -2165,46 +2202,51 @@ SECOND(timestamp)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the second of a minute from a SQL timestamp (an integer between 0 and 59). Equivalent to <code>EXTRACT(SECOND FROM timestamp)</code>. E.g. <code>SECOND(TIMESTAMP '1994-09-27 13:14:15')</code> leads to 15. </p>
+        <p>从给定时间戳 <i>timestamp</i> 内提取当分钟已过秒数（取值从0到59），等价于 <code>EXTRACT(SECOND FROM timestamp)</code>。</p>
+        <p>例如：<code>MINUTE(TIMESTAMP '1994-09-27 13:14:15')</code> 返回15。</p>
       </td>
     </tr>
 
     <tr>
       <td>
         {% highlight text %}
-(timepoint, temporal) OVERLAPS (timepoint, temporal)
+(timepoint1, temporal1) OVERLAPS (timepoint2, temporal2)
 {% endhighlight %}
       </td>
       <td>
-        <p>Determines whether two anchored time intervals overlap. Time point and temporal are transformed into a range defined by two time points (start, end). The function evaluates <code>leftEnd >= rightStart && rightEnd >= leftStart</code>. E.g. <code>(TIME '2:55:00', INTERVAL '1' HOUR) OVERLAPS (TIME '3:30:00', INTERVAL '2' HOUR)</code> leads to true; <code>(TIME '9:00:00', TIME '10:00:00') OVERLAPS (TIME '10:15:00', INTERVAL '3' HOUR)</code> leads to false.</p>
+        <p>如果两个时间区间 (<i>timepoint1</i>, <i>temporal1</i>) 和 (<i>timepoint2</i>, <i>temporal2</i>) 有重叠，则返回 TRUE。其中 <i>temporal1</i> 和 <i>temporal2</i> 可以是一个时间点或时间区间。</p> 
+        <p>例如：<code>(TIME '2:55:00', INTERVAL '1' HOUR) OVERLAPS (TIME '3:30:00', INTERVAL '2' HOUR)</code> 返回 TRUE； <code>(TIME '9:00:00', TIME '10:00:00') OVERLAPS (TIME '10:15:00', INTERVAL '3' HOUR)</code> 返回 FALSE。</p>
       </td>
     </tr>
 
     <tr>
       <td>
         {% highlight text %}
-DATE_FORMAT(timestamp, format)
+DATE_FORMAT(timestamp, string)
 {% endhighlight %}
       </td>
       <td>
-        <p>Formats <code>timestamp</code> as a string using a specified <code>format</code> string. The format must be compatible with MySQL's date formatting syntax as used by the <code>date_parse</code> function. The format specification is given in the <a href="#date-format-specifier">Date Format Specifier table</a> below.</p>
-        <p>For example <code>DATE_FORMAT(ts, '%Y, %d %M')</code> results in strings formatted as <code>"2017, 05 May"</code>.</p>
+        <p>返回一个将时间 <i>timestamp</i> 按照 <i>string</i> 进行格式化的字符串。具体格式说明请参照<a href="#日期格式说明表">日期格式说明表</a>。</p>
+        <p>例如：<code>DATE_FORMAT(ts, '%Y, %d %M')</code> 返回 "2017, 05 May".</p>
       </td>
     </tr>
 
     <tr>
       <td>
         {% highlight text %}
-TIMESTAMPADD(unit, interval, timestamp)
+TIMESTAMPADD(unit, integer, timestamp)
 {% endhighlight %}
       </td>
       <td>
-        <p>Adds a (signed) integer interval to a timestamp. The unit for the interval is given by the unit argument, which should be one of the following values: <code>SECOND</code>, <code>MINUTE</code>, <code>HOUR</code>, <code>DAY</code>, <code>WEEK</code>, <code>MONTH</code>, <code>QUARTER</code>, or <code>YEAR</code>. E.g. <code>TIMESTAMPADD(WEEK, 1, '2003-01-02')</code> leads to <code>2003-01-09</code>.</p>
+        <p>返回一个将 <i>integer</i>（带符号）个时间单元 <i>unit</i> 添加到时间 <i>timestamp</i> 后的时间值。其中 <i>unit</i> 的取值可以是：<code>SECOND</code>、<code>MINUTE</code>、<code>HOUR</code>、<code>DAY</code>、<code>WEEK</code>、 <code>MONTH</code>、 <code>QUARTER</code> 或 <code>YEAR</code>。</p> 
+        <p>例如：<code>TIMESTAMPADD(WEEK, 1, '2003-01-02')</code> 返回2003-01-09。</p>
       </td>
     </tr>
 
   </tbody>
 </table>
+
+### 聚合函数
 
 <table class="table table-bordered">
   <thead>
@@ -2218,11 +2260,11 @@ TIMESTAMPADD(unit, interval, timestamp)
     <tr>
       <td>
         {% highlight text %}
-COUNT(value [, value]* )
+COUNT([ ALL ] expression | DISTINCT expression1 [, expression2]*)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the number of input rows for which <i>value</i> is not null. Use <code>COUNT(DISTINCT value)</code> for the number of unique values in the column or expression.</p>
+        <p>默认或使用 ALL 关键字的情况下，返回所有不为 NULL 的 <i>expression</i> 的数目。使用 DISTINCT 关键字的情况下相同值只会统计一次。</p>
       </td>
     </tr>
 
@@ -2230,75 +2272,76 @@ COUNT(value [, value]* )
       <td>
         {% highlight text %}
 COUNT(*)
+COUNT(1)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the number of input rows.</p>
+        <p>返回数据行数。</p>
       </td>
     </tr>
 
     <tr>
       <td>
         {% highlight text %}
-AVG(numeric)
+AVG([ ALL | DISTINCT ] expression)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the average (arithmetic mean) of <i>numeric</i> across all input values.</p>
+        <p>默认或使用 ALL 关键字的情况下，对所有输入行计算 <i>expression</i> 的算数平均值。使用 DISTINCT 关键字的情况下相同值只会计算一次。</p>
       </td>
     </tr>
 
     <tr>
       <td>
         {% highlight text %}
-SUM(numeric)
+SUM([ ALL | DISTINCT ] expression)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the sum of <i>numeric</i> across all input values. Use <code>SUM(DISTINCT value)</code> for the sum of unique values in the column or expression.</p>
+        <p>默认或使用 ALL 关键字的情况下，对所有输入行的 <i>expression</i> 求和。使用 DISTINCT 关键字的情况下相同值只会计算一次。</p>
       </td>
     </tr>
 
     <tr>
       <td>
         {% highlight text %}
-MAX(value)
+MAX([ ALL | DISTINCT ] expression)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the maximum value of <i>value</i> across all input values.</p>
+        <p>默认或使用 ALL 关键字的情况下，对所有输入行统计 <i>expression</i> 的最大值。使用 DISTINCT 关键字的情况下相同值只会计算一次。</p>
       </td>
     </tr>
 
     <tr>
       <td>
         {% highlight text %}
-MIN(value)
+MIN([ ALL | DISTINCT ] expression)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the minimum value of <i>value</i> across all input values.</p>
+        <p>默认或使用 ALL 关键字的情况下，对所有输入行统计 <i>expression</i> 的最小值。使用 DISTINCT 关键字的情况下相同值只会计算一次。</p>
       </td>
     </tr>
     <tr>
       <td>
         {% highlight text %}
-STDDEV_POP(value)
+STDDEV_POP([ ALL | DISTINCT ] expression)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the population standard deviation of the numeric field across all input values.</p>
+        <p>默认或使用 ALL 关键字的情况下，对所有输入行的 <i>expression</i> 计算总体标准差。使用 DISTINCT 关键字的情况下相同值只会计算一次。</p>
       </td>
     </tr>
 
 <tr>
       <td>
         {% highlight text %}
-STDDEV_SAMP(value)
+STDDEV_SAMP([ ALL | DISTINCT ] expression)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the sample standard deviation of the numeric field across all input values.</p>
+        <p>默认或使用 ALL 关键字的情况下，对所有输入行的 <i>expression</i> 计算样本标准差。使用 DISTINCT 关键字的情况下相同值只会计算一次。</p>
       </td>
     </tr>
 
@@ -2309,7 +2352,7 @@ VAR_POP(value)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the population variance (square of the population standard deviation) of the numeric field across all input values.</p>
+        <p>默认或使用 ALL 关键字的情况下，对所有输入行的 <i>expression</i> 计算总体方差（总体标准差的平方根）。使用 DISTINCT 关键字的情况下相同值只会计算一次。</p>
       </td>
     </tr>
 
@@ -2320,7 +2363,7 @@ VAR_SAMP(value)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the sample variance (square of the sample standard deviation) of the numeric field across all input values.</p>
+        <p>默认或使用 ALL 关键字的情况下，对所有输入行的 <i>expression</i> 计算样本方差（样本标准差的平方根）。使用 DISTINCT 关键字的情况下相同值只会计算一次。</p>
       </td>
     </tr>
 
@@ -2331,11 +2374,13 @@ COLLECT(value)
 {% endhighlight %}
       </td>
       <td>
-          <p>Returns a multiset of the <i>value</i>s. null input <i>value</i> will be ignored. Return an empty multiset if only null values are added. </p>
+        <p>默认或使用 ALL 关键字的情况下，将所有输入行的 <i>expression</i> 生成一个多重集。使用 DISTINCT 关键字的情况下相同值只会计算一次。</p>
       </td>
     </tr>
   </tbody>
 </table>
+
+### 分组函数
 
 <table class="table table-bordered">
   <thead>
@@ -2353,33 +2398,26 @@ GROUP_ID()
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns an integer that uniquely identifies the combination of grouping keys.</p>
+        <p>返回一个在分组过程中可以用以标识 grouping key 组合的整数。</p>
       </td>
     </tr>
 
     <tr>
       <td>
         {% highlight text %}
-GROUPING(expression)
+GROUPING(expression1 [, expression2]* )
+GROUPING_ID(expression1 [, expression2]* )
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns 1 if <i>expression</i> is rolled up in the current row’s grouping set, 0 otherwise.</p>
+        <p>返回一个对应所选 grouping expressions 的位向量。</p>
       </td>
     </tr>
 
-    <tr>
-      <td>
-        {% highlight text %}
-GROUPING_ID(expression [, expression]* )
-{% endhighlight %}
-      </td>
-      <td>
-        <p>Returns a bit vector of the given grouping expressions.</p>
-      </td>
-    </tr>
   </tbody>
 </table>
+
+### 值访问函数
 
 <table class="table table-bordered">
   <thead>
@@ -2397,7 +2435,7 @@ tableName.compositeType.field
 {% endhighlight %}
       </td>
       <td>
-        <p>Accesses the field of a Flink composite type (such as Tuple, POJO, etc.) by name and returns it's value.</p>
+        <p>根据名称返回 Flink 所支持的某一复合类型（例如 Tuple、POJO 等）指定字段的值。</p>
       </td>
     </tr>
 
@@ -2408,11 +2446,13 @@ tableName.compositeType.*
 {% endhighlight %}
       </td>
       <td>
-        <p>Converts a Flink composite type (such as Tuple, POJO, etc.) and all of its direct subtypes into a flat representation where every subtype is a separate field.</p>
+        <p>扁平式地对 Flink 所支持的某一复合类型（例如 Tuple、POJO 等）内的全部子类型进行拆解，每个子类型都作为一个单独的字段。多数情况下，所生成的字段名称和原始子类型的字段名称相近，层级之间会以 $ 号进行连接（例如：<code>mypojo$mytuple$f0</code>）。</p>
       </td>
     </tr>
   </tbody>
 </table>
+
+### 值构建函数
 
 <table class="table table-bordered">
   <thead>
@@ -2427,49 +2467,41 @@ tableName.compositeType.*
     <tr>
       <td>
         {% highlight text %}
-(value, [, value]*)
+ROW(value1, [, value2]*)
+(value1, [, value2]*)
 {% endhighlight %}
       </td>
       <td>
-        <p>Creates a row from a list of values.</p>
+        <p>根据所提供的列表 (<i>value1, value2, ...</i>) 生成一个 row。</p>
       </td>
     </tr>
 
     <tr>
       <td>
         {% highlight text %}
-ROW(value, [, value]*)
+ARRAY ‘[’ value1 [, value2 ]* ‘]’
 {% endhighlight %}
       </td>
       <td>
-        <p>Creates a row from a list of values.</p>
+        <p>根据所提供的列表 (<i>value1, value2, ...</i>) 生成一个 array。</p>
       </td>
     </tr>
 
     <tr>
       <td>
         {% highlight text %}
-ARRAY ‘[’ value [, value ]* ‘]’
+MAP ‘[’ value1, value2 [, value3, value4 ]* ‘]’
 {% endhighlight %}
       </td>
       <td>
-        <p>Creates an array from a list of values.</p>
-      </td>
-    </tr>
-
-    <tr>
-      <td>
-        {% highlight text %}
-MAP ‘[’ key, value [, key, value ]* ‘]’
-{% endhighlight %}
-      </td>
-      <td>
-        <p>Creates a map from a list of key-value pairs.</p>
+        <p>根据所提供的键值对列表 ((<i>value1, value2</i>), <i>(value3, value4)</i>, ...)生成一个 map。</p>
       </td>
     </tr>
 
   </tbody>
 </table>
+
+### 数组函数
 
 <table class="table table-bordered">
   <thead>
@@ -2484,37 +2516,39 @@ MAP ‘[’ key, value [, key, value ]* ‘]’
     <tr>
       <td>
         {% highlight text %}
-CARDINALITY(ARRAY)
+CARDINALITY(array)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the number of elements of an array.</p>
+        <p>返回数组 <i>array</i> 中的元素个数。</p>
       </td>
     </tr>
 
     <tr>
       <td>
         {% highlight text %}
-array ‘[’ index ‘]’
+array ‘[’ integer ‘]’
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the element at a particular position in an array. The index starts at 1.</p>
+        <p>返回数组 <i>array</i> 中 <i>integer</i> 位置的值。下标从1开始。</p>
       </td>
     </tr>
 
     <tr>
       <td>
         {% highlight text %}
-ELEMENT(ARRAY)
+ELEMENT(array)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the sole element of an array with a single element. Returns <code>null</code> if the array is empty. Throws an exception if the array has more than one element.</p>
+        <p>返回数组 <i>array</i>（其长度必须为1）中的唯一元素；如果 <i>array</i> 为空则返回 NULL；如果 <i>array</i> 的长度大于1，则会执行失败。</p>
       </td>
     </tr>
   </tbody>
 </table>
+
+### 字典函数
 
 <table class="table table-bordered">
   <thead>
@@ -2529,26 +2563,28 @@ ELEMENT(ARRAY)
     <tr>
       <td>
         {% highlight text %}
-CARDINALITY(MAP)
+CARDINALITY(map)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the number of entries of a map.</p>
+        <p>返回字典 <i>map</i> 中的元素个数。</p>
       </td>
     </tr>
 
     <tr>
       <td>
         {% highlight text %}
-map ‘[’ key ‘]’
+map ‘[’ value ‘]’
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the value specified by a particular key in a map.</p>
+        <p>根据指定键 <i>value</i> 访问字典 <i>map</i> 中的值。</p>
       </td>
     </tr>
   </tbody>
 </table>
+
+### 哈希函数
 
 <table class="table table-bordered">
   <thead>
@@ -2566,7 +2602,7 @@ MD5(string)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the MD5 hash of the <i>string</i> argument as a string of 32 hexadecimal digits; null if <i>string</i> is null.</p>
+        <p>返回输入串 <i>string</i> 的 MD5 编码值，结果以32位16进制数表示；如果 <i>string</i> 为 NULL，返回 NULL。</p>
       </td>
     </tr>
 
@@ -2577,7 +2613,7 @@ SHA1(string)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the SHA-1 hash of the <i>string</i> argument as a string of 40 hexadecimal digits; null if <i>string</i> is null.</p>
+        <p>返回输入串 <i>string</i> 的 SHA-1 编码值，结果以40位16进制数表示；如果 <i>string</i> 为 NULL，返回 NULL。</p>
       </td>
     </tr>
     
@@ -2588,7 +2624,7 @@ SHA224(string)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the SHA-224 hash of the <i>string</i> argument as a string of 56 hexadecimal digits; null if <i>string</i> is null.</p>
+        <p>返回输入串 <i>string</i> 的 SHA-224 编码值，结果以56位16进制数表示；如果 <i>string</i> 为 NULL，返回 NULL。</p>
       </td>
     </tr>    
     
@@ -2599,7 +2635,7 @@ SHA256(string)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the SHA-256 hash of the <i>string</i> argument as a string of 64 hexadecimal digits; null if <i>string</i> is null.</p>
+        <p>返回输入串 <i>string</i> 的 SHA-256 编码值，结果以64位16进制数表示；如果 <i>string</i> 为 NULL，返回 NULL。</p>
       </td>
     </tr>
     
@@ -2610,7 +2646,7 @@ SHA384(string)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the SHA-384 hash of the <i>string</i> argument as a string of 96 hexadecimal digits; null if <i>string</i> is null.</p>
+        <p>返回输入串 <i>string</i> 的 SHA-384 编码值，结果以96位16进制数表示；如果 <i>string</i> 为 NULL，返回 NULL。</p>
       </td>
     </tr>  
 
@@ -2621,7 +2657,7 @@ SHA512(string)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the SHA-512 hash of the <i>string</i> argument as a string of 128 hexadecimal digits; null if <i>string</i> is null.</p>
+        <p>返回输入串 <i>string</i> 的 SHA-512 编码值，结果以128位16进制数表示；如果 <i>string</i> 为 NULL，返回 NULL。</p>
       </td>
     </tr>
 
@@ -2632,26 +2668,25 @@ SHA2(string, hashLength)
 {% endhighlight %}
       </td>
       <td>
-        <p>Returns the hash using the SHA-2 family of hash functions (SHA-224, SHA-256, SHA-384, or SHA-512). The first argument <i>string</i> is the string to be hashed. <i>hashLength</i> is the bit length of the result (either 224, 256, 384, or 512). Returns <i>null</i> if <i>string</i> or <i>hashLength</i> is <i>null</i>.
-        </p>
+        <p>返回输入串 <i>string</i> 的某 SHA-2 类别（SHA-224、SHA-256、SHA-384或SHA-512）的编码值。其编码长度由 <i>hashLength</i> 控制，可选范围为224、256、384或512。如果 <i>string</i> 或 <i>hashLength</i> 为 NULL，返回 NULL。</p>
       </td>
     </tr>
   </tbody>
 </table>
 
-### Unsupported Functions
+### 暂不支持的函数 
 
-The following functions are not supported yet:
+Flink SQL 暂不支持以下函数：
 
-- Binary string operators and functions
-- System functions
+- 二进制字符串相关的算子及函数 
+- 系统函数
 
 {% top %}
 
-Reserved Keywords
+保留字
 -----------------
 
-Although not every SQL feature is implemented yet, some string combinations are already reserved as keywords for future use. If you want to use one of the following strings as a field name, make sure to surround them with backticks (e.g. `` `value` ``, `` `count` ``).
+虽然当前版本还无法支持 SQL 的全部功能，Flink SQL 为将来可能需要实现的功能保留了部分关键字。如果您希望用它们进行命名，请注意使用反引号进行标识。例如： `` `value` ``、 `` `count` ``。全部保留字如下：
 
 {% highlight sql %}
 
@@ -2659,7 +2694,7 @@ A, ABS, ABSOLUTE, ACTION, ADA, ADD, ADMIN, AFTER, ALL, ALLOCATE, ALLOW, ALTER, A
 
 {% endhighlight %}
 
-#### Date Format Specifier
+#### 日期格式说明表
 
 <table class="table table-bordered">
   <thead>
@@ -2670,103 +2705,100 @@ A, ABS, ABSOLUTE, ACTION, ADA, ADD, ADMIN, AFTER, ALL, ALLOCATE, ALLOW, ALTER, A
   </thead>
   <tbody>
   <tr><td>{% highlight text %}%a{% endhighlight %}</td>
-  <td>Abbreviated weekday name (<code>Sun</code> .. <code>Sat</code>)</td>
+  <td>星期名称的缩写 (<code>Sun</code> .. <code>Sat</code>)</td>
   </tr>
   <tr><td>{% highlight text %}%b{% endhighlight %}</td>
-  <td>Abbreviated month name (<code>Jan</code> .. <code>Dec</code>)</td>
+  <td>月份名称的缩写 (<code>Jan</code> .. <code>Dec</code>)</td>
   </tr>
   <tr><td>{% highlight text %}%c{% endhighlight %}</td>
-  <td>Month, numeric (<code>1</code> .. <code>12</code>)</td>
+  <td>数值类型的月份 (<code>1</code> .. <code>12</code>)</td>
   </tr>
   <tr><td>{% highlight text %}%D{% endhighlight %}</td>
-  <td>Day of the month with English suffix (<code>0th</code>, <code>1st</code>, <code>2nd</code>, <code>3rd</code>, ...)</td>
+  <td>带有英文尾缀的月份天数 (<code>0th</code>, <code>1st</code>, <code>2nd</code>, <code>3rd</code>, ...)</td>
   </tr>
   <tr><td>{% highlight text %}%d{% endhighlight %}</td>
-  <td>Day of the month, numeric (<code>01</code> .. <code>31</code>)</td>
+  <td>一月中的第几天 (<code>01</code> .. <code>31</code>)</td>
   </tr>
   <tr><td>{% highlight text %}%e{% endhighlight %}</td>
-  <td>Day of the month, numeric (<code>1</code> .. <code>31</code>)</td>
+  <td>数值类型的月份天数 (<code>1</code> .. <code>31</code>)</td>
   </tr>
   <tr><td>{% highlight text %}%f{% endhighlight %}</td>
-  <td>Fraction of second (6 digits for printing: <code>000000</code> .. <code>999000</code>; 1 - 9 digits for parsing: <code>0</code> .. <code>999999999</code>) (Timestamp is truncated to milliseconds.) </td>
+  <td>秒数的若干分之几 (打印时显示6位：<code>000000</code> .. <code>999000</code>；解析时可识别1-9位：<code>0</code> .. <code>999999999</code>) (时间戳以毫秒数截断) </td>
   </tr>
   <tr><td>{% highlight text %}%H{% endhighlight %}</td>
-  <td>Hour (<code>00</code> .. <code>23</code>)</td>
+  <td>24时制的小时 (<code>00</code> .. <code>23</code>)</td>
   </tr>
   <tr><td>{% highlight text %}%h{% endhighlight %}</td>
-  <td>Hour (<code>01</code> .. <code>12</code>)</td>
+  <td>12时制的小时 (<code>01</code> .. <code>12</code>)</td>
   </tr>
   <tr><td>{% highlight text %}%I{% endhighlight %}</td>
-  <td>Hour (<code>01</code> .. <code>12</code>)</td>
+  <td>12时制的小时 (<code>01</code> .. <code>12</code>)</td>
   </tr>
   <tr><td>{% highlight text %}%i{% endhighlight %}</td>
-  <td>Minutes, numeric (<code>00</code> .. <code>59</code>)</td>
+  <td>数值类型的分钟 (<code>00</code> .. <code>59</code>)</td>
   </tr>
   <tr><td>{% highlight text %}%j{% endhighlight %}</td>
-  <td>Day of year (<code>001</code> .. <code>366</code>)</td>
+  <td>一年中的第几天 (<code>001</code> .. <code>366</code>)</td>
   </tr>
   <tr><td>{% highlight text %}%k{% endhighlight %}</td>
-  <td>Hour (<code>0</code> .. <code>23</code>)</td>
+  <td>小时 (<code>0</code> .. <code>23</code>)</td>
   </tr>
   <tr><td>{% highlight text %}%l{% endhighlight %}</td>
-  <td>Hour (<code>1</code> .. <code>12</code>)</td>
+  <td>小时 (<code>1</code> .. <code>12</code>)</td>
   </tr>
   <tr><td>{% highlight text %}%M{% endhighlight %}</td>
-  <td>Month name (<code>January</code> .. <code>December</code>)</td>
+  <td>月份全称 (<code>January</code> .. <code>December</code>)</td>
   </tr>
   <tr><td>{% highlight text %}%m{% endhighlight %}</td>
-  <td>Month, numeric (<code>01</code> .. <code>12</code>)</td>
+  <td>数值类型的月份 (<code>01</code> .. <code>12</code>)</td>
   </tr>
   <tr><td>{% highlight text %}%p{% endhighlight %}</td>
-  <td><code>AM</code> or <code>PM</code></td>
+  <td><code>AM</code> 或 <code>PM</code></td>
   </tr>
   <tr><td>{% highlight text %}%r{% endhighlight %}</td>
-  <td>Time, 12-hour (<code>hh:mm:ss</code> followed by <code>AM</code> or <code>PM</code>)</td>
+  <td>带有 <code>AM</code> 或 <code>PM</code> 的12小时时间 (<code>hh:mm:ss</code> <code>AM/PM</code>)</td>
   </tr>
   <tr><td>{% highlight text %}%S{% endhighlight %}</td>
-  <td>Seconds (<code>00</code> .. <code>59</code>)</td>
+  <td>秒数 (<code>00</code> .. <code>59</code>)</td>
   </tr>
   <tr><td>{% highlight text %}%s{% endhighlight %}</td>
-  <td>Seconds (<code>00</code> .. <code>59</code>)</td>
+  <td>秒数 (<code>00</code> .. <code>59</code>)</td>
   </tr>
   <tr><td>{% highlight text %}%T{% endhighlight %}</td>
-  <td>Time, 24-hour (<code>hh:mm:ss</code>)</td>
+  <td>24时制的时间 (<code>hh:mm:ss</code>)</td>
   </tr>
   <tr><td>{% highlight text %}%U{% endhighlight %}</td>
-  <td>Week (<code>00</code> .. <code>53</code>), where Sunday is the first day of the week</td>
+  <td>一年中的第几周 (<code>00</code> .. <code>53</code>)，以周日为一周的第一天计算</td>
   </tr>
   <tr><td>{% highlight text %}%u{% endhighlight %}</td>
-  <td>Week (<code>00</code> .. <code>53</code>), where Monday is the first day of the week</td>
+  <td>一年中的第几周 (<code>00</code> .. <code>53</code>)，以周一为一周的第一天计算</td>
   </tr>
   <tr><td>{% highlight text %}%V{% endhighlight %}</td>
-  <td>Week (<code>01</code> .. <code>53</code>), where Sunday is the first day of the week; used with <code>%X</code></td>
+  <td>一年中的第几周 (<code>00</code> .. <code>53</code>)，以周日为一周的第一天计算，配合 <code>%X</code> 使用</td>
   </tr>
   <tr><td>{% highlight text %}%v{% endhighlight %}</td>
-  <td>Week (<code>01</code> .. <code>53</code>), where Monday is the first day of the week; used with <code>%x</code></td>
+  <td>一年中的第几周 (<code>00</code> .. <code>53</code>)，以周一为一周的第一天计算，配合 <code>%x</code> 使用</td>
   </tr>
   <tr><td>{% highlight text %}%W{% endhighlight %}</td>
-  <td>Weekday name (<code>Sunday</code> .. <code>Saturday</code>)</td>
+  <td>星期名称 (<code>Sunday</code> .. <code>Saturday</code>)</td>
   </tr>
   <tr><td>{% highlight text %}%w{% endhighlight %}</td>
-  <td>Day of the week (<code>0</code> .. <code>6</code>), where Sunday is the first day of the week</td>
+  <td>一周之中的第几天 (<code>0</code> .. <code>6</code>), 以周天位一周的第一天计算</td>
   </tr>
   <tr><td>{% highlight text %}%X{% endhighlight %}</td>
-  <td>Year for the week where Sunday is the first day of the week, numeric, four digits; used with <code>%V</code></td>
+  <td>星期对应的年份（4位数字），以周天为一周的第一天计算，配合 <code>%V</code> 使用</td>
   </tr>
   <tr><td>{% highlight text %}%x{% endhighlight %}</td>
-  <td>Year for the week, where Monday is the first day of the week, numeric, four digits; used with <code>%v</code></td>
+  <td>星期对应的年份（4位数字），以周一为一周的第一天计算，配合 <code>%v</code> 使用</td>
   </tr>
   <tr><td>{% highlight text %}%Y{% endhighlight %}</td>
-  <td>Year, numeric, four digits</td>
+  <td>4位年份数字</td>
   </tr>
   <tr><td>{% highlight text %}%y{% endhighlight %}</td>
-  <td>Year, numeric (two digits) </td>
+  <td>2位年份数字 </td>
   </tr>
   <tr><td>{% highlight text %}%%{% endhighlight %}</td>
-  <td>A literal <code>%</code> character</td>
-  </tr>
-  <tr><td>{% highlight text %}%x{% endhighlight %}</td>
-  <td><code>x</code>, for any <code>x</code> not listed above</td>
+  <td>一个 <code>%</code> 字面量</td>
   </tr>
   </tbody>
 </table>
