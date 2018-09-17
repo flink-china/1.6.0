@@ -66,7 +66,7 @@ under the License.
     {% unless site.is_stable %}
     <p style="border-radius: 5px; padding: 5px" class="bg-danger">
         <b>Note</b>: For Maven 3.0 or higher, it is no longer possible to specify the repository (-DarchetypeCatalog) via the command line. If you wish to use the snapshot repository, you need to add a repository entry to your settings.xml. For details about this change, please refer to <a href="http://maven.apache.org/archetype/maven-archetype-plugin/archetype-repository.html">Maven official document</a>
-        <b>注意</b>: 对于 Maven 3.0 或更高版本，不再可以通过命令行指定仓库 (-DarchetypeCatalog)。如果你想使用快照仓库，则需要在setting.xml里添加一个仓库配置。对于这个改变的详情，请参阅 <a href="http://maven.apache.org/archetype/maven-archetype-plugin/archetype-repository.html">Maven 官方文档</a>
+        <b>注意</b>: 对于 Maven 3.0 及更高版本，不再可以通过命令行指定仓库 (-DarchetypeCatalog)。如果你想使用快照仓库，则需要在setting.xml里添加一个仓库配置。对于这个改变的详情，请参阅 <a href="http://maven.apache.org/archetype/maven-archetype-plugin/archetype-repository.html">Maven 官方文档</a>
     </p>
     {% endunless %}
 </div>
@@ -91,7 +91,7 @@ quickstart/
             └── log4j.properties
 {% endhighlight %}
 
-示例项目是一个 __Maven 项目__，包含两个类： _StreamingJob_ 和 _BatchJob_ 是 *DataStream* 和 *DataSet* 的基本框架程序。_main_ 方法是程序的入口，既可以用 IDE 测试/执行，也可用于正确的部署。
+示例项目是一个 __Maven 项目__，包含两个类： _StreamingJob_ 和 _BatchJob_ 是 *DataStream* 和 *DataSet* 的基本框架程序。_main_ 方法是程序的入口，既可以用 IDE 测试/执行，也可用于部署。
 
 我们建议你 __把这个项目导入到你的 IDE__ 来开发和测试一下。IntelliJ IDEA 支持开箱即用的 Maven 项目。如果您使用 Eclipse，使用 [m2e 插件](http://www.eclipse.org/m2e/)可以[导入 Maven 项目](http://books.sonatype.com/m2eclipse-book/reference/creating-sect-importing-projects.html#fig-creating-import)。
 一些 Eclipse 默认捆绑该插件，其他的需要手动安装。
@@ -102,7 +102,7 @@ quickstart/
 ## 构建项目
 
 如果你想 __构建/打包你的项目__，进入到你的项目目录并且执行 '`mvn clean package`' 命令。
-你将 __找到一个 JAR 文件__，包含了您的应用、扩展的 connectors ，并且您需要添加应用的依赖包：`target/<artifact-id>-<version>.jar`。
+你将 __找到一个 JAR 文件__，包含了您的应用、扩展的 connectors 以及程序依赖的Libraries到您的应用程序：`target/<artifact-id>-<version>.jar`。
 
 __注意：__ 如果您使用和 *StreamingJob* 不同的类作为应用程序的主类/入口，我们建议您相应的修改 `pom.xml` 中的 `mainClass` 设置。那样，Flink 在运行应用程序的 JAR 文件的时候不需要再指定主类。
 
@@ -118,7 +118,7 @@ __注意：__ 如果您使用和 *StreamingJob* 不同的类作为应用程序�
 
 在[这里]({{ site.baseurl }}/quickstart/setup_quickstart.html)你可以找到怎么在 IDE 之外的集群上运行应用。
 
-如果您有任何问题，请在我们的[邮箱列表](http://mail-archives.apache.org/mod_mbox/flink-user/)上询问。
+如果您有任何问题，可发邮件到[邮箱列表](http://mail-archives.apache.org/mod_mbox/flink-user/)。
 我们很乐意提供帮助。
 
 {% top %}
