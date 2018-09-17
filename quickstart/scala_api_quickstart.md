@@ -1,6 +1,6 @@
 ---
-title: "Project Template for Scala"
-nav-title: Project Template for Scala
+title: "Scala 项目模板"
+nav-title: Scala 项目模板
 nav-parent_id: start
 nav-pos: 1
 ---
@@ -27,25 +27,25 @@ under the License.
 {:toc}
 
 
-## Build Tools
+## 构建工具
 
-Flink projects can be built with different build tools.
-In order to get quickly started, Flink provides project templates for the following build tools:
+可以使用不同的构建工具来构建Flink项目。
+您可使用以下构建工具的项目模板，快速构建Flink项目：
 
 - [SBT](#sbt)
 - [Maven](#maven)
 
-These templates help you to set up the project structure and to create the initial build files.
+这些模板能够帮助你建立项目的框架和创建初始化的构建文件。
 
 ## SBT
 
-### Create Project
+### 创建项目
 
-You can scaffold a new project via either of the following two methods:
+你可以通过以下两种方法之一来构建新项目：
 
 <ul class="nav nav-tabs" style="border-bottom: none;">
-    <li class="active"><a href="#sbt_template" data-toggle="tab">Use the <strong>sbt template</strong></a></li>
-    <li><a href="#quickstart-script-sbt" data-toggle="tab">Run the <strong>quickstart script</strong></a></li>
+    <li class="active"><a href="#sbt_template" data-toggle="tab">使用 <strong>sbt 模板</strong></a></li>
+    <li><a href="#quickstart-script-sbt" data-toggle="tab">运行 <strong>快速开始脚本</strong></a></li>
 </ul>
 
 <div class="tab-content">
@@ -53,28 +53,28 @@ You can scaffold a new project via either of the following two methods:
     {% highlight bash %}
     $ sbt new tillrohrmann/flink-project.g8
     {% endhighlight %}
-    This will prompt you for a couple of parameters (project name, flink version...) and then create a Flink project from the <a href="https://github.com/tillrohrmann/flink-project.g8">flink-project template</a>.
-    You need sbt >= 0.13.13 to execute this command. You can follow this <a href="http://www.scala-sbt.org/download.html">installation guide</a> to obtain it if necessary.
+    这将提示您输入几个参数（项目名称，Flink 版本...），然后从 <a href="https://github.com/tillrohrmann/flink-project.g8">flink 项目模板</a> 创建一个 Flink 项目。
+    你需要 sbt >= 0.13.13 版本才能执行这个命令。如有必要，您可以按照这个<a href="http://www.scala-sbt.org/download.html">安装指南</a>获取sbt。 
     </div>
     <div class="tab-pane" id="quickstart-script-sbt">
     {% highlight bash %}
     $ bash <(curl https://flink.apache.org/q/sbt-quickstart.sh)
     {% endhighlight %}
-    This will create a Flink project in the <strong>specified</strong> project directory.
+    这将在<strong>指定的</strong>项目目录中创建一个 Flink 项目。
     </div>
 </div>
 
-### Build Project
+### 构建项目
 
-In order to build your project you simply have to issue the `sbt clean assembly` command.
-This will create the fat-jar __your-project-name-assembly-0.1-SNAPSHOT.jar__ in the directory __target/scala_your-major-scala-version/__.
+为了构建您的项目，您只需要执行 `sbt clean assembly` 命令。
+这将在目录 __target/scala_your-major-scala-version/__ 中创建 fat-jar __your-project-name-assembly-0.1-SNAPSHOT.jar__ 。
 
-### Run Project
+### 运行项目
 
-In order to run your project you have to issue the `sbt run` command.
+您可使用`sbt run` 命令运行项目。
 
-Per default, this will run your job in the same JVM as `sbt` is running.
-In order to run your job in a distinct JVM, add the following line to `build.sbt`
+默认情况下，这将在 `sbt` 相同的 JVM 中运行您的作业。 
+为了在不同的 JVM 中运行您的作业，请将以下内容添加到  `build.sbt`
 
 {% highlight scala %}
 fork in run := true
@@ -83,47 +83,47 @@ fork in run := true
 
 #### IntelliJ
 
-We recommend using [IntelliJ](https://www.jetbrains.com/idea/) for your Flink job development.
-In order to get started, you have to import your newly created project into IntelliJ.
-You can do this via `File -> New -> Project from Existing Sources...` and then choosing your project's directory.
-IntelliJ will then automatically detect the `build.sbt` file and set everything up.
+我们建议您使用 [IntelliJ](https://www.jetbrains.com/idea/) 来开发 Flink 作业。
+开始时，您必须把新建的项目导入到 IntelliJ 。
+您可以通过 `File -> New -> Project from Existing Sources...` 然后选择项目目录来完成这个操作。
+然后 IntelliJ 将自动检测 `build.sbt` 文件并设置所有内容。
 
-In order to run your Flink job, it is recommended to choose the `mainRunner` module as the classpath of your __Run/Debug Configuration__.
-This will ensure, that all dependencies which are set to _provided_ will be available upon execution.
-You can configure the __Run/Debug Configurations__ via `Run -> Edit Configurations...` and then choose `mainRunner` from the _Use classpath of module_ dropbox.
+为了运行 Flink 作业，建议选择 `mainRunner` 模块作为 __运行/调试 配置__ 的类路径。
+这将确保在执行时可以使用设置为 _provided_ 的所有依赖项。
+您可以通过 `Run -> Edit Configurations...` 配置 __运行/调试 配置__ ，然后从 _Use classpath of module_ 的下拉框中选择 `mainRunner` 。
 
 #### Eclipse
 
-In order to import the newly created project into [Eclipse](https://eclipse.org/), you first have to create Eclipse project files for it.
-These project files can be created via the [sbteclipse](https://github.com/typesafehub/sbteclipse) plugin.
-Add the following line to your `PROJECT_DIR/project/plugins.sbt` file:
+为了将新建的项目导入 [Eclipse](https://eclipse.org/)，首先需要为它创建 Eclipse 项目文件。
+这些项目文件可以通过 [sbteclipse](https://github.com/typesafehub/sbteclipse) 创建来创建。
+将以下行添加到 `PROJECT_DIR/project/plugins.sbt` 文件中：
 
 {% highlight bash %}
 addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "4.0.0")
 {% endhighlight %}
 
-In `sbt` use the following command to create the Eclipse project files
+在 `sbt` 中使用以下命令来创建 Eclipse 项目文件
 
 {% highlight bash %}
 > eclipse
 {% endhighlight %}
 
-Now you can import the project into Eclipse via `File -> Import... -> Existing Projects into Workspace` and then select the project directory.
+现在你可以通过 `File -> Import... -> Existing Projects into Workspace` 将项目导入到 Eclipse，然后选择项目目录。
 
 ## Maven
 
-### Requirements
+### 要求
 
-The only requirements are working __Maven 3.0.4__ (or higher) and __Java 8.x__ installations.
+唯一的要求是 __Maven 3.0.4__ （或更高版本）和 安装 __Java 8.x__ 。
 
 
-### Create Project
+### 创建项目
 
-Use one of the following commands to __create a project__:
+使用以下命令之一来 __创建项目__ ：
 
 <ul class="nav nav-tabs" style="border-bottom: none;">
-    <li class="active"><a href="#maven-archetype" data-toggle="tab">Use <strong>Maven archetypes</strong></a></li>
-    <li><a href="#quickstart-script" data-toggle="tab">Run the <strong>quickstart script</strong></a></li>
+    <li class="active"><a href="#maven-archetype" data-toggle="tab">使用 <strong>Maven 脚手架</strong></a></li>
+    <li><a href="#quickstart-script" data-toggle="tab">运行 <strong>快速启动脚本</strong></a></li>
 </ul>
 
 <div class="tab-content">
@@ -135,7 +135,7 @@ Use one of the following commands to __create a project__:
       -DarchetypeCatalog=https://repository.apache.org/content/repositories/snapshots/ \{% endunless %}
       -DarchetypeVersion={{site.version}}
     {% endhighlight %}
-    This allows you to <strong>name your newly created project</strong>. It will interactively ask you for the groupId, artifactId, and package name.
+    这将允许您<strong>为新创建的项目命名</strong>。它将以交互式的方式询问您 groupId，artifactId 和 package 名称。
     </div>
     <div class="tab-pane" id="quickstart-script">
 {% highlight bash %}
@@ -148,17 +148,15 @@ Use one of the following commands to __create a project__:
     </div>
     {% unless site.is_stable %}
     <p style="border-radius: 5px; padding: 5px" class="bg-danger">
-        <b>Note</b>: For Maven 3.0 or higher, it is no longer possible to specify the repository (-DarchetypeCatalog) via the commandline. If you wish to use the snapshot repository, you need to add a repository entry to your settings.xml. For details about this change, please refer to <a href="http://maven.apache.org/archetype/maven-archetype-plugin/archetype-repository.html">Maven official document</a>
+        <b>注意</b>：对于 Maven 3.0 及更高版本，不再可以通过命令行（-DarchetypeCatalog）来指定仓库。如果你想使用快照仓库，你需要在您的 setting.xml 里添加一个仓库条目。有关此更改的详细信息，请参阅 <a href="http://maven.apache.org/archetype/maven-archetype-plugin/archetype-repository.html">Maven 官方文档</a>。
     </p>
     {% endunless %}
 </div>
 
 
-### Inspect Project
+### 检查项目
 
-There will be a new directory in your working directory. If you've used
-the _curl_ approach, the directory is called `quickstart`. Otherwise,
-it has the name of your `artifactId`:
+在您的工作目录中建一个新目录。如果您已经习惯了 _curl_ 方法，该目录称为 `quickstart` 。除此之外，它还包含你命名的 `artifactId` ：
 
 {% highlight bash %}
 $ tree quickstart/
@@ -176,15 +174,15 @@ quickstart/
                         └── StreamingJob.scala
 {% endhighlight %}
 
-The sample project is a __Maven project__, which contains two classes: _StreamingJob_ and _BatchJob_ are the basic skeleton programs for a *DataStream* and *DataSet* program.
-The _main_ method is the entry point of the program, both for in-IDE testing/execution and for proper deployments.
+示例项目是 __Maven 项目__，它包含两个类： _StreamingJob_ 和 _BatchJob_ 是 *DataStream* 和 *DataSet* 程序的基本框架程序。
+_main_ 方法是程序的入口，既可以用于 IDE 内测试/执行，也可用于部署。
 
-We recommend you __import this project into your IDE__.
+我们建议您 __将此项目导入到您的 IDE 中__ 。
 
-IntelliJ IDEA supports Maven out of the box and offers a plugin for Scala development.
-From our experience, IntelliJ provides the best experience for developing Flink applications.
+IntelliJ IDEA 支持 Maven 开箱即用，并为 Scala 提供了开发的插件。
+根据我们的经验，IntelliJ 为开发 Flink 应用程序提供了最佳体验。
 
-For Eclipse, you need the following plugins, which you can install from the provided Eclipse Update Sites:
+对于 Eclipse，您需要以下插件，您可以从提供的 Eclipse Update Sites 安装这些插件：
 
 * _Eclipse 4.x_
   * [Scala IDE](http://download.scala-ide.org/sdk/lithium/e44/scala211/stable/site)
@@ -195,36 +193,29 @@ For Eclipse, you need the following plugins, which you can install from the prov
   * [m2eclipse-scala](http://alchim31.free.fr/m2e-scala/update-site)
   * [Build Helper Maven Plugin](https://repository.sonatype.org/content/repositories/forge-sites/m2e-extras/0.14.0/N/0.14.0.201109282148/)
 
-### Build Project
+### 构建项目
 
-If you want to __build/package your project__, go to your project directory and
-run the '`mvn clean package`' command.
-You will __find a JAR file__ that contains your application, plus connectors and libraries
-that you may have added as dependencies to the application: `target/<artifact-id>-<version>.jar`.
+如果您想 __构建/打包__ 您的项目，进入到您的项目目录执行命令 '`mvn clean package`' 。
+您将 __找到一个 JAR 文件__ 包含您的应用程序，以及 connectors 和您可能已将其作为依赖项添加到应用程序：`target/<artifact-id>-<version>.jar` 的库。
 
-__Note:__ If you use a different class than *StreamingJob* as the application's main class / entry point,
-we recommend you change the `mainClass` setting in the `pom.xml` file accordingly. That way, the Flink
-can run time application from the JAR file without additionally specifying the main class.
+___注意：__ 如果您使用与 *StreamingJob* 不同的类作为应用程序的主类/入口，我们建议您相应地更改 `pom.xml` 文件中的 `mainClass` 设置。那样，Flink 在运行应用程序时无需另外指定主类。
 
 
-## Next Steps
+## 下一步
 
-Write your application!
+编写你的应用！
 
-If you are writing a streaming application and you are looking for inspiration what to write,
-take a look at the [Stream Processing Application Tutorial]({{ site.baseurl }}/quickstart/run_example_quickstart.html#writing-a-flink-program)
+如果您正在编写流处理程序，并且在寻找灵感来写什么，可以看看 [流式处理指南]({{ site.baseurl }}/quickstart/run_example_quickstart.html#writing-a-flink-program)
 
-If you are writing a batch processing application and you are looking for inspiration what to write,
-take a look at the [Batch Application Examples]({{ site.baseurl }}/dev/batch/examples.html)
+如果您正在编写批处理程序，并且在寻找灵感来写什么，可以看看 [批处理应用示例]({{ site.baseurl }}/dev/batch/examples.html)
 
-For a complete overview over the APIa, have a look at the
-[DataStream API]({{ site.baseurl }}/dev/datastream_api.html) and
-[DataSet API]({{ site.baseurl }}/dev/batch/index.html) sections.
+有关 API 的完整概述，请查看
+[DataStream API]({{ site.baseurl }}/dev/datastream_api.html) 和
+[DataSet API]({{ site.baseurl }}/dev/batch/index.html) 章节。
 
-[Here]({{ site.baseurl }}/quickstart/setup_quickstart.html) you can find out how to run an application outside the IDE on a local cluster.
+[在这里]({{ site.baseurl }}/quickstart/setup_quickstart.html)  你可以找到怎么在 IDE 之外的本地集群来运行应用程序。
 
-If you have any trouble, ask on our
-[Mailing List](http://mail-archives.apache.org/mod_mbox/flink-user/).
-We are happy to provide help.
+如果您有任何问题，请发信至我们的 [邮箱列表](http://mail-archives.apache.org/mod_mbox/flink-user/)。
+我们很乐意提供帮助。
 
 {% top %}
