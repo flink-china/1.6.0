@@ -29,8 +29,8 @@ under the License.
 
 ## 构建工具
 
-Flin 项目可以使用不同的构建构建来构建。
-为了快速开始，Flink 为以下构建工具提供了项目模板：
+可以使用不同的构建工具来构建Flink项目。
+您可使用以下构建工具的项目模板，快速构建Flink项目：
 
 - [SBT](#sbt)
 - [Maven](#maven)
@@ -54,7 +54,7 @@ Flin 项目可以使用不同的构建构建来构建。
     $ sbt new tillrohrmann/flink-project.g8
     {% endhighlight %}
     这将提示您输入几个参数（项目名称，Flink 版本...），然后从 <a href="https://github.com/tillrohrmann/flink-project.g8">flink 项目模板</a> 创建一个 Flink 项目。
-    你需要 sbt >= 0.13.13 版本才能执行这个命令。如有必要，您可以按照这个<a href="http://www.scala-sbt.org/download.html">安装指南</a>获取。 
+    你需要 sbt >= 0.13.13 版本才能执行这个命令。如有必要，您可以按照这个<a href="http://www.scala-sbt.org/download.html">安装指南</a>获取sbt。 
     </div>
     <div class="tab-pane" id="quickstart-script-sbt">
     {% highlight bash %}
@@ -71,9 +71,9 @@ Flin 项目可以使用不同的构建构建来构建。
 
 ### 运行项目
 
-为了运行您的项目，您必须运行 `sbt run` 命令。
+您可使用`sbt run` 命令运行项目。
 
-默认情况下，这将在运行 `sbt` 相同的 JVM 中运行您的作业。 
+默认情况下，这将在 `sbt` 相同的 JVM 中运行您的作业。 
 为了在不同的 JVM 中运行您的作业，请将以下内容添加到  `build.sbt`
 
 {% highlight scala %}
@@ -84,7 +84,7 @@ fork in run := true
 #### IntelliJ
 
 我们建议您使用 [IntelliJ](https://www.jetbrains.com/idea/) 来开发 Flink 作业。
-为了开始，您必须把新建的项目导入到 IntelliJ 。
+开始时，您必须把新建的项目导入到 IntelliJ 。
 您可以通过 `File -> New -> Project from Existing Sources...` 然后选择项目目录来完成这个操作。
 然后 IntelliJ 将自动检测 `build.sbt` 文件并设置所有内容。
 
@@ -148,7 +148,7 @@ addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "4.0.0")
     </div>
     {% unless site.is_stable %}
     <p style="border-radius: 5px; padding: 5px" class="bg-danger">
-        <b>注意</b>：对于 Maven 3.0 或更高版本，不再可以通过命令行来知道仓库（-DarchetypeCatalog）。如果你想使用快照仓库，你需要在您的 setting.xml 里添加一个仓库条目。有关此更改的详细信息，请参阅 <a href="http://maven.apache.org/archetype/maven-archetype-plugin/archetype-repository.html">Maven 官方文档</a>。
+        <b>注意</b>：对于 Maven 3.0 及更高版本，不再可以通过命令行（-DarchetypeCatalog）来指定仓库。如果你想使用快照仓库，你需要在您的 setting.xml 里添加一个仓库条目。有关此更改的详细信息，请参阅 <a href="http://maven.apache.org/archetype/maven-archetype-plugin/archetype-repository.html">Maven 官方文档</a>。
     </p>
     {% endunless %}
 </div>
@@ -156,7 +156,7 @@ addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "4.0.0")
 
 ### 检查项目
 
-在您的工作目录中将有一个新目录。如果您已经习惯了 _curl_ 方法，该目录称为 `quickstart` 。除此之外，它有你命名的 `artifactId` ：
+在您的工作目录中建一个新目录。如果您已经习惯了 _curl_ 方法，该目录称为 `quickstart` 。除此之外，它还包含你命名的 `artifactId` ：
 
 {% highlight bash %}
 $ tree quickstart/
@@ -175,7 +175,7 @@ quickstart/
 {% endhighlight %}
 
 示例项目是 __Maven 项目__，它包含两个类： _StreamingJob_ 和 _BatchJob_ 是 *DataStream* 和 *DataSet* 程序的基本框架程序。
-_main_ 方法是程序的入口，既可以用于 IDE 内测试/执行，也可用于正确的部署。
+_main_ 方法是程序的入口，既可以用于 IDE 内测试/执行，也可用于部署。
 
 我们建议您 __将此项目导入到您的 IDE 中__ 。
 
@@ -207,7 +207,7 @@ ___注意：__ 如果您使用与 *StreamingJob* 不同的类作为应用程序�
 
 如果您正在编写流处理程序，并且在寻找灵感来写什么，可以看看 [流式处理指南]({{ site.baseurl }}/quickstart/run_example_quickstart.html#writing-a-flink-program)
 
-如果您正在编写流处理程序，并且在寻找灵感来写什么，可以看看 [批处理应用示例]({{ site.baseurl }}/dev/batch/examples.html)
+如果您正在编写批处理程序，并且在寻找灵感来写什么，可以看看 [批处理应用示例]({{ site.baseurl }}/dev/batch/examples.html)
 
 有关 API 的完整概述，请查看
 [DataStream API]({{ site.baseurl }}/dev/datastream_api.html) 和
