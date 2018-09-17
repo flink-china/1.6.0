@@ -1,6 +1,6 @@
 # 在 Windows 中运行 Flink
 
-如果你想在本地 Windows 机器上运行 Flink，需要[下载](http://flink.apache.org/downloads.html)并解压 Flink 二进制包。完成之后你可以使用 **Windows 批处理** 文件（`.bat`）或 **Cygwin** 来运行 Flink 作业管理器。
+如果你想在本地 Windows 机器上运行 Flink，需要[下载](http://flink.apache.org/downloads.html)并解压 Flink 二进制包。完成之后你可以使用 **Windows 批处理** 文件（`.bat`）或 **Cygwin** 来运行 Flink JobManager。
 
 ## 使用 Windows 批处理文件启动
 
