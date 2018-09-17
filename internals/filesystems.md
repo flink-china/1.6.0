@@ -25,115 +25,79 @@ under the License.
 * Replaced by the TOC
 {:toc}
 
-Flink has its own file system abstraction via the `org.apache.flink.core.fs.FileSystem` class.
-This abstraction provides a common set of operations and minimal guarantees across various types
-of file system implementations.
+Flink 运用`org.apache.flink.core.fs.FileSystem`类，实现文件系统抽象化。
+这种抽象化，为不同的文件系统之间的实践，提供了一套通用的操作标准和最小化的保证体系。
 
-The `FileSystem`'s set of available operations is quite limited, in order to support a wide
-range of file systems. For example, appending to or mutating existing files is not supported.
+为了支持更为广泛的文件系统，Flink文件系统的可操作性十分有限。例如，不支持对已经存在的文件做添加功能和变更处理。
 
-File systems are identified by a *file system scheme*, such as `file://`, `hdfs://`, etc.
+文件系统规划，例如，`file://`、`hdfs://`，定义为文件系统。
 
-# Implementations
+# 文件系统执行
 
-Flink implements the file systems directly, with the following file system schemes:
+Flink运用以下文件系统规划，直接对自身的文件系统实施操作。
 
-  - `file`, which represents the machine's local file system.
+  - `file`:计算机本地文件系统
 
-Other file system types are accessed by an implementation that bridges to the suite of file systems supported by
-[Apache Hadoop](https://hadoop.apache.org/). The following is an incomplete list of examples:
+其他的文件系统通过实践规划，连接[Apache Hadoop](https://hadoop.apache.org/ "Apache Hadoop") 所支持的一系列文件系统。包括但不限于以下实例。
 
-  - `hdfs`: Hadoop Distributed File System
-  - `s3`, `s3n`, and `s3a`: Amazon S3 file system
-  - `gcs`: Google Cloud Storage
-  - `maprfs`: The MapR distributed file system
+  - `hdfs`: 亚马逊S3文件系统
+  - `s3`, `s3n`, 和 `s3a`: 亚马逊S3文件系统
+  - `gcs`: 谷歌云存储
+  - `maprfs`: MapR 分布式文件系统
   - ...
 
-Flink loads Hadoop's file systems transparently if it finds the Hadoop File System classes in the class path and finds a valid
-Hadoop configuration. By default, it looks for the Hadoop configuration in the class path. Alternatively, one can specify a
-custom location via the configuration entry `fs.hdfs.hadoopconf`.
+如果Flink能够在类路径下找到Hadoop文件系统类，并且Hadoop已经被正确的配置，Flink就可以
+顺利读取Hadoop文件系统。在默认情况下，Flink在类路径中搜索Hadoop配置。或者，您可以通过配置条目`fs.hdfs.hadoopconf`，指定一个自定义路径。
 
 
-# Persistence Guarantees
+# 持续性保证
 
-These `FileSystem` and its `FsDataOutputStream` instances are used to persistently store data, both for results of applications
-and for fault tolerance and recovery. It is therefore crucial that the persistence semantics of these streams are well defined.
+这些`FileSystem`和对应的`FsDataOutputStream`实例是用来长期的存储应用程序、容错与恢复数据
+。因此，长期坚持按照语义法定义这些字串流是非常重要的。
 
-## Definition of Persistence Guarantees
+## 持续性保证的定义
 
-Data written to an output stream is considered persistent, if two requirements are met:
+如果以下两个条件能够满足，数据的写入就被认为是持续的。
 
-  1. **Visibility Requirement:** It must be guaranteed that all other processes, machines,
-     virtual machines, containers, etc. that are able to access the file see the data consistently
-     when given the absolute file path. This requirement is similar to the *close-to-open*
-     semantics defined by POSIX, but restricted to the file itself (by its absolute path).
+  1. **可见性要求:** 当提供了绝对路径后，必须保证所有的其他进程、计算机、虚拟机、容器等，能够持续的访问文件和读取数据。这个条件类似于POSIX对*close- to-open*语义的定义。但受限于文件的绝对路径。
 
-  2. **Durability Requirement:** The file system's specific durability/persistence requirements
-     must be met. These are specific to the particular file system. For example the
-     {@link LocalFileSystem} does not provide any durability guarantees for crashes of both
-     hardware and operating system, while replicated distributed file systems (like HDFS)
-     guarantee typically durability in the presence of up *n* concurrent node failures,
-     where *n* is the replication factor.
+  2. **持续性要求 :** 文件系统需要满足具体的延续性和持续性要求。这些要求视不同的的文件系统而定。例如，{@link LocalFileSystem} 对于硬件和操作系统的崩溃不提供延续性保证。但是，经备份的分布式的文件系统（比如HDFS)通常能够在并发节点发生故障时保证文件系统的延续性。
 
-Updates to the file's parent directory (such that the file shows up when
-listing the directory contents) are not required to be complete for the data in the file stream
-to be considered persistent. This relaxation is important for file systems where updates to
-directory contents are only eventually consistent.
+对上级文件目录的更新（例如，列出上级文件目录内容时,具体的文件出现在列表中)，不同于对待文件中的数据要求具备持续性。这种持续性要求的放宽方式，对于只要求文件目录内容最终一致的文件系统来非常重要。
 
-The `FSDataOutputStream` has to guarantee data persistence for the written bytes once the call to
-`FSDataOutputStream.close()` returns.
+一旦调用了`FSDataOutputStream.close()`的返回值，`FSDataOutputStream`就需要保证写入数据的持续性。
 
-## Examples
+## 举例
  
-  - For **fault-tolerant distributed file systems**, data is considered persistent once 
-    it has been received and acknowledged by the file system, typically by having been replicated
-    to a quorum of machines (*durability requirement*). In addition the absolute file path
-    must be visible to all other machines that will potentially access the file (*visibility requirement*).
+  - 对于**容错的分布式文件系统**，一旦数据被文件系统接收和识别，一般是被复制到指定数量的计算机上，数据就被认为是可持续的。(延续性要求)<br/>同时，对于其他  具有潜在可能访问这些文件的计算机，这些文件的绝对路径也必须是对这些计算机可见的。(可见性要求)<br/>
+    数据是否会在储存节点触发了非易失性储存功能，取决于具体文件系统的对相应的持续性保证的定义。
 
-    Whether data has hit non-volatile storage on the storage nodes depends on the specific
-    guarantees of the particular file system.
+    对上级文件目录进行更新的元数据不需要满足一致的状态。当列出上级目录内容时，文件内容只对部分设备可见。这种情形是被允许的。只需要所有设备能够通过文件的绝对路径访问文件。
 
-    The metadata updates to the file's parent directory are not required to have reached
-    a consistent state. It is permissible that some machines see the file when listing the parent
-    directory's contents while others do not, as long as access to the file by its absolute path
-    is possible on all nodes.
-
-  - A **local file system** must support the POSIX *close-to-open* semantics.
-    Because the local file system does not have any fault tolerance guarantees, no further
-    requirements exist.
+  - **本地文件系统** 必须支持POSIX的*close-to-open*语义。原因是本地文件系统没有任何的容错保证，也没有其它的限制条件。
  
-    The above implies specifically that data may still be in the OS cache when considered
-    persistent from the local file system's perspective. Crashes that cause the OS cache to loose
-    data are considered fatal to the local machine and are not covered by the local file system's
-    guarantees as defined by Flink.
+    从本地文件系统的方面认定数据的持续性时，可能数据还是存在于操作系统的缓冲中。导致操作系统缓冲数据丢失的系统崩溃问题，对本地设备是致命的。而且这种情况不在Flink对本地文件系统持续性保证的范围内。
 
-    That means that computed results, checkpoints, and savepoints that are written only to
-    the local filesystem are not guaranteed to be recoverable from the local machine's failure,
-    making local file systems unsuitable for production setups.
+    这意味着计算结果、检查点、和保存点，这些只写入本地文件系统的数据，在本地计算机发生故障时，不保证这些数据的可恢复性。这也使得本地文件系统不适用于生产环境的设置。
 
-# Updating File Contents
+# 文件内容更新
 
-Many file systems either do not support overwriting contents of existing files at all, or do not support consistent visibility of the
-updated contents in that case. For that reason, Flink's FileSystem does not support appending to existing files, or seeking within
-output streams such that previously written data could be changed within the same file.
+很多文件系统完全不支持对现有文件内容的覆盖，或者不支持对文件的更新保持一贯的可见性。因此，Flink的文件系统不支持对现有文件的追加操作，也不支持搜索输出流文件内的数据，以免之前写入的数据在同一个文件内产生变更。
 
-# Overwriting Files
+# 文件覆盖
 
-Overwriting files is in general possible. A file is overwritten by deleting it and creating a new file.
-However, certain filesystems cannot make that change synchronously visible to all parties that have access to the file.
-For example [Amazon S3](https://aws.amazon.com/documentation/s3/) guarantees only *eventual consistency* in
-the visibility of the file replacement: Some machines may see the old file, some machines may see the new file.
+文件的覆盖一般是可实现的。通过删除旧文件并创建新文件来完成文件的覆盖。
+但是，某些文件系统无法将这一变化，同步的显示给有权访问该文件的所有角色。
+例如，[亚马逊 S3](https://aws.amazon.com/documentation/s3/ "亚马逊 S3")仅对文件变更的结果保持一致性。而在覆盖的过程之中，有的计算机看到的可能是旧文件，有的看到的是新文件。
 
-To avoid these consistency issues, the implementations of failure/recovery mechanisms in Flink strictly avoid writing to
-the same file path more than once.
 
-# Thread Safety
+为了避免这些仅对结果保持一致性的问题，Flink中的故障与恢复机制的实现，要求避免在相同的文件路径进行多次写入。
 
-Implementations of `FileSystem` must be thread-safe: The same instance of `FileSystem` is frequently shared across multiple threads
-in Flink and must be able to concurrently create input/output streams and list file metadata.
+# 线程安全
 
-The `FSDataOutputStream` and `FSDataOutputStream` implementations are strictly **not thread-safe**.
-Instances of the streams should also not be passed between threads in between read or write operations, because there are no guarantees
-about the visibility of operations across threads (many operations do not create memory fences).
+`FileSystem`的实现必须是满足线程安全的。`FileSystem`共通的实例能够经常在Flink不同的线程中进行分享，
+而且必须能够同时创建输入、输出流和列出文件的元数据。
+
+`FSDataOutputStream`和`FSDataOutputStream`的实现严格来说是非线程安全的。由于跨线程的操作（很多执行操作没有创建内存屏障）的可视性是没有保证性的，数据流的实例不应该在线程间进行读或写操作的传输。
 
 {% top %}
