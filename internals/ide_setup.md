@@ -6,7 +6,7 @@
 
 ## 准备工作
 
-在开始前，请先从我们的 [repositories](https://flink.apache.org/community.html#source-code) 检出 Flink 文件，如下所示：
+在开始前，请先从我们的 [repositories](https://flink.apache.org/community.html#source-code) 下载 Flink 文件，如下所示：
 
 ```bash
 git clone https://github.com/apache/flink.git
