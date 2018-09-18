@@ -1,5 +1,5 @@
 ---
-title: 为 FLink 程序注册自定义序列化程序
+title: 为 FLink 程序注册自定义序列器（serializer）
 nav-title: 自定义序列化程序
 nav-parent_id: types
 nav-pos: 10
@@ -23,7 +23,7 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-如果在 Flink 程序中使用不能由 Flink 类型序列化器序列化的自定义类型，则Flink返回使用通用 Kryo 序列化器。您可以注册自己的序列化程序或序列化系统，如 Google Protobuf 或 Apache Thrift with Kryo 。要做到这一点，只需在FLink程序的 “ExecutionConfig” 中注册这个类型的类和序列化程序即可。
+如果在 Flink 程序中使用了自定义序列器（serializer），且该serializer无法被 Flink 内置的type serializer解析，则Flink会使用 Kryo serializer。您可以将自定义的serializer程序或序列化系统，如 Google Protobuf 或 Apache Thrift，注册到Kryo中 。要做到这一点，只需在FLink程序的 “ExecutionConfig” 中注册这个类型的类和serializer即可。
 
 {% highlight java %}
 final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
@@ -36,7 +36,7 @@ MySerializer mySerializer = new MySerializer();
 env.getConfig().registerTypeWithKryoSerializer(MyCustomType.class, mySerializer);
 {% endhighlight %}
 
-请注意，自定义序列化程序必须扩展 Kryo 的序列化类。在使用 Google Protobuf 或Apache Thrift 的情况下，这已经为你做了：
+请注意，自定义序列化程序必须继承 Kryo 的序列化类。Google Protobuf 或Apache Thrift 已经继承了这个类：
 
 {% highlight java %}
 final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
@@ -99,10 +99,9 @@ env.getConfig().addDefaultKryoSerializer(MyCustomType.class, TBaseSerializer.cla
 
 ### 使用 Kryo 的 `JavaSerializer` 的问题
 
-如果您为您的自定义类型注册了 Kryo 的 `JavaSerializer`，即使您的自定义类型类包含在提交的用户代码的jar中，也可能遇到 `ClassNotFoundException` 的异常。这是由于 Kryo 的 `JavaSerializer` 一个已知的问题，它可能错误的使用了错误的类加载器。
+如果您为您的自定义类型注册了 Kryo 的 `JavaSerializer`，即使你的提交的jar中包含了自定义类型的类，也可能遇到 `ClassNotFoundException` 的异常。这是由于 Kryo `JavaSerializer` 的一个已知的问题，它可能使用了错误的类加载器。
 
-在这种情况下，你应该使用 `org.apache.flink.api.java.typeutils.runtime.kryo.JavaSerializer` 作为替代来解决这个问题。这是在 Flink 中重新实现的 `JavaSerializer` ，它确保使用了用户代码的类加载器。
+在这种情况下，你应该使用 `org.apache.flink.api.java.typeutils.runtime.kryo.JavaSerializer` 来解决这个问题。这会在 Flink 中重新实现 `JavaSerializer` ，可以确保使用用户代码的类加载器。
 
 详情请参阅 [FLINK-6025](https://issues.apache.org/jira/browse/FLINK-6025) 。
 
-{% top %}
