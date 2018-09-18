@@ -1,4 +1,6 @@
-#数据类型和序列化
+# 数据类型和序列化
+
+独特的类型描述符，通用类型抽象以及序列化框架组成了Apache Flink处理数据类型和序列化的独特方式。本文描述了这些基本概念以及其间的关系。
 
 ## Flink 中的类型处理
 
@@ -9,7 +11,7 @@ Flink 会尝试推断出在分布式计算过程中被交换和存储的数据�
 
 * Flink 知道的数据类型信息越多，序列化和数据布局方案（data layout scheme）就越好。这对 Flink 的内存使用范式（memory usage paradigm）非常重要（无论在堆内还是堆外都可以操作序列化数据，并且使得序列化的开销非常低）。
 
-* 最后，这些信息可以让用户从考虑序列化框架的选择和注册类型中解脱。
+* 最后，这些信息可以让用户不必考虑序列化框架的选择和注册类型。
 
 一般而言，在`预处理阶段（pre-flight phase）`需要数据类型的相关信息，此时程序刚刚调用了 `DataStream` 和 `DataSet`，但是还没调用 `execute()`, `print()`, `count()`, 或 `collect()`方法。
 
@@ -29,7 +31,7 @@ Flink 会尝试推断出在分布式计算过程中被交换和存储的数据�
 
 ## FLink 的 TypeInformation 类
 
-{% gh_link /flink-core/src/main/java/org/apache/flink/api/common/typeinfo/TypeInformation.java "TypeInformation" %} 类是所有类型描述类的基类。它包括了类型的一些基本属性，并可以通过它来生成序列化器（serializer），特殊情况下还可以生成类型的比较器。（*注意：Flink 中的比较器不仅仅是定义大小顺序，更是处理 key 的基本辅助工具*）
+{% gh_link /flink-core/src/main/java/org/apache/flink/api/common/typeinfo/TypeInformation.java "TypeInformation" %} 类是所有类型描述类的基类。它包括了类型的一些基本属性，并可以通过它来生成序列化器（serializer），特殊情况下还可以生成类型的比较器（comparators）。（*注意：Flink 中的比较器不仅仅是定义大小顺序，更是处理 key 的基本辅助工具*）
 
 在内部，Flink 对类型做出以下区分：
 
@@ -114,7 +116,7 @@ Scala 通过*类型清单（manifests）*与*类标签*功能，能够非常详�
 在编译期间，我们使用宏来查看获取用户方法的参数类型和返回类型。因此在编译期，所有类型信息都将完全获知。在宏中，我们为方法的返回类型（或参数类型）创建一个 *TypeInformation* ，并将其作为方法的一部分。
 
 
-#### 无隐式值导致的证据参数（Evidence Parameter）错误
+#### 无隐式值导致的证据参数错误（Evidence Paramete Error）
 
 有时程序编译报错：*“could not find implicit value for evidence parameter of type TypeInformation”*，无法创建 TypeInformation。
 
@@ -140,7 +142,7 @@ val data : DataSet[(String, Long) = ...
 val result = selectFirst(data)
 ```
 
-例子中的这种泛型方法，每次调用的方法参数和返回类型的数据类型可能都不一样，并且定义方法的地方也不知道。这就会导致上面的代码产生一个没有足够的隐式证据可用的错误。
+例子中的这种泛型方法，每次调用的方法参数和返回类型的数据类型可能都不一样，并且定义方法的地方也不知道。这就会导致上面的代码产生Evidence Paramete Error。
  
 在这种情况下，必须在调用的地方生成类型信息并传递给方法。Scala 为此提供了*隐式参数*。
  
