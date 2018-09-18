@@ -1,5 +1,5 @@
 ---
-title: "Configuring Dependencies, Connectors, Libraries"
+title: "配置依赖，连接器，库"
 nav-parent_id: start
 nav-pos: 2
 ---
@@ -22,47 +22,38 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-Every Flink application depends on a set of Flink libraries. At the bare minimum, the application depends
-on the Flink APIs. Many applications depend in addition on certain connector libraries (like Kafka, Cassandra, etc.).
-When running Flink applications (either in a distributed deployment, or in the IDE for testing), the Flink
-runtime library must be available as well.
+每个 Flink 应用程序都依赖于一组 Flink 库。至少，应用程序依赖于 Flink API。许多应用程序还依赖于某些连接器的库（如 Kafka、Cassandra 等）。
+当运行 Flink 程序时（在分布式部署中，或在 IDE 中进行测试），Flink 运行时的库也是必须的。
 
 
-## Flink Core and Application Dependencies
+## Flink 核心和应用程序依赖
 
-As with most systems that run user-defined applications, there are two broad categories of dependencies and libraries in Flink:
+和大多数运行用户自定义应用程序的系统一样，Flink 中有两大类依赖和库：
 
-  - **Flink Core Dependencies**: Flink itself consists of a set of classes and dependencies that are needed to run the system, for example
-    coordination, networking, checkpoints, failover, APIs, operations (such as windowing), resource management, etc.
-    The set of all these classes and dependencies forms the core of Flink's runtime and must be present when a Flink
-    application is started.
+  - **Flink 核心依赖**：Flink 本身包含一组运行系统所需要的类和依赖项，例如协调、网络、检查点、故障转移、API、操作（如窗口操作）、资源管理等。
+    所有这些类和依赖的集合构成了 Flink 运行时的核心，并且在 Flink 应用程序启动时存在。
 
-    These core classes and dependencies are packaged in the `flink-dist` jar. They are part of Flink's `lib` folder and
-    part of the basic Flink container images. Think of these dependencies as similar to Java's core library (`rt.jar`, `charsets.jar`, etc.),
-    which contains the classes like `String` and `List`.
+    这些核心类和依赖打包在 `flink-dist` jar 中。它们是 Flink 的 `lib` 文件夹的一部分，也是 Flink 基本容器镜像的一部分。
+    可以认为这些依赖类似于 Java 的核心库（`rt.jar`, `charsets.jar` 等），它包含了类似的 `String` 和 `List` 类。
 
-    The Flink Core Dependencies do not contain any connectors or libraries (CEP, SQL, ML, etc.) in order to avoid having an excessive
-    number of dependencies and classes in the classpath by default. In fact, we try to keep the core dependencies as slim as possible
-    to keep the default classpath small and avoid dependency clashes.
+    Flink 核心依赖不包含任何连接器或库（CEP 、SQL、ML 等），以避免默认情况下在类路径中具有过多的依赖和类。事实上，我们尝试尽可能保持核心依赖关系，
+    以保持默认类路径下较小的避免依赖冲突。
 
-  - The **User Application Dependencies** are all connectors, formats, or libraries that a specific user application needs.
+  - **用户应用程序依赖** 是指定用户应用程序所需的所有连接器、格式化或库。
 
-    The user application is typically packaged into an *application jar*, which contains the application code and the required
-    connector and library dependencies.
+    用户应用程序通常打包到 *应用程序 jar* 中，包含了该应用程序的代码和所需的连接器以及依赖库。
 
-    The user application dependencies explicitly do not include the Flink DataSet / DataStream APIs and runtime dependencies,
-    because those are already part of Flink's Core Dependencies.
+    用户应用程序依赖显示不包括 Flink DataSet / DataStream API 和运行时依赖，因为它们已经是 Flink 核心依赖的一部分。
 
 
-## Setting up a Project: Basic Dependencies
+## 设置项目：基本依赖
 
-Every Flink application needs as the bare minimum the API dependencies, to develop against.
-For Maven, you can use the [Java Project Template]({{ site.baseurl }}/quickstart/java_api_quickstart.html)
-or [Scala Project Template]({{ site.baseurl }}/quickstart/scala_api_quickstart.html) to create
-a program skeleton with these initial dependencies.
+每个 Flink 应用程序都需要最低限度的 API 依赖来进行开发。
+对于 Maven，你可以使用 [Java 项目模板]({{ site.baseurl }}/quickstart/java_api_quickstart.html)
+或 [Scala 项目模板]({{ site.baseurl }}/quickstart/scala_api_quickstart.html)
+来创建具有这些初始依赖的程序框架。
 
-When setting up a project manually, you need to add the following dependencies for the Java/Scala API
-(here presented in Maven syntax, but the same dependencies apply to other build tools (Gradle, SBT, etc.) as well.
+手动设置项目时，需要为 Java / Scala API 添加以下依赖（这里以 Maven 语法展示），但相同的依赖也适用于其他构建工具（Gradle, SBT 等）。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -99,31 +90,24 @@ When setting up a project manually, you need to add the following dependencies f
 </div>
 </div>
 
-**Important:** Please note that all these dependencies have their scope set to *provided*.
-That means that they are needed to compile against, but that they should not be packaged into the
-project's resulting application jar file - these dependencies are Flink Core Dependencies,
-which are already available in any setup.
+**重要说明：** 请注意，所有这些依赖的范围都设置为 *provided* 。
+这意味着它们需要编译，但不应将它们打包到项目生成的应用程序的 jar 文件中 - 这些依赖是 Flink 核心依赖，已经在安装时提供。
 
-It is highly recommended to keep the dependencies in scope *provided*. If they are not set to *provided*,
-the best case is that the resulting JAR becomes excessively large, because it also contains all Flink core
-dependencies. The worst case is that the Flink core dependencies that are added to the application's jar file
-clash with some of your own dependency versions (which is normally avoided through inverted classloading).
+强烈建议将依赖范围保持在 *provided*。如果它们未设置为 *provided*，最好的情况是生成的 JAR 文件变得过大，因为它包含所有 Flink 核心依赖。
+最糟糕的情况是添加到应用程序的 jar 文件的 Flink 核心依赖与您自己的一些依赖版本冲突（通常通过反向类加载来避免）。
 
-**Note on IntelliJ:** To make the applications run within IntelliJ IDEA, the Flink dependencies need
-to be declared in scope *compile* rather than *provided*. Otherwise IntelliJ will not add them to the classpath and
-the in-IDE execution will fail with a `NoClassDefFountError`. To avoid having to declare the
-dependency scope as *compile* (which is not recommended, see above), the above linked Java- and Scala
-project templates use a trick: They add a profile that selectively activates when the application
-is run in IntelliJ and only then promotes the dependencies to scope *compile*, without affecting
-the packaging of the JAR files.
+**关于 IntelliJ 的注意事项：**要使应用程序在 IntelliJ IDEA 中运行，需要声明的范围是 *compile* 而不是 *provided* 。
+否则，IntelliJ 不会将它们添加到类路径中，并且在 IDE 中执行将会失败并出现 `NoClassDefFountError` 。
+为了避免必须将依赖声明为 *compile* （不推荐使用，请参见上文），上面链接的 Java 和 Scala 项目模板中使用了一个技巧：
+它们添加了一个配置文件，该应用程序在 IntelliJ 中运行时有选择地激活，只有这样才能将依赖范围提升到 *compile*，而不会影响打包 JAR 文件。
 
 
-## Adding Connector and Library Dependencies
+## 添加连接器和库依赖
 
-Most applications need specific connectors or libraries to run, for example a connector to Kafka, Cassandra, etc.
-These connectors are not part of Flink's core dependencies and must hence be added as dependencies to the application
+大多数应用程序需要运行指定的连接器或库，例如 Kafka、Cassandra 等连接器，
+这些连接器不是 FLink 核心依赖的一部分，因此必须作为依赖添加到应用程序中。
 
-Below is an example adding the connector for Kafka 0.10 as a dependency (Maven syntax):
+下面的示例是添加 Kafka 0.10 的连接器依赖（Maven 语法）：
 {% highlight xml %}
 <dependency>
     <groupId>org.apache.flink</groupId>
@@ -132,67 +116,51 @@ Below is an example adding the connector for Kafka 0.10 as a dependency (Maven s
 </dependency>
 {% endhighlight %}
 
-We recommend to package the application code and all its required dependencies into one *jar-with-dependencies* which
-we refer to as the *application jar*. The application jar can be submitted to an already running Flink cluster,
-or added to a Flink application container image.
+我们建议将应用程序代码及其所有必需的依赖打包到一个 *jar-with-dependencies* 中，我们将其称为 *应用程序 jar* 。
+应用程序 jar 可以提交给已经运行的 Flink 集群，也可以添加到 Flink 应用程序容器镜像中。
 
-Projects created from the [Java Project Template]({{ site.baseurl }}/quickstart/java_api_quickstart.html) or
-[Scala Project Template]({{ site.baseurl }}/quickstart/scala_api_quickstart.html) are configured to automatically include
-the application dependencies into the application jar when running `mvn clean package`. For projects that are
-not set up from those templates, we recommend to add the Maven Shade Plugin (as listed in the Appendix below)
-to build the application jar with all required dependencies.
+从 [Java 项目模板]({{ site.baseurl }}/quickstart/java_api_quickstart.html) 或
+[Scala 项目模板]({{ site.baseurl }}/quickstart/scala_api_quickstart.html) 创建的项目配置为在运行 `mvn clean package` 时自动将应用程序依赖包含到应用程序的 jar 中。
+对于未从这些模板设置的项目，我们建议添加 Maven Shade 插件（如下面附录中所列）来构建具有全部必须依赖的应用程序。 
 
-**Important:** For Maven (and other build tools) to correctly package the dependencies into the application jar,
-these application dependencies must be specified in scope *compile* (unlike the core dependencies, which
-must be specified in scope *provided*).
+**重要说明：** 对于 Maven（和其他构建工具）将依赖正确打包到应用程序 jar 中，必须指定应用程序的依赖范围为 *compile* （与核心依赖不同，核心依赖必须指定依赖范围为 *provided*）。
 
 
-## Scala Versions
+## Scala 版本
 
-Scala versions (2.10, 2.11, 2.12, etc.) are not binary compatible with one another.
-For that reason, Flink for Scala 2.11 cannot be used with an application that uses
-Scala 2.12.
+Scala 版本（2.10, 2.11, 2.12等）彼此二进制不是兼容的。
+因此，Scala 2.11 版本的 Flink 不能与使用 Scala 2.12 的应用程序一起使用。
 
-All Flink dependencies that (transitively) depend on Scala are suffixed with the
-Scala version that they are built for, for example `flink-streaming-scala_2.11`.
+所有（间接）依赖于 Scala 的 Flink 依赖都以它们构建的 Scala 版本为后缀，例如 `flink-streaming-scala_2.11` 。
 
-Developers that only use Java can pick any Scala version, Scala developers need to
-pick the Scala version that matches their application's Scala version.
+只使用 Java 的开发人员可以选择任何 Scala 版本， Scala 开发人员需要选择与其应用程序的 Scala 版本匹配的 Scala 版本。
 
-Please refer to the [build guide]({{ site.baseurl }}/start/building.html#scala-versions)
-for details on how to build Flink for a specific Scala version.
+有关如何为特定的 Scala 版本构建 Flink 的详细信息，请参阅 [构建指南]({{ site.baseurl }}/start/building.html#scala-versions)。
 
-**Note:** Because of major breaking changes in Scala 2.12, Flink 1.5 currently builds only for Scala 2.11.
-We aim to add support for Scala 2.12 in the next versions.
+**注意：** 因为 Scala 2.12 中的重大更改，Flink 1.5 目前仅针对 Scala 2.11 构建。我们的目标是在下一版本中添加对 Scala 2.12 的支持。
 
 
-## Hadoop Dependencies
+## Hadoop 依赖
 
-**General rule: It should never be necessary to add Hadoop dependencies directly to your application.**
-*(The only exception being when using existing Hadoop input-/output formats with Flink's Hadoop compatibility wrappers)*
+**一般规则：永远不必将 Hadoop 依赖直接添加到您的应用程序中。**
+*（唯一例外的是当使用现有的 Hadoop input-/output formats 与 Flink 的 Hadoop 兼容时）*
 
-If you want to use Flink with Hadoop, you need to have a Flink setup that includes the Hadoop dependencies, rather than
-adding Hadoop as an application dependency. Please refer to the [Hadoop Setup Guide]({{ site.baseurl }}/ops/deployment/hadoop.html)
-for details.
+如果要将 Flink 与 Hadoop 一起使用，则需要具有包含 Hadoop 依赖的 Flink 设置，而不是将 Hadoop 添加为应用程序的依赖。
+有关详细信息，请参阅 [Hadoop 设置指南]({{ site.baseurl }}/ops/deployment/hadoop.html)。
 
-There are two main reasons for that design:
+该设计有两个主要原因：
 
-  - Some Hadoop interaction happens in Flink's core, possibly before the user application is started, for example
-    setting up HDFS for checkpoints, authenticating via Hadoop's Kerberos tokens, or deployment on YARN.
+  - 一些与 Hadoop 交互发生在 Flink 的核心，可能在用户应用程序启动之前，例如将 checkpoints 设置为 HDFS，通过 Hadoop 的 Kerberos 令牌进行身份验证或在 YARN 上部署。
 
-  - Flink's inverted classloading approach hides many transitive dependencies from the core dependencies. That applies not only
-    to Flink's own core dependencies, but also to Hadoop's dependencies when present in the setup.
-    That way, applications can use different versions of the same dependencies without running into dependency conflicts (and
-    trust us, that's a big deal, because Hadoops dependency tree is huge.)
+  - Flink 的反向类加载方法隐藏了核心依赖中的许多传递依赖。这不仅适用于 Flink 自己的核心依赖，也适用于 Hadoop 在设置中存在的依赖。
+    这样，应用程序可以使用相同依赖的不同版本，而不会遇到依赖冲突（并且相信我们，这是一个大问题，因为 Hadoop 的依赖树很大。）
 
-If you need Hadoop dependencies during testing or development inside the IDE (for example for HDFS access), please configure
-these dependencies similar to the scope of the dependencies to *test* or to *provided*.
+如果在 IDE 内部的测试或开发过程中需要 Hadoop 依赖（例如用于访问 HDFS ），请将这些依赖范围配置为类似于 *test* 或 *provided* 。
 
 
-## Appendix: Template for building a Jar with Dependencies
+## 附录：用于构建具有依赖的 Jar 的模板
 
-To build an application JAR that contains all dependencies required for declared connectors and libraries,
-you can use the following shade plugin definition:
+要构建包含声明的连接器和库所需的所有依赖的应用程序的JAR，可以使用下面的 shade 插件的定义：
 
 {% highlight xml %}
 <build>
