@@ -1,8 +1,5 @@
----
-title: "Pre-defined Timestamp Extractors / Watermark Emitters"
-nav-parent_id: event_time
-nav-pos: 2
----
+# Pre-defined Timestamp Extractors / Watermark Emitters
+
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -22,33 +19,18 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-* toc
-{:toc}
+如[timestamps and watermark 处理中所述](doc/dev/event_timestamps_watermarks.html)，Flink提供了抽象，允许程序员自定义时间戳和watermark。更具体地说，用户可以根据实际情况，选择实现`AssignerWithPeriodicWatermarks`或`AssignerWithPunctuatedWatermarks`接口。简而言之，第一个接口将定期发出watermark，而第二个接口基于传入记录的某些属性，例如在流中遇到特殊元素时，发出watermark。
 
-As described in [timestamps and watermark handling]({{ site.baseurl }}/dev/event_timestamps_watermarks.html),
-Flink provides abstractions that allow the programmer to assign their own timestamps and emit their own watermarks. More specifically,
-one can do so by implementing one of the `AssignerWithPeriodicWatermarks` and `AssignerWithPunctuatedWatermarks` interfaces, depending
-on the use case. In a nutshell, the first will emit watermarks periodically, while the second does so based on some property of
-the incoming records, e.g. whenever a special element is encountered in the stream.
+为了进一步简化此类任务的编程工作，Flink附带了一些预先实现的时间戳分配器。本节提供了它们的列表。除了开箱即用的功能外，它们的实现还可以作为自定义实现的示例。
 
-In order to further ease the programming effort for such tasks, Flink comes with some pre-implemented timestamp assigners.
-This section provides a list of them. Apart from their out-of-the-box functionality, their implementation can serve as an example
-for custom implementations.
+### **具有递增时间戳的分配器**
 
-### **Assigners with ascending timestamps**
+对于*周期性*生成watermark，最简单的特殊情况是，source task拿到的数据的时间戳都是升序的，不会出现乱序情况。在这种情况下，当前时间戳可以始终充当watermark，因为source task不会拿到带有之前时间戳的数据。
 
-The simplest special case for *periodic* watermark generation is the case where timestamps seen by a given source task
-occur in ascending order. In that case, the current timestamp can always act as a watermark, because no earlier timestamps will
-arrive.
+请注意，每个*并发执行的source task*拿到的数据的时间戳，都必须是升序。例如：如果指定了一个Kafka分区被一个并行数据源实例读取，那么每个Kafka分区的数据时间戳都必须是递增的。Flink的watermark合并机制将会在并行数据流shuffled、unioned、connected或者merged的时候产生正确的watermark。
 
-Note that it is only necessary that timestamps are ascending *per parallel data source task*. For example, if
-in a specific setup one Kafka partition is read by one parallel data source instance, then it is only necessary that
-timestamps are ascending within each Kafka partition. Flink's watermark merging mechanism will generate correct
-watermarks whenever parallel streams are shuffled, unioned, connected, or merged.
-
-<div class="codetabs" markdown="1">
-<div data-lang="java" markdown="1">
-{% highlight java %}
+**Java**
+```java
 DataStream<MyEvent> stream = ...
 
 DataStream<MyEvent> withTimestampsAndWatermarks =
@@ -59,34 +41,21 @@ DataStream<MyEvent> withTimestampsAndWatermarks =
             return element.getCreationTime();
         }
 });
-{% endhighlight %}
-</div>
-<div data-lang="scala" markdown="1">
-{% highlight scala %}
+```
+**Scala**
+```scala
 val stream: DataStream[MyEvent] = ...
 
 val withTimestampsAndWatermarks = stream.assignAscendingTimestamps( _.getCreationTime )
-{% endhighlight %}
-</div>
-</div>
+```
 
-### **Assigners allowing a fixed amount of lateness**
+### **允许固定时延的分配器**
 
-Another example of periodic watermark generation is when the watermark lags behind the maximum (event-time) timestamp
-seen in the stream by a fixed amount of time. This case covers scenarios where the maximum lateness that can be encountered in a
-stream is known in advance, e.g. when creating a custom source containing elements with timestamps spread within a fixed period of
-time for testing. For these cases, Flink provides the `BoundedOutOfOrdernessTimestampExtractor` which takes as an argument
-the `maxOutOfOrderness`, i.e. the maximum amount of time an element is allowed to be late before being ignored when computing the
-final result for the given window. Lateness corresponds to the result of `t - t_w`, where `t` is the (event-time) timestamp of an
-element, and `t_w` that of the previous watermark. If `lateness > 0` then the element is considered late and is, by default, ignored when computing
-the result of the job for its corresponding window. See the documentation about [allowed lateness]({{ site.baseurl }}/dev/stream/operators/windows.html#allowed-lateness)
-for more information about working with late elements.
+生成周期性水印的另一个例子，是watermark滞后于，数据流中最大事件时间（event-time）的时间戳，且滞后时间固定。在这种情况下，在数据流中遇到的最大延迟是已知的，例如，创建一个带时间戳的并在一个固定的时间内传播的元素的测试源。对于这些情况，Flink 提供了`BoundedOutOfOrdernessTimestampExtractor`，以`maxOutOfOrderness`作为参数，这个`maxOutOfOrderness`是指在窗口计算中，一个元素允许的最大延迟时间，如果元素的延时大于这个值，就会被丢弃，而不会被窗口进行计算。延迟与`t - t_w`的结果相对应，这里`t`指的是元素的事件时间（event-time）时间戳，而`t_w`指的是前一个watermark的时间戳。如果`lateness > 0`那么这个元素被认为是延迟数据的，默认情况下，这个元素不会被窗口进行计算。请参考[允许延迟](doc/dev/stream/operators/windows.html#allowed-lateness)来获取更多关于如何处理延迟元素的内容。
 
-<div class="codetabs" markdown="1">
-<div data-lang="java" markdown="1">
-{% highlight java %}
+**Java**
+```java
 DataStream<MyEvent> stream = ...
-
 DataStream<MyEvent> withTimestampsAndWatermarks =
     stream.assignTimestampsAndWatermarks(new BoundedOutOfOrdernessTimestampExtractor<MyEvent>(Time.seconds(10)) {
 
@@ -95,15 +64,10 @@ DataStream<MyEvent> withTimestampsAndWatermarks =
             return element.getCreationTime();
         }
 });
-{% endhighlight %}
-</div>
-<div data-lang="scala" markdown="1">
-{% highlight scala %}
+```
+**Scala**
+```scala
 val stream: DataStream[MyEvent] = ...
 
 val withTimestampsAndWatermarks = stream.assignTimestampsAndWatermarks(new BoundedOutOfOrdernessTimestampExtractor[MyEvent](Time.seconds(10))( _.getCreationTime ))
-{% endhighlight %}
-</div>
-</div>
-
-{% top %}
+```
