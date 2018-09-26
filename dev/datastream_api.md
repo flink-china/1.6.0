@@ -29,14 +29,14 @@ Flink 中的 DataStream 程序是对数据流进行转换（例如，过滤、�
 
 请参考 [基本概念]({{ site.baseurl }}/dev/api_concepts.html) 了解关于Flink API 的介绍。
 
-为了创建你的 Flink DataStream 程序，我们鼓励你从 [剖析 Flink 程序]({{ site.baseurl }}/dev/api_concepts.html#anatomy-of-a-flink-program) 开始，并且逐渐添加你的 [stream transformations]({{ site.baseurl }}/dev/stream/operators/index.html) 。其余部分作为附加操作和高级特性的引用。
+为了创建你的 Flink DataStream 程序，我们鼓励你从 [剖析 Flink 程序]({{ site.baseurl }}/dev/api_concepts.html#anatomy-of-a-flink-program) 开始，并且逐渐添加你的 [stream transformations]({{ site.baseurl }}/dev/stream/operators/index.html) 。其余部分作为附加操作和高级特性的参考。
 
 * This will be replaced by the TOC
 {:toc}
 
 ## 程序示例
 
-下面的程序是流式窗口单词计数应用程序的一个完整的工作示例，该应用程序对来自5秒窗口中的web socket的单词进行计数。您可以复制和粘贴代码以在本地运行。
+下面的程序是单词计数应用程序的一个完整的工作示例，其中使用了流式窗口，对来自web socket的单词，以5秒为窗口进行计数。您可以复制和粘贴代码在本地运行。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -115,7 +115,7 @@ object WindowWordCount {
 nc -lk 9999
 {% endhighlight %}
 
-然后输入一些单词，回车换行输入新一行的单词。这些输入将作为示例程序的输入。如果要使得某个单词的计数大于1，请在5秒钟内重复输入相同的单词（如果5秒钟输入相同单词对你来说太快，请把示例程序中的窗口大小从5秒调大 ☺）。
+然后输入一些单词，回车，再输入新一行的单词。这些输入将作为示例程序的输入。如果要使得某个单词的计数结果大于1，请在5秒钟内重复输入相同的单词（如果5秒钟输入相同单词对你来说太快，请把示例程序中的窗口大小从5秒调大 ☺）。
 
 {% top %}
 
@@ -126,27 +126,27 @@ nc -lk 9999
 
 <br />
 
-Sources 是你的程序读取输入的地方。你可以通过 `StreamExecutionEnvironment.addSource(sourceFunction)` 将 Source 添加到你的程序中。Flink 提供了若干已经实现好了的 `source functions`，当然你也可以通过实现 `SourceFunction` 来自定义非并行的 source 或者实现 `ParallelSourceFunction` 接口或者扩展 `RichParallelSourceFunction` 来自定义并行的 source。
+你的程序从数据源读取数据。你可以通过 `StreamExecutionEnvironment.addSource(sourceFunction)` 将 Source 添加到你的程序中。Flink 提供了若干已经实现好了的 `source functions`，当然你也可以通过实现 `SourceFunction` 来自定义非并发的 source ，实现 `ParallelSourceFunction` 接口或扩展 `RichParallelSourceFunction` 来自定义并发的 source。
 
 `StreamExecutionEnvironment` 中可以使用以下几个已实现的 stream sources ：
 
 基于文件：
 
-- `readTextFile(path)` \- 读取文本文件，即符合 `TextInputFormat` 规范的文件，并将其作为字符串返回。
+- `readTextFile(path)` \- 按行读取文本文件，即符合 `TextInputFormat` 规范的文件，并将其作为字符串返回。
     
 - `readFile(fileInputFormat, path)` \- 根据指定的文件输入格式读取文件（一次）。
     
-- `readFile(fileInputFormat, path, watchType, interval, pathFilter, typeInfo)` \- 这是上面两个方法内部调用的方法。它根据给定的 `fileInputFormat` 和读取路径读取文件。根据提供的 `watchType` ，这个 source 可以定期（每隔 `interval` 毫秒）监测给定路径的新数据（`FileProcessingMode.PROCESS_CONTINUOUSLY`），或者处理一次路径对应文件的数据并退出（`FileProcessingMode.PROCESS_ONCE`）。你可以通过 `pathFilter` 进一步排除掉需要处理的文件。
+- `readFile(fileInputFormat, path, watchType, interval, pathFilter, typeInfo)` \- 这是上面两个方法内部调用的方法。它根据给定的 `fileInputFormat` 和读取路径读取文件。根据提供的 `watchType`参数 ，这个 source 可以定期（每隔 `interval` 毫秒）监测给定路径的新数据（`FileProcessingMode.PROCESS_CONTINUOUSLY`），或者处理一次路径对应文件的数据并退出（`FileProcessingMode.PROCESS_ONCE`）。你可以通过 `pathFilter` 进一步排除掉不需要处理的文件。
     
     *实现：*
     
-    在具体实现上，Flink把文件读取过程分为两个子任务，即_目录监控_和_数据读取_。每个子任务都由单独的实体实现。目录监控由单个**非并行**（并行度为1）的任务执行，而数据读取由并行运行的多个任务执行。后者的并行性等于作业的并行性。单个目录监控任务的作用是扫描目录（根据 `watchType` 定期扫描或仅扫描一次），查找要处理的文件并把文件分割成_切分片_，然后将这些切分片分配给下游 reader 。 reader 负责读取数据。每个切分片只能由一个 reader 读取，但一个 reader 可以逐个读取多个切分片。
+    在具体实现上，Flink把文件读取过程分为两个子任务，即_目录监控_和_数据读取_。每个子任务都由单独的实体实现。目录监控由单个**非并行**（并行度为1）的任务执行，而数据读取由并发运行的多个任务执行。后者的并发度等于作业的并发度。监控目录任务的作用是扫描目录（根据 `watchType` 定期扫描或仅扫描一次），查找要处理的文件并把文件分割成_切分片（splits）_，然后将这些切分片（splits）分配给下游 reader 。 reader 负责读取数据。每个切分片（splits）只能由一个 reader 读取，但一个 reader 可以逐个读取多个切分片（splits）。
     
     *重要注意事项：*
     
     1. 如果 `watchType` 设置为 `FileProcessingMode.PROCESS_CONTINUOUSLY` ，则当文件被修改时，其内容将被重新处理。这会打破 “exactly-once” 语义，因为在文件末尾附加数据将导致其**所有**内容被重新处理。
         
-    2. 如果 `watchType` 设置为 `FileProcessingMode.PROCESS_ONCE` ，则 source 仅扫描路径**一次**然后退出，而不等待 reader 完成文件内容的读取。当然 reader 会继续阅读，直到读取所有的文件内容。关闭 source 后就不会再有检查点。这可能导致节点故障后的恢复速度较慢，因为该作业将从最后一个检查点恢复读取。
+    2. 如果 `watchType` 设置为 `FileProcessingMode.PROCESS_ONCE` ，则 source 仅扫描路径**一次**然后退出，而不等待 reader 读完文件内容。当然 reader 会继续阅读，直到读取所有的文件内容。关闭 source 后就不会再有checkpoints。这可能导致节点故障后的恢复速度较慢，因为该作业将从最后一个checkpoint处重新读取数据。
         
 基于 Socket：
 
@@ -161,8 +161,8 @@ Sources 是你的程序读取输入的地方。你可以通过 `StreamExecutionE
 - `fromElements(T ...)` \- 从给定的对象序列中创建数据流。所有对象类型必须相同。
     
 - `fromParallelCollection(SplittableIterator, Class)` \-  从一个迭代器中创建并行数据流。Class 指定了该迭代器返回元素的类型。
-    
-- `generateSequence(from, to)` \- 创建一个生成指定区间范围内的数字序列的并行数据流。
+
+- `generateSequence(from, to)` \- 并发生成指定间隔的数字序列。
     
 自定义：
 
@@ -234,19 +234,19 @@ Sources 是你的程序读取输入的地方。你可以通过 `StreamExecutionE
 
 <br />
 
-数据 sinks 消费 DataStream 并将其发往文件、socket、外部系统或进行打印。Flink 自带多种内置的输出格式，这些都被封装在对 DataStream 的操作后：
+数据 sinks 消费 DataStream 的数据，并将结果写入文件、socket、外部系统或进行打印。Flink 自带多种内置的输出格式，这些都被封装在对 DataStream 的操作后：
 
--   `writeAsText()` / `TextOutputFormat` \- 将元素以字符串形式写入。字符串    通过调用每个元素的 _toString()_ 方法获得。
+-   `writeAsText()` / `TextOutputFormat` \- 将元素以字符串形式按行写入。通过调用每个元素的 _toString()_ 方法获得字符串。
     
--   `writeAsCsv(...)` / `CsvOutputFormat` \- 将元组写入逗号分隔的csv文件。行和字段    分隔符均可配置。每个字段的值来自对象的 _toString()_ 方法。
+-   `writeAsCsv(...)` / `CsvOutputFormat` \- 将元组写入逗号分隔的csv文件。行和字段隔符均可配置。通过调用每个元素的 _toString()_ 方法获得每个字段的字符串。
     
--   `print()` / `printToErr()` \- 打印每个元素的 _toString()_ 值到标准输出/错误输出流。可以配置前缀信息添加到输出，以区分不同 _print_ 的结果。如果并行度大于1，则 task id 也会添加到输出前缀上。
+-   `print()` / `printToErr()` \- 打印每个元素的 _toString()_ 值到标准输出/错误输出流。可以配置前缀信息添加到输出，以区分不同 _print_ 的结果。如果并行度大于1，则 task id 也会添加到输出结果的前缀上。
     
 -   `writeUsingOutputFormat()` / `FileOutputFormat` \- 自定义文件输出的方法/基类。支持自定义的对象到字节的转换。
     
 -   `writeToSocket` \- 根据 `SerializationSchema` 把元素写到 socket 。
     
--   `addSink` \- 调用自定义 sink function 。Flink自带了很多连接其他系统的连接器（ connectors ）（如 Apache Kafka ），这些连接器都实现了 sink function 。
+-   `addSink` \- 调用自定义 sink function 。Flink自带了很多连接其他系统的 connectors（如 Apache Kafka ），这些connectors都实现了 sink function 。
     
 </div>
 <div data-lang="scala" markdown="1">
@@ -270,9 +270,9 @@ Sources 是你的程序读取输入的地方。你可以通过 `StreamExecutionE
 </div>
 </div>
 
-请注意， `DataStream` 上的 `write*()` 方法主要用于调试目的。它们没有参与Flink的检查点机制，这意味着这些 function 通常都有 at-least-once 语义。数据刷新到目标系统取决于 OutputFormat 的实现。这意味着并非所有发送到 OutputFormat 的元素都会立即在目标系统中可见。此外，在失败的情况下，这些记录可能会丢失。
+请注意， `DataStream` 上的 `write*()` 方法主要用于调试目的。它们没有实现Flink的checkpoint机制，这意味着这些 function 通常都有 at-least-once 语义。数据刷新到目标系统取决于 OutputFormat 的实现。这意味着并非所有发送到 OutputFormat 的元素都会立即在目标系统中可见。此外，在失败的情况下，这些记录可能会丢失。
 
-为了可靠，在把流写到文件系统时，使用 `flink-connector-filesystem` 来实现 exactly-once 。此外，通过 `.addSink(...)` 方法自定义的实现可以参与Flink的检查点机制以实现 exactly-once 语义。
+为了可靠，在把流写到文件系统时，使用 `flink-connector-filesystem` 来实现 exactly-once 语义。此外，通过 `.addSink(...)` 方法自定义的实现可以参与Flink的checkpoint机制以实现 exactly-once 语义。
 
 {% top %}
 
@@ -283,7 +283,7 @@ Sources 是你的程序读取输入的地方。你可以通过 `StreamExecutionE
 
 <br />
 
-迭代流程序实现一个 step function 并将其嵌入到 `IterativeStream` 中。由于这样的 DataStream 程序可能永远不会结束，所以没有最大迭代次数。事实上你需要指定哪一部分的流被反馈到迭代过程，哪个部分通过 `split` 或 `filter`  transformation 向下游转发。在这里，我们展示一个使用过滤器的例子。首先，我们定义一个 IterativeStream 
+迭代流程序实现一个 step function 并将其嵌入到 `IterativeStream` 中。由于 DataStream 程序可能永远不会结束，所以没有最大迭代次数。实际上，你需要指定哪一部分的流被反馈到迭代过程，哪个部分通过 `split` 或 `filter`  transformation 向下游转发。在这里，我们展示一个使用过滤器的例子。首先，我们定义一个 IterativeStream 
 
 {% highlight java %}
 IterativeStream<Integer> iteration = input.iterate();
@@ -295,7 +295,7 @@ IterativeStream<Integer> iteration = input.iterate();
 DataStream<Integer> iterationBody = iteration.map(/* this is executed many times */);
 {% endhighlight %}
 
-要关闭迭代并定义迭代尾部，需要调用 `IterativeStream` 的 `closeWith(feedbackStream)` 方法。传给 `closeWith`  function 的 DataStream 将被反馈给迭代的头部。一种常见的模式是使用 filter 来分离流中需要反馈的部分和需要继续发往下游的部分。这些 filter 可以定义“终止”逻辑，以控制元素是流向下游而不是反馈迭代。
+要关闭迭代并定义迭代结束，需要调用 `IterativeStream` 的 `closeWith(feedbackStream)` 方法。传给 `closeWith`  function 的 DataStream 将被反馈给迭代的头部。一种常见的模式是使用 filter 来分离流中需要反馈的部分和需要继续发往下游的部分。这些 filter 可以定义“终止”逻辑，以控制元素是流向下游而不是反馈迭代。
 
 {% highlight java %}
 iteration.closeWith(iterationBody.filter(/* one part of the stream */));
@@ -338,7 +338,7 @@ DataStream<Long> lessThanZero = minusOne.filter(new FilterFunction<Long>() {
 
 <br />
 
-迭代流程序实现一个 step function 并将其嵌入到 `IterativeStream` 中。由于这样的 DataStream 程序可能永远不会结束，所以没有最大迭代次数。事实上你需要指定哪一部分的流被反馈到迭代过程，哪个部分通过 `split` 或 `filter`  transformation 向下游转发。在这里，我们展示一个迭代的例子，其中主体（计算部分被反复执行）是简单的 map transformation，迭代反馈的元素和继续发往下游的元素通过 filters 进行区分。
+迭代流程序实现一个 step function 并将其嵌入到 `IterativeStream` 中。由于 DataStream 程序可能永远不会结束，所以没有最大迭代次数。事实上你需要指定哪一部分的流被反馈到迭代过程，哪个部分通过 `split` 或 `filter`  transformation 向下游转发。在这里，我们展示一个迭代的例子，其中主体（被反复执行计算部分）是简单的 map transformation，迭代反馈的元素和继续发往下游的元素通过 filters 进行区分。
 
 {% highlight scala %}
 val iteratedStream = someDataStream.iterate(
@@ -370,7 +370,7 @@ val iteratedStream = someIntegers.iterate(
 
 ## 执行参数
 
-`StreamExecutionEnvironment` 包含 `ExecutionConfig` ，它允许为作业运行时进行配置。
+`StreamExecutionEnvironment` 包含 `ExecutionConfig` ，需要通过`ExecutionConfig`，对作业运行时进行配置。
 
 更多配置参数请参阅 [execution configuration]({{ site.baseurl }}/dev/execution_configuration.html) 。这些参数是 DataStream API 特有的：
 
@@ -384,7 +384,7 @@ val iteratedStream = someIntegers.iterate(
 
 ### 控制延迟
 
-默认情况下，元素不会逐个传输（这将导致不必要的网络流量），而是被缓冲的。缓冲（实际是在机器之间传输）的大小可以在 Flink 配置文件中设置。虽然这种方法对于优化吞吐量有好处，但是当输入流不够快时，它可能会导致延迟问题。要控制吞吐量和延迟，你可以在 execution environment（或单个 operator ）上使用 `env.setBufferTimeout(timeoutMillis)` 来设置缓冲区填满的最大等待时间。如果超过该最大等待时间，即使缓冲区未满，也会被自动发送出去。该最大等待时间默认值为 100 ms。
+默认情况下，不会逐个传输元素（这将导致不必要的网络流量），而是被缓存的。缓存（实际是在机器之间传输）的大小可以在 Flink 配置文件中设置。虽然这种方法对于优化吞吐量有好处，但是当输入流不够快时，它可能会导致延迟问题。要控制吞吐量和延迟，你可以在 execution environment（或单个 operator ）上使用 `env.setBufferTimeout(timeoutMillis)` 来设置缓冲区填满的最大等待时间。如果超过该最大等待时间，即使缓冲区未满，其中的数据也会被自动发送出去。该最大等待时间默认值为 100 ms。
 
 用法：
 
@@ -407,13 +407,13 @@ env.generateSequence(1,10).map(myMap).setBufferTimeout(timeoutMillis)
 </div>
 </div>
 
-为了最大化吞吐量，可以设置 `setBufferTimeout(-1)` ，这样就没有了超时机制，缓冲区只有在满时才会发送出去。为了最小化延迟，可以把超时设置为接近 0 的值（例如 5 或 10  ms）。应避免将该超时设置为 0，因为这样可能导致性能严重下降。
+为了最大化吞吐量，可以设置 `setBufferTimeout(-1)` ，这样就没有了超时机制，只有缓冲区填满时，才会发送数据出去。为了使延迟最小，可以把超时设置为接近 0 的值（例如 5 或 10  ms）。应避免将该超时设置为 0，因为这样可能导致性能严重下降。
 
 {% top %}
 
 ## 调试
 
-在分布式集群中运行 Streaming 程序之前，最好确保实现的算法可以正常工作。因此，实施数据分析程序通常是一个渐进的过程：检查结果，调试和改进。
+在分布式集群中运行 Streaming 程序之前，最好确保实现的算法可以正常工作。因此，部署数据分析程序通常是一个渐进的过程：检查结果，调试和改进。
 
 Flink 提供了诸多特性来大幅简化数据分析程序的开发：你可以在 IDE 中进行本地调试，注入测试数据，收集结果数据。本节给出一些如何简化 Flink 程序开发的指导。
 
@@ -448,7 +448,7 @@ env.execute()
 </div>
 </div>
 
-### 集合的数据 Sources
+### 基于集合的数据 Sources
 
 Flink 提供了基于 Java 集合实现的特殊数据 sources 用于测试。一旦程序通过测试，它的 sources 和 sinks 可以方便的替换为从外部系统读写的 sources 和 sinks 。
 
@@ -489,7 +489,7 @@ val myLongs = env.fromCollection(longIt)
 </div>
 </div>
 
-**注意：** 当前，集合数据 source 要求数据类型和迭代器实现 `Serializable` 。此外，不能并行执行集合的数据 Sources（并行度＝1）。
+**注意：** 当前，集合数据 source 要求数据类型和迭代器实现 `Serializable` 。此外，集合类数据源不能并发执行（并行度＝1）。
 
 ### 迭代的数据 Sink
 
@@ -523,7 +523,7 @@ val myOutput: Iterator[(String, Int)] = DataStreamUtils.collect(myResult.javaStr
 
 ## 下一步去哪里？
 
-*   [Operators]({{ site.baseurl }}/dev/stream/operators/index.html) ： 可用的流操作规范。
+*   [算子]({{ site.baseurl }}/dev/stream/operators/index.html) ： 可用的流算子规范。
 *   [Event Time]({{ site.baseurl }}/dev/event_time.html)：Flink 的时间概念介绍。
 *   [State & Fault Tolerance]({{ site.baseurl }}/dev/stream/state/index.html)：讲解如何开发有状态的应用程序。
 *   [Connectors]({{ site.baseurl }}/dev/connectors/index.html)：描述可用的输入和输出的 Connectors。
