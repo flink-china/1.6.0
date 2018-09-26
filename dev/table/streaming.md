@@ -1,5 +1,5 @@
 ---
-title: "Streaming Concepts"
+title: "流的概念"
 nav-parent_id: tableapi
 nav-pos: 10
 ---
@@ -22,67 +22,68 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-Flink's [Table API](tableApi.html) and [SQL support](sql.html) are unified APIs for batch and stream processing. This means that Table API and SQL queries have the same semantics regardless whether their input is bounded batch input or unbounded stream input. Because the relational algebra and SQL were originally designed for batch processing, relational queries on unbounded streaming input are not as well understood as relational queries on bounded batch input. 
+Flink 的 [Table API](tableApi.html) 和 [SQL support](sql.html) 是用于批处理和流处理的统一 API 。这意味着 Table API 和 SQL 查询具有相同的语义，无论它们的输入是有界批量输入还是无界流输入。因为关系代数和 SQL 最初是为批处理而设计的，所以无界流输入上的关系查询不像有界批输入上的那样容易理解。
 
-On this page, we explain concepts, practical limitations, and stream-specific configuration parameters of Flink's relational APIs on streaming data. 
+
+在本页，我们将解释 Flink 的关系 API 在流上的概念，实际的限制和流特有的配置参数。
 
 * This will be replaced by the TOC
 {:toc}
 
-Relational Queries on Data Streams
+数据流上的关系查询
 ----------------------------------
 
-SQL and the relational algebra have not been designed with streaming data in mind. As a consequence, there are few conceptual gaps between relational algebra (and SQL) and stream processing.
+SQL 和关系代数的设计并未考虑流数据。 因此，关系代数（和 SQL ）与流处理在概念上存在差别。
 
 <table class="table table-bordered">
 	<tr>
-		<th>Relational Algebra / SQL</th>
-		<th>Stream Processing</th>
+		<th>关系代数 / SQL</th>
+		<th>流处理</th>
 	</tr>
 	<tr>
-		<td>Relations (or tables) are bounded (multi-)sets of tuples.</td>
-		<td>A stream is an infinite sequences of tuples.</td>
+		<td>关系（或表）是有界（多）元组的集合（其中数据可重）。</td>
+		<td>流是无限的元组序列。</td>
 	</tr>
 	<tr>
-		<td>A query that is executed on batch data (e.g., a table in a relational database) has access to the complete input data.</td>
-		<td>A streaming query cannot access all data when is started and has to "wait" for data to be streamed in.</td>
+		<td>对批处理数据（例如：关系数据库中的表）执行的查询可以访问完整的输入数据。</td>
+		<td>流式查询在启动时无法访问所有数据，必须“等待”流数据输入。</td>
 	</tr>
 	<tr>
-		<td>A batch query terminates after it produced a fixed sized result.</td>
-		<td>A streaming query continuously updates its result based on the received records and never completes.</td>
+		<td>批处理查询在生成固定大小的结果后终止。</td>
+		<td>流式查询会根据收到的记录不断更新其结果，并且永远不会完成。</td>
 	</tr>
 </table>
 
-Despite these differences, processing streams with relational queries and SQL is not impossible. Advanced relational database systems offer a feature called *Materialized Views*. A materialized view is defined as a SQL query, just like a regular virtual view. In contrast to a virtual view, a materialized view caches the result of the query such that the query does not need to be evaluated when the view is accessed. A common challenge for caching is to prevent a cache from serving outdated results. A materialized view becomes outdated when the base tables of its definition query are modified. *Eager View Maintenance* is a technique to update materialized views and updates a materialized view as soon as its base tables are updated. 
+尽管存在这些差异，但使用关系查询和 SQL 处理流并非不可能。一些高级的关系数据库系统提供了一个称为 *物化视图（Materialized Views）* 的功能。与常规的虚拟视图一样，物化视图被定义为一个 SQL 查询。与虚拟视图相比，物化视图缓存了查询的结果，使得用户在访问视图时不需要实时计算。使用缓存的一个常见挑战是避免产生过期结果。当修改查询对应的基础表时，物化视图会过时。*立即视图维护（Eager View Maintenance）* 是一种更新物化视图，并在基础表有变更时，立即更新物化视图的技术。
 
-The connection between eager view maintenance and SQL queries on streams becomes obvious if we consider the following:
+如果我们考虑下面的问题，立即视图维护和流上的关系查询之间的联系就变得很明显了：
 
-- A database table is the result of a *stream* of `INSERT`, `UPDATE`, and `DELETE` DML statements, often called *changelog stream*.
-- A materialized view is defined as a SQL query. In order to update the view, the query is continuously processes the changelog streams of the view's base relations.
-- The materialized view is the result of the streaming SQL query.
+- 数据库表在 *流* 上是 `INSERT`，`UPDATE` 和 `DELETE` 这些 DML 语句的结果，通常称为 *变更日志流*。
+- 物化视图被定义为 SQL 查询。为了更新视图，查询是会持续不断的处理视图基本关系的变更日志流。
+- 物化视图是流式 SQL 查询的结果。
 
-With these points in mind, we introduce Flink's concept of *Dynamic Tables* in the next section.
+有了这些基础概念，我们将在下一节介绍 Flink 的 *动态表（Dynamic Tables）* 的概念。
 
-Dynamic Tables &amp; Continuous Queries
+动态表 &amp; 持续查询
 ---------------------------------------
 
-*Dynamic tables* are the core concept of Flink's Table API and SQL support for streaming data. In contrast to the static tables that represent batch data, dynamic table are changing over time. They can be queried like static batch tables. Querying a dynamic table yields a *Continuous Query*. A continuous query never terminates and produces a dynamic table as result. The query continuously updates its (dynamic) result table to reflect the changes on its input (dynamic) table. Essentially, a continuous query on a dynamic table is very similar to the definition query of a materialized view. 
+*动态表* 是 Flink 的 Table API 和 SQL 支持流数据的核心概念。与表示批处理的静态表相比，动态表随时间而变化。可以像静态批处理那样查询它们。查询一个动态表会产生 *持续查询* 。持续查询永远不会终止，并生成一个动态表作为结果。查询不断更新其（动态）结果表以反映其输入（动态）表的更改。对动态表的持续查询本质上与物化视图的定义的查询非常相似。
 
-It is important to note that the result of a continuous query is always semantically equivalent to the result of the same query being executed in batch mode on a snapshot of the input tables.
+需要注意的是持，续查询的结果始终在语义上等同于在输入表的快照上，以批处理模式执行相同查询的结果。
 
-The following figure visualizes the relationship of streams, dynamic tables, and  continuous queries: 
+下图显示了流，动态表和持续查询的关系：
 
 <center>
-<img alt="Dynamic tables" src="{{ site.baseurl }}/fig/table-streaming/stream-query-stream.png" width="80%">
+<img alt="动态表" src="{{ site.baseurl }}/fig/table-streaming/stream-query-stream.png" width="80%">
 </center>
 
-1. A stream is converted into a dynamic table.
-1. A continuous query is evaluated on the dynamic table yielding a new dynamic table.
-1. The resulting dynamic table is converted back into a stream.
+1. 流可以被转化为一个动态表。
+1. 在动态表上进行持续查询会产生一个新的动态表。
+1. 结果动态表可以被转换回成一个流。
 
-**Note:** Dynamic tables are foremost a logical concept. Dynamic tables are not necessarily (fully) materialized during query execution.
+**注意:** 动态表首先应该被理解成一个逻辑概念，因此在查询执行期间不一定要（完全）将其物化。
 
-In the following, we will explain the concepts of dynamic tables and continuous queries with a stream of click events that have the following schema:
+接下来，我们利用一个点击事件流来讲解动态表和持续查询的概念，该表包含以下字段:
 
 {% highlight plain %}
 [ 
@@ -92,55 +93,55 @@ In the following, we will explain the concepts of dynamic tables and continuous 
 ]
 {% endhighlight %}
 
-### Defining a Table on a Stream
+### 在流上定义表
 
-In order to process a stream with a relational query, it has to be converted into a `Table`. Conceptually, each record of the stream is interpreted as an `INSERT` modification on the resulting table. Essentially, we are building a table from an `INSERT`-only changelog stream.
+为了使用关系查询处理流，必须将其转换为 `表` 。从概念上讲，流的每个记录都被解释为对结果表的 `INSERT` 修改。本质上，我们正在从一个只有 `INSERT` 操作的变更日志流构建一个表。
 
-The following figure visualizes how the stream of click event (left-hand side) is converted into a table (right-hand side). The resulting table is continuously growing as more records of the click stream are inserted.
+下图显示了点击记录（左侧）如何转换为表（右侧）。随着更多的点击流记录的插入，结果表在不断增长。
 
 <center>
 <img alt="Append mode" src="{{ site.baseurl }}/fig/table-streaming/append-mode.png" width="60%">
 </center>
 
-**Note:** A table which is defined on a stream is internally not materialized. 
+**注意:** 基于流的表在系统内部并没有实际物化。 
 
-### Continuous Queries
+### 持续查询
 
-A continuous query is evaluated on a dynamic table and produces a new dynamic table as result. In contrast to a batch query, a continuous query never terminates and updates its result table according to the updates on its input tables. At any point in time, the result of a continuous query is semantically equivalent to the result of the same query being executed in batch mode on a snapshot of the input tables. 
+在动态表上计算持续查询，并生成新的动态表作为结果。与批处理查询相反，持续查询永不停止，并会根据其输入表上的变更来更新其结果表。在任何时间点，持续查询的结果在语义上等同于在输入表的快照上以批处理模式执行相同查询的结果。
 
-In the following we show two example queries on a `clicks` table that is defined on the stream of click events.
+下面我们展示了在一个单击事件流 `clicks` 表上进行查询的两个例子。
 
-The first query is a simple `GROUP-BY COUNT` aggregation query. It groups the `clicks` table on the `user` field and counts the number of visited URLs. The following figure shows how the query is evaluated over time as the `clicks` table is updated with additional rows.
+第一个查询是一个简单的 `GROUP-BY COUNT` 聚合查询。 它根据 user 字段将 `clicks` 表分组并统计 URL 的访问次数。下图显示了向 clicks 表插入数据时，查询是如何执行的，查询语句是如何进行计算的。
 
 <center>
 <img alt="Continuous Non-Windowed Query" src="{{ site.baseurl }}/fig/table-streaming/query-groupBy-cnt.png" width="90%">
 </center>
 
-When the query is started, the `clicks` table (left-hand side) is empty. The query starts to compute the result table, when the first row is inserted into the `clicks` table. After the first row `[Mary, ./home]` was inserted, the result table (right-hand side, top) consists of a single row `[Mary, 1]`. When the second row `[Bob, ./cart]` is inserted into the `clicks` table, the query updates the result table and inserts a new row `[Bob, 1]`. The third row `[Mary, ./prod?id=1]` yields an update of an already computed result row such that `[Mary, 1]` is updated to `[Mary, 2]`. Finally, the query inserts a third row `[Liz, 1]` into the result table, when the fourth row is appended to the `clicks` table.
+当查询启动时，`clicks` 表（左侧）为空。当第一行插入到 `clicks` 表时，查询开始计算结果表。插入第一行 `[Mary，./home]` 后，结果表（右侧，顶部）由一行 `[Mary，1]` 组成。当第二行 `[Bob，./car]` 插入到 `clicks` 表中时，查询更新结果表并插入一个新行 `[Bob，1]` 。第三行 `[Mary，./prod?id=1]` 产生已经计算过的结果行的更新，使得 `[Mary，1]` 更新为`[Mary，2]`。最后，当第四行进入 `clicks` 表时，查询将第三行 `[Liz，1]` 插入到结果表中。
 
-The second query is similar to the first one but groups the `clicks` table in addition to the `user` attribute also on an [hourly tumbling window](./sql.html#group-windows) before it counts the number of URLs (time-based computations such as windows are based on special [time attributes](#time-attributes), which are discussed below.). Again, the figure shows the input and output at different points in time to visualize the changing nature of dynamic tables.
+第二个查询类似于第一个查询，但在计算URL数量之前，除了按 `user` 属性分组外，还按 [每小时翻滚窗口](./ sql.html #group-windows) 对 `clicks` 表进行了分组（基于时间的计算，例如窗口是基于特殊的 [时间属性](#time-attributes)，这将在下面讨论。）。同样，该图显示了不同时间点的输入和输出，以展现动态表的变化。
 
 <center>
 <img alt="Continuous Group-Window Query" src="{{ site.baseurl }}/fig/table-streaming/query-groupBy-window-cnt.png" width="100%">
 </center>
 
-As before, the input table `clicks` is shown on the left. The query continuously computes results every hour and updates the result table. The clicks table contains four rows with timestamps (`cTime`) between `12:00:00` and `12:59:59`. The query computes two results rows from this input (one for each `user`) and appends them to the result table. For the next window between `13:00:00` and `13:59:59`, the `clicks` table contains three rows, which results in another two rows being appended to the result table. The result table is updated, as more rows are appended to `clicks` over time.
+和上图类似，输入表 `clicks` 显示在左侧。持续查询每小时的计算结果并更新结果表。click 表包含四行，时间戳（`cTime`）介于 `12：00：00` 和 `12：59：59` 之间。查询根据输入计算出两行结果（每个用户一个）并追加到结果表。对于 `13：00：00` 和 `13：59：59` 之间的下一个窗口，`clicks` 表包含三行，这导致另外两行被追加到结果表中。随着 clicks 表中数据的不断增加，结果表会一直更新。
 
-#### Update and Append Queries
+#### 查询的更新和追加
 
-Although the two example queries appear to be quite similar (both compute a grouped count aggregate), they differ in one important aspect: 
-- The first query updates previously emitted results, i.e., the changelog stream that defines the result table contains `INSERT` and `UPDATE` changes. 
-- The second query only appends to the result table, i.e., the changelog stream of the result table only consists of `INSERT` changes.
+尽管这两个查询例子看起来非常相似（都是分组聚合统计），但它们在一个重要的方面有所不同：
+- 第一个查询更新先前发出的结果，即定义结果表的更改日志流包含 `INSERT` 和 `UPDATE` 变更。
+- 第二个查询仅向结果表中追加数据，即结果表的更改日志流仅包含 `INSERT` 变更。
 
-Whether a query produces an append-only table or an updated table has some implications:
-- Queries that produce update changes usually have to maintain more state (see the following section).
-- The conversion of an append-only table into a stream is different from the conversion of an updated table (see the [Table to Stream Conversion](#table-to-stream-conversion) section). 
+关于一个查询是生成仅追加的表（append-only table）还是更新表（updated table）的说明：
+- 产生更新变更的查询通常必须维护更多的状态（请参阅下一节）。
+- 对追加表或更新表而言，它们转换为流的方式不同。（请参阅 [表到流的转换](#表到流的转换) 章节）。
 
-#### Query Restrictions
+#### 查询限制
 
-Many, but not all, semantically valid queries can be evaluated as continuous queries on streams. Some queries are too expensive to compute, either due to the size of state that they need to maintain or because computing updates is too expensive.
+很多（但非全部）语义合理的查询允许以持续查询的方式在流上执行。但由于需要维护太多状态或产生更高的更新成本，部分查询的计算代价很会大。
 
-- **State Size:** Continuous queries are evaluated on unbounded streams and are often supposed to run for weeks or months. Hence, the total amount of data that a continuous query processes can be very large. Queries that have to update previously emitted results need to maintain all emitted rows in order to be able to update them. For instance, the first example query needs to store the URL count for each user to be able to increase the count and sent out a new result when the input table receives a new row. If only registered users are tracked, the number of counts to maintain might not be too high. However, if non-registered users get a unique user name assigned, the number of counts to maintain would grow over time and might eventually cause the query to fail.
+- **状态大小：** 持续查询作用于无界的数据流上，经常需要运行数周甚至数月。因此，持续查询处理的数据总量可能非常大。那些必须更新先前发出的结果的查询，需要维护所有发出去的行，以便能够更新它们。例如，第一个示例查询需要存储每个用户的URL计数，以便能够增加计数，并在输入表收到一行新数据时发送新的结果。如果仅跟踪注册用户，则要维护的计数可能不会太高。但是，如果系统给每个未注册的用户都分配了一个唯一的用户名，则要维护的计数器数量将随着时间的推移而增长，并最终可能导致查询失败。
 
 {% highlight sql %}
 SELECT user, COUNT(url)
@@ -148,7 +149,7 @@ FROM clicks
 GROUP BY user;
 {% endhighlight %}
 
-- **Computing Updates:** Some queries require to recompute and update a large fraction of the emitted result rows even if only a single input record is added or updated. Clearly, such queries are not well suited to be executed as continuous queries. An example is the following query which computes for each user a `RANK` based on the time of the last click. As soon as the `clicks` table receives a new row, the `lastAction` of the user is updated and a new rank must be computed. However since two rows cannot have the same rank, all lower ranked rows need to be updated as well.
+- **计算更新：** 即使添加或更新一条数据，也可能会引发某些查询对已有结果进行大范围的更新及重复计算。显然，这种查询不太适合作为持续查询执行。下面的查询例子，是根据最后一次点击的时间为每个用户计算一个 `排名（RANK）` 。只要 `clicks` 表收到一个新行，就会更新用户的 `lastAction` ，并且必须计算新的等级。但是，由于两行不能具有相同的等级，因此所有排名较低的行也需要被更新。
 
 {% highlight sql %}
 SELECT user, RANK() OVER (ORDER BY lastLogin) 
@@ -157,46 +158,47 @@ FROM (
 );
 {% endhighlight %}
 
-The [QueryConfig](#query-configuration) section discusses parameters to control the execution of continuous queries. Some parameters can be used to trade the size of maintained state for result accuracy.
+[QueryConfig](#query-configuration) 章节讨论了控制持续查询的参数。用户可以通过调节某些参数，实现维护状态大小及查询结果精度之间的取舍。
 
-### Table to Stream Conversion
+### 表到流的转换
 
-A dynamic table can be continuously modified by `INSERT`, `UPDATE`, and `DELETE` changes just like a regular database table. It might be a table with a single row, which is constantly updated, an insert-only table without `UPDATE` and `DELETE` modifications, or anything in between.
+就像常规数据库表一样，动态表可以通过 `INSERT` ， `UPDATE` 和 `DELETE` 持续修改。动态表可能是一个只有一行数据但不断被更新的表；可能是一个只支持插入操作而不支持 UPDATE 和 DELETE 改动的表；也可能介于两者之间。
 
-When converting a dynamic table into a stream or writing it to an external system, these changes need to be encoded. Flink's Table API and SQL support three ways to encode the changes of a dynamic table:
+将动态表转换为流或将其写入外部系统时，需要对这些变更进行编码。Flink 的 Table API 和 SQL 支持三种编码动态表变更的方法：
 
-* **Append-only stream:** A dynamic table that is only modified by `INSERT` changes can be  converted into a stream by emitting the inserted rows. 
+* **追加流（Append-only stream）：** 一个只能通过 `INSERT` 变更修改的动态表可以通过插入行来转换为流。
 
-* **Retract stream:** A retract stream is a stream with two types of messages, *add messages* and *retract messages*. A dynamic table is converted into an retract stream by encoding an `INSERT` change as add message, a `DELETE` change as retract message, and an `UPDATE` change as a retract message for the updated (previous) row and an add message for the updating (new) row. The following figure visualizes the conversion of a dynamic table into a retract stream.
+* **撤回流（Retract stream）：** 撤回流是一个包含两种类型消息的流，*添加消息（add message）* 和 *撤回消息（retract message）* 。将一个动态表转换为一个撤回流是通过将 `INSERT` 变更编码为添加消息，将 `DELETE` 变更编码为撤回消息，将 `UPDATE` 变更编码为上一个更新行的撤回消息和最新的更新行的添加消息。下图显示了从动态表到撤回流的转换。
 
 <center>
 <img alt="Dynamic tables" src="{{ site.baseurl }}/fig/table-streaming/undo-redo-mode.png" width="85%">
 </center>
 <br><br>
 
-* **Upsert stream:** An upsert stream is a stream with two types of messages, *upsert messages* and *delete message*. A dynamic table that is converted into an upsert stream requires a (possibly composite) unique key. A dynamic table with unique key is converted into a dynamic table by encoding `INSERT` and `UPDATE` changes as upsert message and `DELETE` changes as delete message. The stream consuming operator needs to be aware of the unique key attribute in order to apply messages correctly. The main difference to a retract stream is that `UPDATE` changes are encoded with a single message and hence more efficient. The following figure visualizes the conversion of a dynamic table into an upsert stream.
+* **更新插入流（Upsert stream）：** 更新插入流是一种包含两种消息类型的流，*更新插入消息（upsert message）* 和 *删除消息*。一个动态表要转换为更新插入流需要（可能是复合的）唯一键。具有唯一键的动态表转换为动态表是通过将 `INSERT` 和 `UPDATE` 变更编码为更新插入消息，并将 `DELETE` 更改编码为删除消息。流的消耗运算符需要知道唯一键的属性，以便能够正确的应用消息。与撤回流的主要区别在于，`UPDATE` 变更是使用单个消息进行编码，因此更高效。下图显示了动态表到更新插入流的转换。
 
 <center>
 <img alt="Dynamic tables" src="{{ site.baseurl }}/fig/table-streaming/redo-mode.png" width="85%">
 </center>
 <br><br>
 
-The API to convert a dynamic table into a `DataStream` is discussed on the [Common Concepts](./common.html#convert-a-table-into-a-datastream) page. Please note that only append and retract streams are supported when converting a dynamic table into a `DataStream`. The `TableSink` interface to emit a dynamic table to an external system are discussed on the [TableSources and TableSinks](./sourceSinks.html#define-a-tablesink) page.
+
+在 [Common Concepts](./ common.html＃convert-a-table-into-a-datastream) 页面中讨论了将动态表转换为 `DataStream` 的API。请注意，在将动态表转换为 `DataStream` 时，仅支持追加流和撤回流。在 [TableSources和TableSinks](./sourceSinks.html＃define-a-tablesink) 页面上讨论了将动态表写入外部系统的 `TableSink` 接口。
 
 {% top %}
 
-Time Attributes
+时间属性
 ---------------
 
-Flink is able to process streaming data based on different notions of *time*.
+ Flink支持根据不同概念的 时间 处理数据流。
 
-- *Processing time* refers to the system time of the machine (also known as "wall-clock time") that is executing the respective operation.
-- *Event time* refers to the processing of streaming data based on timestamps which are attached to each row. The timestamps can encode when an event happened.
-- *Ingestion time* is the time that events enter Flink; internally, it is treated similarly to event time.
+- *Processing time* 是指执行相应操作的机器的系统时间（也称为 “时钟时间” ）。
+- *Event time* 是指基于附加到每一行的时间戳处理流数据。时间戳可以在事件发生时进行编码。
+- *Ingestion time* 是事件进入 Flink 的时间; 在内部，它与事件时间类似。
 
-For more information about time handling in Flink, see the introduction about [Event Time and Watermarks]({{ site.baseurl }}/dev/event_time.html).
+有关 Flink 中时间处理的更多信息，请参阅 [事件时间和水印]({{ site.baseurl }}/dev/event_time.html) 的介绍。
 
-Table programs require that the corresponding time characteristic has been specified for the streaming environment:
+在执行表程序之前，用户需要在流运行环境中配置相应的时间特征：
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -223,21 +225,21 @@ env.setStreamTimeCharacteristic(TimeCharacteristic.ProcessingTime) // default
 </div>
 </div>
 
-Time-based operations such as windows in both the [Table API]({{ site.baseurl }}/dev/table/tableApi.html#group-windows) and [SQL]({{ site.baseurl }}/dev/table/sql.html#group-windows) require information about the notion of time and its origin. Therefore, tables can offer *logical time attributes* for indicating time and accessing corresponding timestamps in table programs.
+诸如 [Table API]({{ site.baseurl }}/dev/table/tableApi.html#group-windows)）或[SQL]({{ site.baseurl }}/dev/table/sql.html#group-windows) 中的窗口等基于时间的操作，需要明确知道时间类型以及其来源。为此，表可以提供用于标识时间和访问表程序中的相应时间戳的逻辑时间属性
 
-Time attributes can be part of every table schema. They are defined when creating a table from a `DataStream` or are pre-defined when using a `TableSource`. Once a time attribute has been defined at the beginning, it can be referenced as a field and can used in time-based operations.
+用户可以在任意表模式中定义时间属性。它们是在从 `DataStream` 创建表时定义的，或者是在使用 `TableSource` 时预定义的。一旦在开头定义了时间属性，它就可以作为字段引用，并可以用于基于时间的操作。
 
-As long as a time attribute is not modified and is simply forwarded from one part of the query to another, it remains a valid time attribute. Time attributes behave like regular timestamps and can be accessed for calculations. If a time attribute is used in a calculation, it will be materialized and becomes a regular timestamp. Regular timestamps do not cooperate with Flink's time and watermarking system and thus can not be used for time-based operations anymore.
+只要时间属性未被修改，并且只是从查询的一个地方转发到另一个地方，它仍然是有效的时间属性。时间属性的行为类似于常规时间戳，可以访问以进行计算。如果在计算中使用时间属性，则它将物化并成为常规时间戳。常规时间戳不与 Flink 的时间和水印系统配合，因此不能再用于基于时间的操作。
 
-### Processing time
+### 处理时间
 
-Processing time allows a table program to produce results based on the time of the local machine. It is the simplest notion of time but does not provide determinism. It neither requires timestamp extraction nor watermark generation.
+处理时间允许表程序根据本地机器的时间产生结果。这是最简单的时间概念，但不提供确定性。它既不需要时间戳提取也不需要水印生成。
 
-There are two ways to define a processing time attribute.
+有两种方法可以定义处理时间的属性。
 
-#### During DataStream-to-Table Conversion
+#### 从 DataStream 到 Table 的转换
 
-The processing time attribute is defined with the `.proctime` property during schema definition. The time attribute must only extend the physical schema by an additional logical field. Thus, it can only be defined at the end of the schema definition.
+处理时间属性在 schema 定义期间使用 `.proctime` 属性定义。时间属性只能通过一个附加的逻辑字段扩展物理 schema 。因此，它只能定义在 schema 的末尾。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -262,9 +264,9 @@ val windowedTable = table.window(Tumble over 10.minutes on 'UserActionTime as 'u
 </div>
 </div>
 
-#### Using a TableSource
+#### 使用 TableSource
 
-The processing time attribute is defined by a `TableSource` that implements the `DefinedProctimeAttribute` interface. The logical time attribute is appended to the physical schema defined by the return type of the `TableSource`.
+处理时间属性由实现 `DefinedProctimeAttribute` 接口的 `TableSource` 定义。逻辑时间属性被附加到由 `TableSource` 的返回类型定义的物理 schema 之上。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -334,26 +336,26 @@ val windowedTable = tEnv
 </div>
 </div>
 
-### Event time
+### 事件时间
 
-Event time allows a table program to produce results based on the time that is contained in every record. This allows for consistent results even in case of out-of-order events or late events. It also ensures replayable results of the table program when reading records from persistent storage.
+事件时间允许表程序根据每个记录中包含的时间来生成结果。即使在无序事件或延迟事件的情况下，这种方式也能确保一致的结果。当从持久存储中读取记录时，它还确保表程序可以重放结果。
 
-Additionally, event time allows for unified syntax for table programs in both batch and streaming environments. A time attribute in a streaming environment can be a regular field of a record in a batch environment.
+此外，事件时间确保了批处理和流处理环境中程序的语法统一。流式环境中的时间属性可以是批处理环境中的记录的常规字段。
 
-In order to handle out-of-order events and distinguish between on-time and late events in streaming, Flink needs to extract timestamps from events and make some kind of progress in time (so-called [watermarks]({{ site.baseurl }}/dev/event_time.html)).
+为了处理无序事件，并区分流中的准时和晚到事件，Flink 需要从事件中提取时间戳并及时取得某种进展（即所谓的 [水印]({{ site.baseurl }}/dev/event_time.html)）。
 
-An event time attribute can be defined either during DataStream-to-Table conversion or by using a TableSource. 
+事件时间属性可以在 DataStream 到表的转换期间，或使用 TableSource 时定义。
 
-#### During DataStream-to-Table Conversion
+#### DataStream 到表的转换期间
 
-The event time attribute is defined with the `.rowtime` property during schema definition. [Timestamps and watermarks]({{ site.baseurl }}/dev/event_time.html) must have been assigned in the `DataStream` that is converted.
+在 schema 定义期间，使用 `.rowtime` 属性定义事件时间属性。转换前的数据流必须已经指定好[event time以及相应的watermark产生机制]({{ site.baseurl }}/dev/event_time.html)。
 
-There are two ways of defining the time attribute when converting a `DataStream` into a `Table`. Depending on whether the specified `.rowtime` field name exists in the schema of the `DataStream` or not, the timestamp field is either 
+将 `DataStream` 转换为表时，有两种定义时间属性的方法。根据指定的 `.rowtime` 字段名称是否存在于 `DataStream` 的模式中，时间戳字段要么是
 
-- appended as a new field to the schema or
-- replaces an existing field.
+- 作为新字段追加到 scheme ，或者
+- 替换现有字段。
 
-In either case the event time timestamp field will hold the value of the `DataStream` event time timestamp.
+在任何一种情况下，这个事件时间时间戳字段将保存 `DataStream` 事件时间时间戳的值。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -410,11 +412,11 @@ val windowedTable = table.window(Tumble over 10.minutes on 'UserActionTime as 'u
 </div>
 </div>
 
-#### Using a TableSource
+#### 使用 TableSource
 
-The event time attribute is defined by a `TableSource` that implements the `DefinedRowtimeAttribute` interface. The `getRowtimeAttribute()` method returns the name of an existing field that carries the event time attribute of the table and is of type `LONG` or `TIMESTAMP`.
+事件时间属性由实现 `DefinedRowtimeAttribute` 接口的 `TableSource` 定义。`getRowtimeAttribute()` 方法返回一个现有字段的名称，该字段带有表的事件时间属性，类型为 `LONG` 或 `TIMESTAMP`。
 
-Moreover, the `DataStream` returned by the `getDataStream()` method must have watermarks assigned that are aligned with the defined time attribute. Please note that the timestamps of the `DataStream` (the ones which are assigned by a `TimestampAssigner`) are ignored. Only the values of the `TableSource`'s rowtime attribute are relevant.
+此外，对于`getDataStream()`方法返回的 DataStream ，其watermark必须与定义的时间属性对齐。请注意，DataStream 自带的时间戳（由 TimestampAssigner 分配）会被忽略。只有 `TableSource` 的 rowtime 属性才起作用。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -491,12 +493,12 @@ val windowedTable = tEnv
 
 {% top %}
 
-Query Configuration
+查询配置
 -------------------
 
-Table API and SQL queries have the same semantics regardless whether their input is bounded batch input or unbounded stream input. In many cases, continuous queries on streaming input are capable of computing accurate results that are identical to offline computed results. However, this is not possible in general case because continuous queries have to restrict the size of the state they are maintaining in order to avoid to run out of storage and to be able to process unbounded streaming data over a long period of time. As a result, a continuous query might only be able to provide approximated results depending on the characteristics of the input data and the query itself.
+Table API 和 SQL 查询具有相同的语义，无论它们的输入是有界批量输入还是无界流输入。在许多情况下，对流输入的持续查询能够得到与离线计算相同的准确结果。然而，这在一般情况下是不可能的，因为持续查询必须限制它们维护的状态的大小，以避免耗尽存储并且能够在很长一段时间内处理无界流数据。因此，持续查询可能只能提供近似结果，具体取决于输入数据和查询本身的特征。
 
-Flink's Table API and SQL interface provide parameters to tune the accuracy and resource consumption of continuous queries. The parameters are specified via a `QueryConfig` object. The `QueryConfig` can be obtained from the `TableEnvironment` and is passed back when a `Table` is translated, i.e., when it is [transformed into a DataStream](common.html#convert-a-table-into-a-datastream-or-dataset) or [emitted via a TableSink](common.html#emit-a-table).
+Flink 的 Table API 和 SQL 接口提供参数来调整持续查询的准确性和资源消耗。参数通过 QueryConfig 对象指定。可以通过TableEnvironment 获得QueryConfig 对象，并在转换为 Table 时，例如，当它[转换为DataStream](common.html#convert-a-table-into-a-datastream-or-dataset)）或 [通过TableSink发出](common.html#emit-a-table)时传回。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -549,29 +551,30 @@ val stream: DataStream[Row] = result.toAppendStream[Row](qConfig)
 </div>
 </div>
 
-In the following we describe the parameters of the `QueryConfig` and how they affect the accuracy and resource consumption of a query.
+接下来，我们描述 `QueryConfig` 的参数以及它们如何影响查询的准确性和资源消耗。
 
-### Idle State Retention Time
+### 空闲状态保留时间
 
-Many queries aggregate or join records on one or more key attributes. When such a query is executed on a stream, the continuous query needs to collect records or maintain partial results per key. If the key domain of the input stream is evolving, i.e., the active key values are changing over time, the continuous query accumulates more and more state as more and more distinct keys are observed. However, often keys become inactive after some time and their corresponding state becomes stale and useless.
+许多查询是在一个或多个键属性上进行聚合或连接记录。当在流上执行此类查询时，持续查询需要收集记录或维护每个键的部分结果。如果输入流的键域发生变化，例如，活动键的值随时间变化，则随着观察到越来越多的不同键，持续查询会累积越来越多的状态。但是，经常在一段时间后键会变为非活动状态，并且它们的相应状态变得陈旧且无用。
 
-For example the following query computes the number of clicks per session.
+例如，下面这个查询计算每个会话的点击次数。
 
 {% highlight sql %}
 SELECT sessionId, COUNT(*) FROM clicks GROUP BY sessionId;
 {% endhighlight %}
 
-The `sessionId` attribute is used as a grouping key and the continuous query maintains a count for each `sessionId` it observes. The `sessionId` attribute is evolving over time and `sessionId` values are only active until the session ends, i.e., for a limited period of time. However, the continuous query cannot know about this property of `sessionId` and expects that every `sessionId` value can occur at any point of time. It maintains a count for each observed `sessionId` value. Consequently, the total state size of the query is continuously growing as more and more `sessionId` values are observed. 
+`sessionId` 属性用作分组键，持续查询维护其观察到的每个 `sessionId` 的计数。`sessionId` 属性随着时间的推移而变化，并且 `sessionId` 值仅在在有限的时间段内，即会话结束之前有效。但是，持续查询无法了解 `sessionId` 的这个特性，并期望每个 `sessionId` 值都可以在任何时间点发生。它维护着每个观察到的 `sessionId` 值的计数。因此，随着越来越多的 `sessionId` 值被观察到，查询的总状态大小会不断增长。
 
-The *Idle State Retention Time* parameters define for how long the state of a key is retained without being updated before it is removed. For the previous example query, the count of a `sessionId` would be removed as soon as it has not been updated for the configured period of time.
+*空闲状态保留时间* 参数定义了一个键的状态在被删除前，可以保留多长时间而不被更新。在上述查询例子中，`sessionId` 的计数在配置的时间段内未被更新时将被移除。
 
-By removing the state of a key, the continuous query completely forgets that it has seen this key before. If a record with a key, whose state has been removed before, is processed, the record will be treated as if it was the first record with the respective key. For the example above this means that the count of a `sessionId` would start again at `0`.
+通过删除键的状态，持续查询完全忘记它之前已经处理过这个键。如果处理到具有其状态已被删除的键的记录，则该记录将被视为具有相应键的第一个记录。对于上面的示例，这意味着 `sessionId` 的计数将再次从0开始。
 
-There are two parameters to configure the idle state retention time:
-- The *minimum idle state retention time* defines how long the state of an inactive key is at least kept before it is removed.
-- The *maximum idle state retention time* defines how long the state of an inactive key is at most kept before it is removed.
+配置空闲状态保留时间有两个参数：
 
-The parameters are specified as follows:
+- *最小空闲状态保留时间* 定义非活动键的状态在被删除之前至少保留多长时间。
+- *最大空闲状态保留时间* 定义非活动键的状态在被删除之前最多保留多长时间。
+
+参数的指定方式如下：
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -596,7 +599,7 @@ qConfig.withIdleStateRetentionTime(Time.hours(12), Time.hours(24))
 </div>
 </div>
 
-Cleaning up state requires additional bookkeeping which becomes less expensive for larger differences of `minTime` and `maxTime`. The difference between `minTime` and `maxTime` must be at least 5 minutes.
+清理状态需要额外的标记，这对于 `minTime` 和 `maxTime` 差异较大的情况来说，代价会更低。`minTime` 和 `maxTime` 之间的差异必须至少为5分钟。
 
 {% top %}
 
