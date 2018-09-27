@@ -1,6 +1,6 @@
 ---
 title:  "批处理示例"
-nav-title: Batch Examples
+nav-title: "批处理示例"
 nav-parent_id: examples
 nav-pos: 20
 ---
@@ -23,8 +23,8 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-下面的一些示例程序展示了 Flink 从简单的 WordCount 到图计算的不同应用。代码示例演示了 Flink 的 [DataSet API]({{ site.baseurl }}/dev/batch/index.html)的使用。  
-可以在Flink源码库的 __flink-examples-batch__ 或 __flink-examples-streaming__ 模块中找到以下和更多示例的完整源代码。 
+下面的一些示例程序展示了 Flink 从简单的 WordCount 到图计算的不同应用。代码示例演示了 Flink 的 [DataSet API]({{ site.baseurl }}/dev/batch/index.html) 的使用。  
+可以在 Flink 源码库的 __flink-examples-batch__ 或 __flink-examples-streaming__ 模块中找到以下和更多示例的完整源代码。 
 
 * 目录
 {:toc}
@@ -292,7 +292,7 @@ result.writeAsCsv(outputPath, "\n", " ")
 ## Connected Components（连通分量）
 
 连通分量算法通过为同一连通区块中的所有顶点分配相同的连通分量 ID， 来识别它是否为较大图的一部分。与 PageRank 类似，连通分量算法是一种迭代算法。
-每个顶点会将它当前的连通分量 ID 发送给它的邻结点，当接收到来自邻结点的连通分量 ID 小于自己的 ID时，接受邻结点的连通分量 ID。
+每个顶点会将它当前的连通分量 ID 发送给它的邻结点，当接收到来自邻结点的连通分量 ID 小于自己的 ID 时，接受邻结点的连通分量 ID。
 
 连通分量算法通过使用[增量迭代](iterations.html)来实现，没有修改过连通分量 ID 的顶点将不会参与下一步的迭代计算。
 这使得后面的迭代处理性能大幅提升，因为只有很少一部分顶点的连通分量 ID 会变化。
@@ -438,7 +438,7 @@ The {% gh_link /flink-examples/flink-examples-batch/src/main/scala/org/apache/fl
 关系型查询示例中假设有两张表，一张 `orders` 表和一张 `lineitems` 表，它们是根据 [TPC-H 决策支持基准测试系统](http://www.tpc.org/tpch/)生成的数据。
 TPC-H 是一个数据库领域的基准测试标准。参考下文可了解如何生成输入数据。  
 
-该查询示例要实现的SQL查询如下。
+该查询示例要实现的 SQL 查询如下。
 
 
 {% highlight sql %}
@@ -534,7 +534,7 @@ CC       = gcc
 
 
 1.  使用 *make* 构建DBGEN
-2.  使用 dbgen 生成 lineitem 和 orders 。参数 -s 为1时，生成的数据集大小约为1 GB。
+2.  使用 dbgen 生成 lineitem 和 orders 。参数 -s 为 1 时，生成的数据集大小约为 1 GB。
 
 {% highlight bash %}
 ./dbgen -T o -s 1
