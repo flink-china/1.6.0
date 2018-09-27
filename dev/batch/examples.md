@@ -1,5 +1,5 @@
 ---
-title:  "Batch Examples"
+title:  "批处理示例"
 nav-title: Batch Examples
 nav-parent_id: examples
 nav-pos: 20
@@ -23,44 +23,40 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-The following example programs showcase different applications of Flink
-from simple word counting to graph algorithms. The code samples illustrate the
-use of [Flink's DataSet API]({{ site.baseurl }}/dev/batch/index.html).
+下面的一些示例程序展示了 Flink 从简单的 WordCount 到图计算的不同应用。代码示例演示了 Flink 的 [DataSet API]({{ site.baseurl }}/dev/batch/index.html)的使用。  
+可以在Flink源码库的 __flink-examples-batch__ 或 __flink-examples-streaming__ 模块中找到以下和更多示例的完整源代码。 
 
-The full source code of the following and more examples can be found in the __flink-examples-batch__
-or __flink-examples-streaming__ module of the Flink source repository.
-
-* This will be replaced by the TOC
+* 目录
 {:toc}
 
 
-## Running an example
 
-In order to run a Flink example, we assume you have a running Flink instance available. The "Quickstart" and "Setup" tabs in the navigation describe various ways of starting Flink.
+## 如何运行示例
 
-The easiest way is running the `./bin/start-cluster.sh`, which by default starts a local cluster with one JobManager and one TaskManager.
+为了运行 Flink 示例，假设你有一个正在运行的 Flink 实例。你可以在导航中的“快速起步”和“建立工程”选项卡了解启动 Flink 的各种方法。  
 
-Each binary release of Flink contains an `examples` directory with jar files for each of the examples on this page.
-
-To run the WordCount example, issue the following command:
+最简单的方法是运行 `./bin/start-cluster.sh` 脚本，默认情况下会启动一个带有一个 JobManager 和一个 TaskManager 的本地集群。  
+Flink 的 binary 版本资源包下有一个 `examples` 目录，里面有这个页面上每个示例的 jar 文件。  
+要运行 WordCount 示例，请先执行以下命令：
 
 {% highlight bash %}
 ./bin/flink run ./examples/batch/WordCount.jar
 {% endhighlight %}
 
-The other examples can be started in a similar way.
-
-Note that many examples run without passing any arguments for them, by using build-in data. To run WordCount with real data, you have to pass the path to the data:
+其他示例也可以用类似的方法启动。  
+需要注意，此处的很多例子中由于使用内置数据，不传入任何参数就可以运行。如果你要使用实际数据运行 WordCount，必须指明数据的输入、输出路径：  
 
 {% highlight bash %}
 ./bin/flink run ./examples/batch/WordCount.jar --input /path/to/some/text/data --output /path/to/result
 {% endhighlight %}
 
-Note that non-local file systems require a schema prefix, such as `hdfs://`.
+请注意，如果使用非本地文件系统存储需要指明文件系统，例如：`hdfs://`。
 
 
 ## Word Count
-WordCount is the "Hello World" of Big Data processing systems. It computes the frequency of words in a text collection. The algorithm works in two steps: First, the texts are splits the text to individual words. Second, the words are grouped and counted.
+
+WordCount 是大数据处理系统的“Hello World”。它可以计算文本集合中单词出现的频率。
+该算法分两步完成：首先，将文本分成单词；其次，对单词进行分组和统计。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -97,7 +93,9 @@ public static class Tokenizer implements FlatMapFunction<String, Tuple2<String, 
 }
 {% endhighlight %}
 
-The {% gh_link /flink-examples/flink-examples-batch/src/main/java/org/apache/flink/examples/java/wordcount/WordCount.java  "WordCount example" %} implements the above described algorithm with input parameters: `--input <path> --output <path>`. As test data, any text file will do.
+
+{% gh_link /flink-examples/flink-examples-batch/src/main/java/org/apache/flink/examples/java/wordcount/WordCount.java  "WordCount 示例" %}实现了上述算法，
+它需要以下参数来运行: `--input <path> --output <path>`。可以统计任何文本文件。
 
 </div>
 <div data-lang="scala" markdown="1">
@@ -116,17 +114,21 @@ val counts = text.flatMap { _.toLowerCase.split("\\W+") filter { _.nonEmpty } }
 counts.writeAsCsv(outputPath, "\n", " ")
 {% endhighlight %}
 
-The {% gh_link /flink-examples/flink-examples-batch/src/main/scala/org/apache/flink/examples/scala/wordcount/WordCount.scala  "WordCount example" %} implements the above described algorithm with input parameters: `--input <path> --output <path>`. As test data, any text file will do.
-
+{% gh_link /flink-examples/flink-examples-batch/src/main/scala/org/apache/flink/examples/scala/wordcount/WordCount.scala  "WordCount 示例" %}实现了上述算法，
+它需要以下参数来运行: `--input <path> --output <path>`。可以统计任何文本文件。
 
 </div>
 </div>
 
 ## Page Rank
 
-The PageRank algorithm computes the "importance" of pages in a graph defined by links, which point from one pages to another page. It is an iterative graph algorithm, which means that it repeatedly applies the same computation. In each iteration, each page distributes its current rank over all its neighbors, and compute its new rank as a taxed sum of the ranks it received from its neighbors. The PageRank algorithm was popularized by the Google search engine which uses the importance of webpages to rank the results of search queries.
+PageRank 算法计算由页面“链接”组成的图中每个页面的“重要程度”，“链接”指从一个页面转到另一个页面。
+它是一种重复进行相同计算的迭代图计算。
+在每次迭代中，每个页面在其所有相邻页面上记录自己的当前等级，然后求出所有从相邻页面返回的等级的加权之和作为新的等级。
+PageRank 算法来自于 Google 搜索引擎，该搜索引擎会根据网页的重要程度对搜索结果进行排名。
 
-In this simple example, PageRank is implemented with a [bulk iteration](iterations.html) and a fixed number of iterations.
+在这个简单的例子中，通过一个[全量迭代](iterations.html)和固定数量的增量迭代来计算 PageRank。
+
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -204,8 +206,9 @@ public static final class EpsilonFilter
 }
 {% endhighlight %}
 
-The {% gh_link /flink-examples/flink-examples-batch/src/main/java/org/apache/flink/examples/java/graph/PageRank.java "PageRank program" %} implements the above example.
-It requires the following parameters to run: `--pages <path> --links <path> --output <path> --numPages <n> --iterations <n>`.
+
+{% gh_link /flink-examples/flink-examples-batch/src/main/java/org/apache/flink/examples/java/graph/PageRank.java "PageRank 程序" %} 实现了上述例子。
+它需要以下参数来运行:  `--pages <path> --links <path> --output <path> --numPages <n> --iterations <n>`。
 
 </div>
 <div data-lang="scala" markdown="1">
@@ -271,24 +274,28 @@ val result = finalRanks
 result.writeAsCsv(outputPath, "\n", " ")
 {% endhighlight %}
 
-he {% gh_link /flink-examples/flink-examples-batch/src/main/scala/org/apache/flink/examples/scala/graph/PageRankBasic.scala "PageRank program" %} implements the above example.
-It requires the following parameters to run: `--pages <path> --links <path> --output <path> --numPages <n> --iterations <n>`.
+{% gh_link /flink-examples/flink-examples-batch/src/main/scala/org/apache/flink/examples/scala/graph/PageRankBasic.scala "PageRank 程序" %} 实现了上述例子。
+它需要以下参数来运行: `--pages <path> --links <path> --output <path> --numPages <n> --iterations <n>`。
+
 </div>
 </div>
 
-Input files are plain text files and must be formatted as follows:
-- Pages represented as an (long) ID separated by new-line characters.
-    * For example `"1\n2\n12\n42\n63\n"` gives five pages with IDs 1, 2, 12, 42, and 63.
-- Links are represented as pairs of page IDs which are separated by space characters. Links are separated by new-line characters:
-    * For example `"1 2\n2 12\n1 12\n42 63\n"` gives four (directed) links (1)->(2), (2)->(12), (1)->(12), and (42)->(63).
+输入文件是纯文本文件，格式必须满足下列条件：
 
-For this simple implementation it is required that each page has at least one incoming and one outgoing link (a page can point to itself).
+- 页面用页面 ID（long 类型）来表示。多个页面之间用换行符分割：
+    * 例如，`"1\n2\n12\n42\n63\n"` 表示 5 个页面ID：1，2，12，42 和 63。
+- 链接由用空格隔开的一对页面 ID 来表示。多个链接之间用换行符分割：
+    * 例如，`"1 2\n2 12\n1 12\n42 63\n"` 表示 4 个（有向）链接：(1)->(2)，(2)->(12)，(1)->(12) 和 (42)->(63)。
 
-## Connected Components
+这个简单实现要求每个页面至少有一个传入链接和一个传出链接（页面可以指向自身）。
 
-The Connected Components algorithm identifies parts of a larger graph which are connected by assigning all vertices in the same connected part the same component ID. Similar to PageRank, Connected Components is an iterative algorithm. In each step, each vertex propagates its current component ID to all its neighbors. A vertex accepts the component ID from a neighbor, if it is smaller than its own component ID.
+## Connected Components（连通分量）
 
-This implementation uses a [delta iteration](iterations.html): Vertices that have not changed their component ID do not participate in the next step. This yields much better performance, because the later iterations typically deal only with a few outlier vertices.
+连通分量算法通过为同一连通区块中的所有顶点分配相同的连通分量 ID， 来识别它是否为较大图的一部分。与 PageRank 类似，连通分量算法是一种迭代算法。
+每个顶点会将它当前的连通分量 ID 发送给它的邻结点，当接收到来自邻结点的连通分量 ID 小于自己的 ID时，接受邻结点的连通分量 ID。
+
+连通分量算法通过使用[增量迭代](iterations.html)来实现，没有修改过连通分量 ID 的顶点将不会参与下一步的迭代计算。
+这使得后面的迭代处理性能大幅提升，因为只有很少一部分顶点的连通分量 ID 会变化。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -367,7 +374,8 @@ public static final class ComponentIdFilter
 }
 {% endhighlight %}
 
-The {% gh_link /flink-examples/flink-examples-batch/src/main/java/org/apache/flink/examples/java/graph/ConnectedComponents.java "ConnectedComponents program" %} implements the above example. It requires the following parameters to run: `--vertices <path> --edges <path> --output <path> --iterations <n>`.
+{% gh_link /flink-examples/flink-examples-batch/src/main/java/org/apache/flink/examples/java/graph/ConnectedComponents.java "ConnectedComponents 程序" %} 实现了上述例子。
+它需要以下参数来运行： `--vertices <path> --edges <path> --output <path> --iterations <n>`。
 
 </div>
 <div data-lang="scala" markdown="1">
@@ -410,21 +418,28 @@ verticesWithComponents.writeAsCsv(outputPath, "\n", " ")
 
 {% endhighlight %}
 
-The {% gh_link /flink-examples/flink-examples-batch/src/main/scala/org/apache/flink/examples/scala/graph/ConnectedComponents.scala "ConnectedComponents program" %} implements the above example. It requires the following parameters to run: `--vertices <path> --edges <path> --output <path> --iterations <n>`.
+
+The {% gh_link /flink-examples/flink-examples-batch/src/main/scala/org/apache/flink/examples/scala/graph/ConnectedComponents.scala "ConnectedComponents 程序" %}实现了上述例子。
+它需要以下参数来运行：`--vertices <path> --edges <path> --output <path> --iterations <n>`。
+
 </div>
 </div>
 
-Input files are plain text files and must be formatted as follows:
-- Vertices represented as IDs and separated by new-line characters.
-    * For example `"1\n2\n12\n42\n63\n"` gives five vertices with (1), (2), (12), (42), and (63).
-- Edges are represented as pairs for vertex IDs which are separated by space characters. Edges are separated by new-line characters:
-    * For example `"1 2\n2 12\n1 12\n42 63\n"` gives four (undirected) links (1)-(2), (2)-(12), (1)-(12), and (42)-(63).
+输入文件是纯文本文件，格式必须满足下列条件：
 
-## Relational Query
+- 顶点用顶点 ID 来表示。多个顶点之间用换行符分割：
+    * 例如，`"1\n2\n12\n42\n63\n"` 表示 5 个顶点 ID ：(1)，(2)，(12)，(42) 和 (63)。
+- 边由用空格隔开的一对顶点 ID 来表示。多条边之间用换行符分割：
+    * 例如，`"1 2\n2 12\n1 12\n42 63\n"` 表示 4 个（无向）连接： (1)->(2)，(2)->(12)，(1)->(12) 和 (42)->(63)。
 
-The Relational Query example assumes two tables, one with `orders` and the other with `lineitems` as specified by the [TPC-H decision support benchmark](http://www.tpc.org/tpch/). TPC-H is a standard benchmark in the database industry. See below for instructions how to generate the input data.
+## 关系型查询
 
-The example implements the following SQL query.
+
+关系型查询示例中假设有两张表，一张 `orders` 表和一张 `lineitems` 表，它们是根据 [TPC-H 决策支持基准测试系统](http://www.tpc.org/tpch/)生成的数据。
+TPC-H 是一个数据库领域的基准测试标准。参考下文可了解如何生成输入数据。  
+
+该查询示例要实现的SQL查询如下。
+
 
 {% highlight sql %}
 SELECT l_orderkey, o_shippriority, sum(l_extendedprice) as revenue
@@ -436,7 +451,7 @@ WHERE l_orderkey = o_orderkey
 GROUP BY l_orderkey, o_shippriority;
 {% endhighlight %}
 
-The Flink program, which implements the above query looks as follows.
+相应的 Flink 代码如下。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -486,22 +501,29 @@ DataSet<Tuple3<Integer, Integer, Double>> priceSums =
 priceSums.writeAsCsv(outputPath);
 {% endhighlight %}
 
-The {% gh_link /flink-examples/flink-examples-batch/src/main/java/org/apache/flink/examples/java/relational/TPCHQuery10.java "Relational Query program" %} implements the above query. It requires the following parameters to run: `--orders <path> --lineitem <path> --output <path>`.
+
+{% gh_link /flink-examples/flink-examples-batch/src/main/java/org/apache/flink/examples/java/relational/TPCHQuery10.java "关系型查询程序" %}实现了上述例子。
+它需要以下参数来运行：`--orders <path> --lineitem <path> --output <path>`。
+
 
 </div>
 <div data-lang="scala" markdown="1">
 Coming soon...
 
-The {% gh_link /flink-examples/flink-examples-batch/src/main/scala/org/apache/flink/examples/scala/relational/TPCHQuery3.scala "Relational Query program" %} implements the above query. It requires the following parameters to run: `--orders <path> --lineitem <path> --output <path>`.
+
+{% gh_link /flink-examples/flink-examples-batch/src/main/scala/org/apache/flink/examples/scala/relational/TPCHQuery3.scala"关系型查询程序" %}实现了上述例子。
+它需要以下参数来运行：`--orders <path> --lineitem <path> --output <path>`。
+
 
 </div>
 </div>
 
-The orders and lineitem files can be generated using the [TPC-H benchmark](http://www.tpc.org/tpch/) suite's data generator tool (DBGEN).
-Take the following steps to generate arbitrary large input files for the provided Flink programs:
 
-1.  Download and unpack DBGEN
-2.  Make a copy of *makefile.suite* called *Makefile* and perform the following changes:
+orders 和 lineitem 表文件可以使用 [TPC-H 基准测试](http://www.tpc.org/tpch/) 套件的数据生成器工具（DBGEN）生成。
+按照以下步骤可按需生成上述的两个表文件：
+
+1.  下载并解压 DBGEN
+2.  创建 *makefile.suite* 的副本文件：*Makefile* 。并执行以下修改：
 
 {% highlight bash %}
 DATABASE = DB2
@@ -510,9 +532,9 @@ WORKLOAD = TPCH
 CC       = gcc
 {% endhighlight %}
 
-1.  Build DBGEN using *make*
-2.  Generate lineitem and orders relations using dbgen. A scale factor
-    (-s) of 1 results in a generated data set with about 1 GB size.
+
+1.  使用 *make* 构建DBGEN
+2.  使用 dbgen 生成 lineitem 和 orders 。参数 -s 为1时，生成的数据集大小约为1 GB。
 
 {% highlight bash %}
 ./dbgen -T o -s 1

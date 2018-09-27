@@ -58,6 +58,7 @@
 |https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/sos.html	|		|		|
 |https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/standard_scaler.html	|		|		|
 |https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/libs/ml/svm.html	|	已认领	|	8月29日	||
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/dev/batch/examples.md	|	已认领	|	9月25日	||
 
 ## 翻译规范
 我们建议你先在本地将英文文档按照原格式翻译成中文，直接在原英文文档基础上编辑翻译，注意保留文档原有的 TOC 、{% top %}等内容。并在本地测试验证后，提交你的翻译成果。
