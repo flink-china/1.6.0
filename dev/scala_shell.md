@@ -22,26 +22,24 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-Flink附带了一个集成的交互式Scala-shell。
-在本地设置或者集群设置里都可以用到Scala shell。
+Flink集成了一个的交互式Scala脚本客户端。
+在本地模式或者模式中，都可以使用Scala shell。
 
-您只需要在您的二进制Flink路径的根目录下，执行以下的命令，就可以在集成的Flink集群里使用shell。
+您只需要在您的二进制Flink路径的根目录下，执行以下的命令，就可以在Flink集成环境中使用scala shell。
 
 {% highlight bash %}
 bin/start-scala-shell.sh local
 {% endhighlight %}
 
-如果需要在集群里运行Shell，请您参照以下有关设置的章节。
+如果需要在集群里运行Shell，请您参照以下设置环境章节。
 
 ## 使用方法
 
-Shell支持批处理和流式处理。
-这两种不同的执行环境（ExecutionEnvironment）在启动后会自动的进行预先绑定。
-使用参数"benv"和"senv"来分别连接批量处理环境和流式处理环境。
+Scala Shell支持批处理和流式处理。这两种不同的执行环境（ExecutionEnvironment）在启动后会自动的进行预先绑定。使用参数"benv"和"senv"来分别连接批量处理环境和流式处理环境。
 
-### 数据集的应用程序界面
+### DataSet API
 
-以下是在Scala shell里执行数字统计程序的示例。
+以下是在Scala shell里执行wordcount程序的示例。
 
 {% highlight scala %}
 Scala-Flink> val text = benv.fromElements(
@@ -63,9 +61,9 @@ print() 命令能够自动发送需要处理的具体任务到作业管理器（
 Scala-Flink> benv.execute("MyProgram")
 {% endhighlight %}
 
-### 数据流的应用程序界面
+### DataStream API
 
-类似于上面提到的批量处理程序，您也可以通过数据流应用程序界面执行流式处理程序。
+类似于上面提到的批量处理程序，您也可以通过DataSet API执行流处理程序。
 
 {% highlight scala %}
 Scala-Flink> val textStreaming = senv.fromElements(
@@ -82,10 +80,10 @@ Scala-Flink> senv.execute("Streaming Wordcount")
 
 > **注意**:在流式处理环境中，print操作不能直接触发程序的执行。
 
-Flink Shell附带历史命令记忆功能和命令自动完成功能。
+Flink Shell附带历史命令记忆功能和命令自动补全功能。
 
 
-## 添加外部依赖条件
+## 添加外部依赖
 
 您可以为 Scala-shell添加外部类路径。当程序执行时，添加的外部类路径将会和您的Shell程序一起，自动发送到任务管理器（Jobmanager）。
 
@@ -123,12 +121,9 @@ bin/start-scala-shell.sh remote <hostname> <portnumber>
 
 ### Yarn集群设置
 
-Scala Shell能够部署Flink集群到YARN程序。YARN是专门服务于shell的包管理器。
-YARN容器的数量能够用参数`-n <arg>`来控制。
-Scala Shell在YARN里部署新的Flink集群，用于连接这些集群。
-您也能够为YARN集群做更加具体的设置。例如，为JobManager设置Memory值，为YARM应用程序设置名称。
+Scala Shell能够部署Flink集群到YARN程序。Scala Shell中有专门的命令。可使用`-n <arg>`参数来控制Yarn container个数。Scala Shell在YARN里部署新的Flink集群，并连接这些集群。您也能够为YARN集群做更加具体的设置。例如，为JobManager设置Memory值，为YARM应用程序设置名称。
 
-使用两个任务管理器（TaskManagers）为Scala Shell启动YARN集群。示例如下。
+例如，使用Scala Shell，在Yar上启动一个有两个TaskManagers的集群。示例如下：
 
 {% highlight bash %}
  bin/start-scala-shell.sh yarn -n 2
@@ -137,9 +132,9 @@ Scala Shell在YARN里部署新的Flink集群，用于连接这些集群。
 请参考本章节的最后的附录，了解其他的设置选项。
 
 
-### Yarn会话
+### Yarn Session
 
-如果您之前已经使用Flink Yarn会话部署了Flink集群。Scala shell能够使用下面的命令连接到之前的Yarn会话。
+如果您之前已经使用Flink Yarn Session部署了Flink集群。可以使用Scala shell通过以下命令连接到这个session上的flink集群。
 
 {% highlight bash %}
  bin/start-scala-shell.sh yarn
@@ -187,4 +182,3 @@ Starts Flink scala shell connecting to a yarn cluster
         Prints this usage text
 {% endhighlight %}
 
-{% top %}
