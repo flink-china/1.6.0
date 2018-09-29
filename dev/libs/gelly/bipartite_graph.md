@@ -27,30 +27,30 @@ under the License.
 * This will be replaced by the TOC
 {:toc}
 
-Bipartite Graph
+二分图
 ---------------
 
-A bipartite graph (also called a two-mode graph) is a type of graph where vertices are separated into two disjoint sets. These sets are usually called top and bottom vertices. An edge in this graph can only connect vertices from opposite sets (i.e. bottom vertex to top vertex) and cannot connect two vertices in the same set.
+二分图(也称为双模图)是一种图形,其中顶点被分成两个不相交的集合。这些集合通常称为顶部和底部顶点。此图中的边可以仅连接来自相对集的顶点（即底部顶点到顶部顶点）,但是不能连接同一集中的两个顶点。
 
-These graphs have wide application in practice and can be a more natural choice for particular domains. For example to represent authorship of scientific papers top vertices can represent scientific papers while bottom nodes will represent authors. Naturally an edge between a top and a bottom nodes would represent an authorship of a particular scientific paper. Another common example for applications of bipartite graphs is relationships between actors and movies. In this case an edge represents that a particular actor played in a movie.
-
-Bipartite graphs are used instead of regular graphs (one-mode) for the following practical [reasons](http://www.complexnetworks.fr/wp-content/uploads/2011/01/socnet07.pdf):
- * They preserve more information about a connection between vertices. For example instead of a single link between two researchers in a graph that represents that they authored a paper together a bipartite graph preserves the information about what papers they authored
- * Bipartite graphs can encode the same information more compactly than one-mode graphs
+这些图广泛的应用于日常实践中,在特定域更是上上之选。例如,在表示科学论文作者方面,可以使用顶部顶点表示科学论文,使用底部节点表示作者。当然,连接顶部和底部节点之间的边线可以表示特定科学论文的作者。另一个常见例子是演员和电影之间的关系。在这种情况下,边线表示在电影中的特定演员。
+出于以下[实际原因](http://www.complexnetworks.fr/wp-content/uploads/2011/01/socnet07.pdf),使用二分图代替常规图(单模):
+ * 它们保留了有关顶点之间连接的更多信息。例如,代表两位研究人员之间的单一链接,代表他们一起撰写了一篇论文,二分图保留了他们撰写的论文信息。
+ * 二分图可以比单模图更紧凑地编码相同信息。
  
 
 
-Graph Representation
+图示
 --------------------
 
-A `BipartiteGraph` is represented by:
- * A `DataSet` of top nodes
- * A `DataSet` of bottom nodes
- * A `DataSet` of edges between top and bottom nodes
+二分图(`BipartiteGraph`) 由以下组成:
+ * `DataSet` 顶级节点
+ * `DataSet` 底部节点
+ * `DataSet` 连接顶部和底部节点边线
 
-As in the `Graph` class nodes are represented by the `Vertex` type and the same rules apply to its types and values.
+在 `Graph` 类节点,节点由 `Vertex` 类型表示, 并且相同的规则适用于其类型和值。
 
-The graph edges are represented by the `BipartiteEdge` type. A `BipartiteEdge` is defined by a top ID (the ID of the top `Vertex`), a bottom ID (the ID of the bottom `Vertex`) and an optional value. The main difference between the `Edge` and `BipartiteEdge` is that IDs of nodes it links can be of different types. Edges with no value have a `NullValue` value type.
+图形边线由 (`BipartiteEdge`) 类型表示, 一条图边(`BipartiteEdge`) 由顶部ID (`Vertex`), 底部ID(`Vertex`)和可定义选值。 
+边(`Edge`)和 图形边线(`BipartiteEdge`)的主要区别在于后者链接的节点可以是不同类型。无值边具有空值类型(`NullValue`)。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -70,12 +70,12 @@ Double weight = e.getValue(); // weight = 0.5
 {% top %}
 
 
-Graph Creation
+图创建
 --------------
 
-You can create a `BipartiteGraph` in the following ways:
+您可以通过以下方式创建图(`BipartiteGraph`):
 
-* from a `DataSet` of top vertices, a `DataSet` of bottom vertices and a `DataSet` of edges:
+* 从一个 `DataSet` 顶部顶点,一个 `DataSet` 底部顶点和一个 `DataSet` 边缘:
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -100,19 +100,19 @@ Graph<String, String, Long, Long, Double> graph = BipartiteGraph.fromDataSet(top
 </div>
 
 
-Graph Transformations
+图转换
 ---------------------
 
 
-* <strong>Projection</strong>: Projection is a common operation for bipartite graphs that converts a bipartite graph into a regular graph. There are two types of projections: top and bottom projections. Top projection preserves only top nodes in the result graph and creates a link between them in a new graph only if there is an intermediate bottom node both top nodes connect to in the original graph. Bottom projection is the opposite to top projection, i.e. only preserves bottom nodes and connects a pair of nodes if they are connected in the original graph.
+* <strong>投影</strong>: 投影是二分图的常见操作,可将二分图转换为常规图。有两种类型的投影：顶部和底部投影。顶部投影仅保留结果图中的顶部节点,并且仅当顶部节点在原始图中连接到中间底部节点时才在新图中创建它们之间的链接。底部投影与顶部投影相反,即仅保留底部节点并连接一对节点（如果它们在原始图形中连接）
 
 <p class="text-center">
     <img alt="Bipartite Graph Projections" width="80%" src="{{ site.baseurl }}/fig/bipartite_graph_projections.png"/>
 </p>
 
-Gelly supports two sub-types of projections: simple projections and full projections. The only difference between them is what data is associated with edges in the result graph.
+Gelly支持两种子类型的投影：简单投影和完整投影。它们之间的唯一区别是数据与结果图中的边相关联。
 
-In the case of a simple projection each node in the result graph contains a pair of values of bipartite edges that connect nodes in the original graph:
+在简单投影的情况下,结果图中的每个节点都包含一对连接原始图中节点的二分边值:
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -148,7 +148,7 @@ Graph<Long, String, Tuple2<String, String>> graph bipartiteGraph.projectionBotto
 </div>
 </div>
 
-Full projection preserves all the information about the connection between two vertices and stores it in `Projection` instances. This includes value and id of an intermediate vertex, source and target vertex values and source and target edge values:
+完整投影保留有关两个顶点之间连接的所有信息,并将其存储在Projection实例中。这包括中间顶点的键值,源和目标顶点值以及源和目标边缘值:
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
