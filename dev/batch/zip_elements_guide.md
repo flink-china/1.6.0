@@ -1,6 +1,6 @@
 ---
-title: "Zipping Elements in a DataSet"
-nav-title: Zipping Elements
+title: "排列数据集中的数据"
+nav-title: 排列数据
 nav-parent_id: batch
 nav-pos: 2
 ---
@@ -23,17 +23,21 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-In certain algorithms, one may need to assign unique identifiers to data set elements.
-This document shows how {% gh_link /flink-java/src/main/java/org/apache/flink/api/java/utils/DataSetUtils.java "DataSetUtils" %} can be used for that purpose.
 
-* This will be replaced by the TOC
+在一些算法中，可能需要为数据集元素分配唯一标识符。
+本文档演示了如何使用 {% gh_link /flink-java/src/main/java/org/apache/flink/api/java/utils/DataSetUtils.java "DataSetUtils" %} 来解决这个问题。
+
+* 目录
 {:toc}
 
-### Zip with a Dense Index
-`zipWithIndex` assigns consecutive labels to the elements, receiving a data set as input and returning a new data set of `(unique id, initial value)` 2-tuples.
-This process requires two passes, first counting then labeling elements, and cannot be pipelined due to the synchronization of counts.
-The alternative `zipWithUniqueId` works in a pipelined fashion and is preferred when a unique labeling is sufficient.
-For example, the following code:
+### 用连续的标识符排列数据
+
+`zipWithIndex` 方法可以为数据集元素分配连续标签（标识符），输入一个数据集然后返回一个 2 元组 `(unique id, initial value)` 格式的新数据集。
+这个过程分两个步骤，首先计算当前标签值，然后标记到元素上。
+由于计算有序的标签值是同步进行的，所以多个操作不能并行执行。
+而 `zipWithUniqueId` 方法则可以以并行的方式执行，所以当唯一标识符数量没有限制时，优先推荐使用这个方法。
+
+例如，以下代码：
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -81,14 +85,16 @@ env.execute()
 
 </div>
 
-may yield the tuples: (0,G), (1,H), (2,A), (3,B), (4,C), (5,D), (6,E), (7,F)
+产生结果的可能是：（0，G），（1，H），（2，A），（3，B），（4，C），（5，D），（6，E），（7， F）
 
-[Back to top](#top)
+[返回顶部](#top)
 
-### Zip with a Unique Identifier
-In many cases one may not need to assign consecutive labels.
-`zipWithUniqueId` works in a pipelined fashion, speeding up the label assignment process. This method receives a data set as input and returns a new data set of `(unique id, initial value)` 2-tuples.
-For example, the following code:
+### 用唯一标识符排列数据
+
+在许多情况下，可能并不需要使分配的标签值保持连续。`zipWithUniqueId` 方法可以以并行的方式执行排序操作，加快了数据排序的速度。
+此方法接收一个数据集作为入参，然后返回一个 2 元组 `(unique id, initial value)` 格式的新数据集。
+
+例如，以下代码：
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -121,8 +127,8 @@ env.execute()
 
 </div>
 
-may yield the tuples: (0,G), (1,A), (2,H), (3,B), (5,C), (7,D), (9,E), (11,F)
+产生结果的可能是：（0，G），（1，A），（2，H），（3，B），（5，C），（7，D），（9，E），（11， F）
 
-[Back to top](#top)
+[返回顶部](#top)
 
 {% top %}
