@@ -103,7 +103,7 @@ Flink 程序通过定义一个 **step function** 并将它内嵌于一个 迭代
 您可以通过一段伪代码来认识 iterate operator：
 
 {% highlight java %}
-迭代tate state = getInitialState();
+IterationState state = getInitialState();
 
 while (!terminationCriterion()) {
 	state = step(state);
@@ -162,8 +162,8 @@ Delta Iterate Operator
 您也可以通过下面的伪代码来认识迭代算子：
 
 {% highlight java %}
-迭代tate workset = getInitialState();
-迭代tate solution = getInitialSolution();
+IterationState workset = getInitialState();
+IterationState solution = getInitialSolution();
 
 while (!terminationCriterion()) {
 	(delta, workset) = step(workset, solution);
