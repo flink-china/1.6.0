@@ -22,7 +22,7 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-为了在 Scala 和 Java API 之间保持一定的一致性，批处理和流处理的标准 API 中保留了一些在Scala中用于高级表达的特性。
+为了在 Scala 和 Java API 之间保持一定的一致性，批处理和流处理的标准 API 中保留了一些Scala的高级表达的特性。
 
 如果想享受完整的Scala体验，您可以选择通过隐式转换增强 Scala API 的功能。
 
@@ -38,7 +38,7 @@ import org.apache.flink.api.scala.extensions._
 import org.apache.flink.streaming.api.scala.extensions._
 {% endhighlight %}
 
-或者，您也可以导入单个的扩展 a-là-carte 以仅使用您喜欢的扩展名。
+或者，您也可以导入扩展 a-là-carte，以便只使用您喜欢的extensions。
 
 ## Accept partial functions
 
