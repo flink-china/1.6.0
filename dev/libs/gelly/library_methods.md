@@ -90,30 +90,28 @@ verticesWithCommunity.print()
 
 * `maxIterations`：算法运行是能进行的最大迭代次数。
 
-## Single Source Shortest Paths
+## 单源最短路径（Single Source Shortest Paths）
 
 #### 概述
-An implementation of the Single-Source-Shortest-Paths algorithm for weighted graphs. Given a source vertex, the algorithm computes the shortest paths from this source to all other nodes in the graph.
+此方法实现了一个单源最短路径算法，可以用于计算加权图。给定一个源点，此算法会计算图中从源点到所有其它点的最短路径。
 
 #### 详情
 此算法通过 [scatter-gather iterations](#scatter-gather-iterations) 实现。
-In each iteration, a vertex sends to its neighbors a message containing the sum its current distance and the edge weight connecting this vertex with the neighbor. Upon receiving candidate distance messages, a vertex calculates the minimum distance and, if a shorter path has been discovered, it updates its value. If a vertex does not change its value during a superstep, then it does not produce messages for its neighbors for the next superstep. The computation terminates after the specified maximum number of supersteps or when there are no value updates.
+在每次迭代中，各个顶点会向邻居发送信息，信息中包含到此顶点的当前距离和连接此顶点与邻居的边的权重。顶点一旦接收到信息，会计算到目标顶点的最小距离，如果发现存在更短的路径，则算法会更新此顶点的值。如果一个顶点在一个超步（superstep）间没有改变自身的值，则不会在下一个超步给邻居发送信息。当顶点没有值可以更新，或到达最大超步数时停止。
 
 #### 用法
-The algorithm takes as input a `Graph` with any vertex type and `Double` edge values. The vertex values can be any type and are not used by this algorithm. The vertex type must implement `equals()`.
-The output is a `DataSet` of vertices where the vertex values correspond to the minimum distances from the given source vertex.
+此算法接受一个任何顶点类型、`Double` 类型边值的 `Graph` 作为输入。由于顶点的 value 不会在此算法中使用，因此可以是任何类型。顶点类型必须实现 `equals()`。此算法会输出一个由顶点组成的 `DataSet`，其中顶点的 value 为此顶点到给定源点的最小距离。
 构造函数接受以下 2 个参数：
 
 * `srcVertexId`：起始顶点的 ID。
 * `maxIterations`：算法运行是能进行的最大迭代次数。
 
-## GSA Single Source Shortest Paths
+## GSA 单源最短路径
 
 此算法通过 [gather-sum-apply iterations](#gather-sum-apply-iterations) 实现。
+参阅[单源最短路径](#single-source-shortest-paths)库方法获取实现细节和使用信息。
 
-See the [Single Source Shortest Paths](#single-source-shortest-paths) library method for implementation details and usage information.
-
-## Triangle Enumerator
+## 三角枚举器（Triangle Enumerator）
 
 #### 概述
 This library method enumerates unique triangles present in the input graph. A triangle consists of three edges that connect three vertices with each other.
@@ -157,63 +155,48 @@ vertex and edge in the output graph stores the common group value and the number
 ### 平均聚类系数（Average Clustering Coefficient）
 
 #### 概述
-The average clustering coefficient measures the mean connectedness of a graph. Scores range from 0.0 (no edges between
-neighbors) to 1.0 (complete graph).
+平均聚类系数衡量了一个图的平均连通程度。得分从 0.0（邻居之间没有边）到 1.0（完全连通图）。
 
 #### 详情
-See the [Local Clustering Coefficient](#local-clustering-coefficient) library method for a detailed explanation of
-clustering coefficient. The Average Clustering Coefficient is the average of the Local Clustering Coefficient scores
-over all vertices with at least two neighbors. Each vertex, independent of degree, has equal weight for this score.
+请参阅[局部集聚系数](#local-clustering-coefficient) 库方法以了解更多聚类系数的定义。平均聚类系数是所有拥有至少两个邻居的顶点上的局部集聚系数得分的平均值。每一个顶点，无论度数如何，对于该得分都有相等的权重。
 
 #### 用法
-Directed and undirected variants are provided. The analytics take a simple graph as input and output an `AnalyticResult`
-containing the total number of vertices and average clustering coefficient of the graph. The graph ID type must be
-`Comparable` and `Copyable`.
+有向或无向均可使用。该分析方法接收一个简单图作为输入，并为计算出的统计输出一个包含图的平均聚类系数的 `AnalyticResult`。图的 ID 类型必须满足 `Comparable` 与 `Copyable`。
 
 * `setParallelism`：覆写算子的并行度设定，用于处理小数据
 
 ### 全局聚类系数（Global Clustering Coefficient）
 
 #### 概述
-The global clustering coefficient measures the connectedness of a graph. Scores range from 0.0 (no edges between
-neighbors) to 1.0 (complete graph).
+全局聚类系数衡量了一个图的整体连通程度。得分从 0.0（邻居之间没有边）到 1.0（完全连通图）。
 
 #### 详情
-See the [Local Clustering Coefficient](#local-clustering-coefficient) library method for a detailed explanation of
-clustering coefficient. The Global Clustering Coefficient is the ratio of connected neighbors over the entire graph.
-Vertices with higher degrees have greater weight for this score because the count of neighbor pairs is quadratic in
-degree.
+请参阅[局部集聚系数](#local-clustering-coefficient) 库方法以了解更多聚类系数的定义。全局聚类系数是整个图上的连通邻居的占比。拥有较多度数的顶点会对于该得分有较大的权重，因为邻居对（neighbor pairs）数是度数的二次方。
 
 #### 用法
-Directed and undirected variants are provided. The analytics take a simple graph as input and output an `AnalyticResult`
-containing the total number of triplets and triangles in the graph. The result class provides a method to compute the
-global clustering coefficient score. The graph ID type must be `Comparable` and `Copyable`.
+有向或无向均可使用。该分析方法接收一个简单图作为输入，并为计算出的统计输出一个包含图的三点组数与三角数的 `AnalyticResult`。输出结果的类提供了一个方法来计算全局聚类系数。图的 ID 类型必须满足 `Comparable` 与 `Copyable`。
 
 * `setParallelism`：覆写算子的并行度设定，用于处理小数据
 
 ### 局部聚类系数（Local Clustering Coefficient）
 
 #### 概述
-The local clustering coefficient measures the connectedness of each vertex's neighborhood. Scores range from 0.0 (no
-edges between neighbors) to 1.0 (neighborhood is a clique).
+局部聚类系数衡量了一个节点与邻居的连接程度。得分从 0.0（邻居之间没有边）到 1.0（与邻居紧密成团）。
 
 #### 详情
-An edge between neighbors of a vertex is a triangle. Counting edges between neighbors is equivalent to counting the
-number of triangles which include the vertex. The clustering coefficient score is the number of edges between neighbors
-divided by the number of potential edges between neighbors.
+一个顶点的邻居之间的边是一个三角。对邻居间的边计数相当于计算包含了顶点的三角形的数量。聚类系数是邻居间的边的数目与邻居间可能存在的边的数目的商。
 
-See the [Triangle Listing](#triangle-listing) library method for a detailed explanation of triangle enumeration.
+请参阅[三角罗列](#triangle-listing) 库方法了解更多关于三角枚举的详细解释。
 
 #### 用法
-Directed and undirected variants are provided. The algorithms take a simple graph as input and output a `DataSet` of
+有向或无向均可使用。 The algorithms take a simple graph as input and output a `DataSet` of
 `UnaryResult` containing the vertex ID, vertex degree, and number of triangles containing the vertex. The result class
-provides a method to compute the local clustering coefficient score. The graph ID type must be `Comparable` and
-`Copyable`.
+provides a method to compute the local clustering coefficient score. 图的 ID 类型必须满足 `Comparable` 与 `Copyable`。
 
-* `setIncludeZeroDegreeVertices`: include results for vertices with a degree of zero
+* `setIncludeZeroDegreeVertices`：包含度为 0 的顶点
 * `setParallelism`：覆写算子的并行度设定，用于处理小数据
 
-### Triadic Census
+### 三点组统计（Triadic Census）
 
 #### 概述
 A triad is formed by any three vertices in a graph. Each triad contains three pairs of vertices which may be connected
@@ -227,17 +210,14 @@ to obtain the number of triplets and edges. Triangle counts are then deducted fr
 triplet counts are removed from edge counts.
 
 #### 用法
-Directed and undirected variants are provided. The analytics take a simple graph as input and output an
-`AnalyticResult` with accessor methods for querying the count of each triad type. The graph ID type must be
-`Comparable` and `Copyable`.
+有向或无向均可使用。该分析方法接收一个简单图作为输入，并为计算出的统计输出一个包含 accessor 方法的 `AnalyticResult`，可以用于查询每个三元组合类型的数量。图的 ID 类型必须满足 `Comparable` 与 `Copyable`。
 
 * `setParallelism`：覆写算子的并行度设定，用于处理小数据
 
-### Triangle Listing
+### 三角罗列（Triangle Listing）
 
 #### 概述
-Enumerates all triangles in the graph. A triangle is composed of three edges connecting three vertices into cliques of
-size 3.
+枚举图中所有的三角。一个三角由三条把三个点连接成一个尺寸为 3 的团（clique）构成。
 
 #### 详情
 Triangles are listed by joining open triplets (two edges with a common neighbor) against edges on the triplet endpoints.
@@ -247,21 +227,17 @@ high-degree vertices. Triplets are generated from the lowest degree vertex since
 This greatly reduces the number of generated triplets which is quadratic in vertex degree.
 
 #### 用法
-Directed and undirected variants are provided. The algorithms take a simple graph as input and output a `DataSet` of
-`TertiaryResult` containing the three triangle vertices and, for the directed algorithm, a bitmask marking each of the
-six potential edges connecting the three vertices. The graph ID type must be `Comparable` and `Copyable`.
+有向或无向均可使用。该算法接收一个简单图作为输入，并输出一个 `TertiaryResult` 组成的 `DataSet`，其中包含了三个三角顶点。对于有向图的算法，还包含一个位掩码，该位掩码标记六个可能存在的连接三角的点的边。图的 ID 类型必须满足 `Comparable` 与 `Copyable`。
 
 * `setParallelism`：覆写算子的并行度设定，用于处理小数据
-* `setSortTriangleVertices`: normalize the triangle listing such that for each result (K0, K1, K2) the vertex IDs are sorted K0 < K1 < K2
+* `setSortTriangleVertices`：归范化三角罗列，对每个结果（K0, K1, K2）的顶点 ID 按照 K0 < K1 < K2 进行排序
 
-## Link Analysis
+## 链接分析
 
-### Hyperlink-Induced Topic Search
+### 基于超链接的主题检索
 
 #### 概述
-[Hyperlink-Induced Topic Search](http://www.cs.cornell.edu/home/kleinber/auth.pdf) (HITS, or "Hubs and Authorities")
-computes two interdependent scores for every vertex in a directed graph. Good hubs are those which point to many
-good authorities and good authorities are those pointed to by many good hubs.
+[基于超链接的主题检索](http://www.cs.cornell.edu/home/kleinber/auth.pdf) （HITS）为一个有向图的每个顶点计算两个互相独立的分数。hub 值高的顶点会指向其它权威度（Authority）高的顶点，权威度高的顶点应当与许多 hub 值高的顶点相连。
 
 #### 详情
 Every vertex is assigned the same initial hub and authority scores. The algorithm then iteratively updates the scores
@@ -275,7 +251,7 @@ The algorithm takes a simple directed graph as input and outputs a `DataSet` of 
 hub score, and authority score. Termination is configured by the number of iterations and/or a convergence threshold on
 the iteration sum of the change in scores over all vertices.
 
-* `setIncludeZeroDegreeVertices`: whether to include zero-degree vertices in the iterative computation
+* `setIncludeZeroDegreeVertices`：决定是否在迭代计算中包含度数为 0 的顶点
 * `setParallelism`：覆写算子的并行度设定
 
 ### PageRank
@@ -306,9 +282,9 @@ on the sum of the change in score for each vertex between iterations.
 - 顶点数量 (number of vertices)
 - 边数量 (number of edges)
 - 平均度数 (average degree)
-- 三元组数 (number of triplets)
+- 三点组数 (number of triplets)
 - 最大度数 (maximum degree)
-- 三元组最大数 (maximum number of triplets)
+- 三点组最大数 (maximum number of triplets)
 
 对有向图，可以额外统计以下信息：
 - 无向边数量 (number of unidirectional edges)
@@ -320,54 +296,47 @@ on the sum of the change in score for each vertex between iterations.
 此方法会统计由 `degree.annotate.directed.VertexDegrees` 与 `degree.annotate.undirected.VertexDegree` 生成的度数。
 
 #### 用法
-Directed and undirected variants are provided. The analytics take a simple graph as input and output an `AnalyticResult`
-with accessor methods for the computed statistics. The graph ID type must be `Comparable`.
+有向或无向均可使用。该分析方法接收一个简单图作为输入，并为计算出的统计输出一个包含 accessor 方法的 `AnalyticResult`。图的 ID 类型必须是 `Comparable` 的。
 
-* `setIncludeZeroDegreeVertices`: include results for vertices with a degree of zero
+* `setIncludeZeroDegreeVertices`：包含度为 0 的顶点
 * `setParallelism`：覆写算子的并行度设定
-* `setReduceOnTargetId` (undirected only): the degree can be counted from either the edge source or target IDs. By default the source IDs are counted. Reducing on target IDs may optimize the algorithm if the input edge list is sorted by target ID
+* `setReduceOnTargetId`（仅对无向图）：度数可以从边的源点 ID 或 目标点 ID 计算，默认使用源点 ID。如果输入边列表按照目标点 ID 排序，在目标点上使用归约可能可以优化此算法
 
 ### 边的指标
 
 #### 概述
 该图分析对有向图和无向图计算下列统计：
-- 三角三元组数 (number of triangle triplets)
-- 矩形三元组数 (number of rectangle triplets)
-- 三角三元组的最大值 (maximum number of triangle triplets)
-- 矩形三元组的最大值 (maximum number of rectangle triplets)
+- 三角三点组数 (number of triangle triplets)
+- 矩形三点组数 (number of rectangle triplets)
+- 三角三点组的最大值 (maximum number of triangle triplets)
+- 矩形三点组的最大值 (maximum number of rectangle triplets)
 
 #### 详情
 此方法会统计由 `degree.annotate.directed.EdgeDegreesPair` 与 `degree.annotate.undirected.EdgeDegreePair` 生成的度数，并按照顶点进行分组。
 
 #### 用法
-Directed and undirected variants are provided. The analytics take a simple graph as input and output an `AnalyticResult`
-with accessor methods for the computed statistics. The graph ID type must be `Comparable`.
+有向或无向均可使用。 该分析方法接收一个简单图作为输入，并为计算出的统计输出一个包含 accessor 方法的 `AnalyticResult`。 图的 ID 类型必须是 `Comparable` 的。
 
 * `setParallelism`：覆写算子的并行度设定
-* `setReduceOnTargetId` (undirected only): the degree can be counted from either the edge source or target IDs. By default the source IDs are counted. Reducing on target IDs may optimize the algorithm if the input edge list is sorted by target ID
+* `setReduceOnTargetId`（仅对无向图）：度数可以从边的源点 ID 或 目标点 ID 计算，默认使用源点 ID。如果输入边列表按照目标点 ID 排序，在目标点上使用归约可能可以优化此算法
 
 ## 相似度
 
 ### AA指数（Adamic-Adar）
 
 #### 概述
-Adamic-Adar measures the similarity between pairs of vertices as the sum of the inverse logarithm of degree over shared
-neighbors. Scores are non-negative and unbounded. A vertex with higher degree has greater overall influence but is less
-influential to each pair of neighbors.
+AA 指数可以衡量顶点对之间的相似度，由共享邻居上的度数的逆对数求和得到。分值是非负且无界的。拥有较高度数的顶点会对总体有较大的影响，但每对邻居没有多大影响。
 
 #### 详情
-The algorithm first annotates each vertex with the inverse of the logarithm of the vertex degree then joins this score
-onto edges by source vertex. Grouping on the source vertex, each pair of neighbors is emitted with the vertex score.
-Grouping on vertex pairs, the Adamic-Adar score is summed.
+该算法首先用顶点度数的逆对数值标注每个顶点，然后根据源点将此数值合并到边上。按照源点分组，发送每一对邻居与其顶点分值；接着按照顶点对分组，计算 AA 指数。
 
-See the [Jaccard Index](#jaccard-index) library method for a similar algorithm.
+参阅[杰卡德指数](#jaccard-index)方法，了解类似的算法。
 
 #### 用法
-The algorithm takes a simple undirected graph as input and outputs a `DataSet` of `BinaryResult` containing two vertex
-IDs and the Adamic-Adar similarity score. The graph ID type must be `Copyable`.
+该算法接收一个简单的无向图作为输入，并输出一个由 `BinaryResult` 组成的 `DataSet`，其中包含了两个顶点 ID 和 AA 相似度分数。图的 ID 类型必须是 `Copyable` 的。
 
-* `setMinimumRatio`: filter out Adamic-Adar scores less than the given ratio times the average score
-* `setMinimumScore`: filter out Adamic-Adar scores less than the given minimum
+* `setMinimumRatio`：过滤小于平均分数乘以设定比率的得分
+* `setMinimumScore`：过滤小于设定的最小值的得分
 * `setParallelism`：覆写算子的并行度设定，用于处理小数据
 
 ### 杰卡德指数（Jaccard Index）
@@ -376,18 +345,14 @@ IDs and the Adamic-Adar similarity score. The graph ID type must be `Copyable`.
 杰卡德指数可以评价不同节点的邻居的相似度，计算方式为相同的邻居数量除以不同的邻居数量。此指数值域为 0（即没有任何相同的邻居） 到 1（即全部的邻居都相同）。
 
 #### 详情
-Counting shared neighbors for pairs of vertices is equivalent to counting connecting paths of length two. The number of
-distinct neighbors is computed by storing the sum of degrees of the vertex pair and subtracting the count of shared
-neighbors, which are double-counted in the sum of degrees.
+计算顶点对的共享邻居相当于计算长度为 2 的相连通路。通过使用顶点对的度数和减去共享邻居数来计算不同邻居数，需注意共享邻居数在算顶点对度数和时被加了两次。
 
-The algorithm first annotates each edge with the target vertex's degree. Grouping on the source vertex, each pair of
-neighbors is emitted with the degree sum. Grouping on vertex pairs, the shared neighbors are counted.
+该算法先在边上标注目标顶点的度数。按照源点分组，发送每一对邻居与其度数和；接着按照顶点对分组，计算共享邻居数。
 
 #### 用法
-The algorithm takes a simple undirected graph as input and outputs a `DataSet` of tuples containing two vertex IDs,
-the number of shared neighbors, and the number of distinct neighbors. The result class provides a method to compute the
-Jaccard Index score. The graph ID type must be `Copyable`.
+该算法接收一个简单的无向图作为输入，并输出一个元组构成的 `DataSet`，其中包含了两个顶点的 ID、共享邻居和不同邻居的数量。输出结果的类提供一个方法用于计算杰卡德指数得分。图的 ID 类型必须是 `Copyable` 的。
 
-* `setMaximumScore`: filter out Jaccard Index scores greater than or equal to the given maximum fraction
-* `setMinimumScore`: filter out Jaccard Index scores less than the given minimum fraction
+* `setMaximumScore`：过滤大于等于给定最大值的得分
+* `setMinimumScore`：过滤小于给定最小值的得分
 * `setParallelism`：覆写算子的并行度设定，用于处理小数据
+
