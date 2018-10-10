@@ -114,19 +114,15 @@ verticesWithCommunity.print()
 ## 三角枚举器（Triangle Enumerator）
 
 #### 概述
-This library method enumerates unique triangles present in the input graph. A triangle consists of three edges that connect three vertices with each other.
-This implementation ignores edge directions.
+这个库方法枚举出现在输入图中的唯一三角（unique triangles）。每个三角都由连接相互三个点的三条边组成。此方法会忽略边的方向。
 
 #### 详情
-The basic triangle enumeration algorithm groups all edges that share a common vertex and builds triads, i.e., triples of vertices
-that are connected by two edges. Then, all triads are filtered for which no third edge exists that closes the triangle.
-For a group of <i>n</i> edges that share a common vertex, the number of built triads is quadratic <i>((n*(n-1))/2)</i>.
-Therefore, an optimization of the algorithm is to group edges on the vertex with the smaller output degree to reduce the number of triads.
-This implementation extends the basic algorithm by computing output degrees of edge vertices and grouping on edges on the vertex with the smaller degree.
+这个基本的三角枚举算法会对所有共享同一个共有顶点的边进行分组，并构建被两个边相连接的三点组合（triad）。然后过滤所有不存在的闭合三角的第三条边的三点组合。对于一组共享一个共有顶点的 `n` 边，构建的三点组合的数量是 `((n*(n-1))/2)`。
+因此，该算法的一个优化是用较小的出度对顶点上的边进行分组来减小三角组合的数量。
+此方法通过计算边顶点的出度，并用较小的度数来对点上的边进行分组来实现算法。
 
 #### 用法
-The algorithm takes a directed graph as input and outputs a `DataSet` of `Tuple3`. The Vertex ID type has to be `Comparable`.
-Each `Tuple3` corresponds to a triangle, with the fields containing the IDs of the vertices forming the triangle.
+此算法接收一个有向图作为输入，并输出一个 `Tuple3` 组成的 `DataSet`。顶点 ID 的类型必须是 `Comparable` 的。每一个 `Tuple3` 对应一个三角，其中的字段包含了组成三角形的顶点的 ID。
 
 ## 摘要（Summarization）
 
@@ -135,20 +131,12 @@ Each `Tuple3` corresponds to a triangle, with the fields containing the IDs of t
 此算法的另一个用途是对社区进行可视化，因为整个图的可视化过于巨大，需要根据顶点的社区标签进行浓缩，再进行可视化。
 
 #### 详情
-In the resulting graph, each vertex represents a group of vertices that share the same value. An edge, that connects a
-vertex with itself, represents all edges with the same edge value that connect vertices from the same vertex group. An
-edge between different vertices in the output graph represents all edges with the same edge value between members of
-different vertex groups in the input graph.
+在结果的图中，每个顶点都标识了一组 value 相同的顶点。连接顶点的边表示所有拥有相同 value 的边。这些边从相同的顶点群连接顶点。输出图中的两个顶点之间的边表示所有输入图中两个不同顶点组内的顶点之间的拥有相同值的边。
 
-The algorithm is implemented using Flink data operators. First, vertices are grouped by their value and a representative
-is chosen from each group. For any edge, the source and target vertex identifiers are replaced with the corresponding
-representative and grouped by source, target and edge value. Output vertices and edges are created from their
-corresponding groupings.
+此算法通过 Flink 的数据算子实现。首先，按照顶点的值将顶点分组，并从每一组中选出一个代表点。而对于边，将源点和目标点 ID 用对应的代表点替换，并按照源点、目标点与 value 进行分组。输出图中的顶点和边皆由他们对应的分组创建。
 
 #### 用法
-The algorithm takes a directed, vertex (and possibly edge) attributed graph as input and outputs a new graph where each
-vertex represents a group of vertices and each edge represents a group of edges from the input graph. Furthermore, each
-vertex and edge in the output graph stores the common group value and the number of represented elements.
+该算法接收一个由顶点、边构成的带属性的有向图作为输入，并输出一个新的图，新图中每一个顶点表示一组来自输入图的顶点，每一条边表示一组来自输入图的边。输出图的各个顶点和各个边都储存了共有的组值和代表元素的数量。
 
 ## 聚类（Clustering）
 
@@ -189,9 +177,7 @@ vertex and edge in the output graph stores the common group value and the number
 请参阅[三角罗列](#triangle-listing) 库方法了解更多关于三角枚举的详细解释。
 
 #### 用法
-有向或无向均可使用。 The algorithms take a simple graph as input and output a `DataSet` of
-`UnaryResult` containing the vertex ID, vertex degree, and number of triangles containing the vertex. The result class
-provides a method to compute the local clustering coefficient score. 图的 ID 类型必须满足 `Comparable` 与 `Copyable`。
+有向或无向均可使用。该分析接收一个简单图作为输入，并输出一个 `UnaryResult` 组成的 `DataSet`，其中包含了顶点 ID、顶点度数以及包含顶点的三角的数量。此输出结果的类会提供一个方法用于计算局部聚类系数。图的 ID 类型必须满足 `Comparable` 与 `Copyable`。
 
 * `setIncludeZeroDegreeVertices`：包含度为 0 的顶点
 * `setParallelism`：覆写算子的并行度设定，用于处理小数据
@@ -199,15 +185,10 @@ provides a method to compute the local clustering coefficient score. 图的 ID �
 ### 三点组统计（Triadic Census）
 
 #### 概述
-A triad is formed by any three vertices in a graph. Each triad contains three pairs of vertices which may be connected
-or unconnected. The [Triadic Census](http://vlado.fmf.uni-lj.si/pub/networks/doc/triads/triads.pdf) counts the
-occurrences of each type of triad with the graph.
+一个三点组（triad）由图内的三个顶点组成。每个三点组合包含了三队可能相连或不相连的顶点。[三点组统计](http://vlado.fmf.uni-lj.si/pub/networks/doc/triads/triads.pdf)会计算图中每种类型的三点组合的出现次数。
 
 #### 详情
-This analytic counts the four undirected triad types (formed with 0, 1, 2, or 3 connecting edges) or 16 directed triad
-types by counting the triangles from [Triangle Listing](#triangle-listing) and running [Vertex Metrics](#vertex-metrics)
-to obtain the number of triplets and edges. Triangle counts are then deducted from triplet counts, and triangle and
-triplet counts are removed from edge counts.
+此方法可以分析统计 4 种无向三点组合类型（由0、1、2 或 3 条相连边组成）或 16 种有向三点组合类型来获得三点组和边的数量。此方法通过进行[三角罗列](#triangle-listing)计算三角形计数以及运行[顶点指标](#vertex-metrics)来进行统计分析。从三点组的数目中推断出三角的数目，再把三角数和三点组数从边数中移除。
 
 #### 用法
 有向或无向均可使用。该分析方法接收一个简单图作为输入，并为计算出的统计输出一个包含 accessor 方法的 `AnalyticResult`，可以用于查询每个三元组合类型的数量。图的 ID 类型必须满足 `Comparable` 与 `Copyable`。
@@ -220,11 +201,8 @@ triplet counts are removed from edge counts.
 枚举图中所有的三角。一个三角由三条把三个点连接成一个尺寸为 3 的团（clique）构成。
 
 #### 详情
-Triangles are listed by joining open triplets (two edges with a common neighbor) against edges on the triplet endpoints.
-This implementation uses optimizations from
-[Schank's algorithm](http://i11www.iti.uni-karlsruhe.de/extra/publications/sw-fclt-05_t.pdf) to improve performance with
-high-degree vertices. Triplets are generated from the lowest degree vertex since each triangle need only be listed once.
-This greatly reduces the number of generated triplets which is quadratic in vertex degree.
+通过对三点组终端点（endpoint）合并开三点组（open triplets）（有一个公共的邻居的两个边）来列出所有的三角。
+此方法使用 [Schank's algorithm](http://i11www.iti.uni-karlsruhe.de/extra/publications/sw-fclt-05_t.pdf) 的优化方式来提高度数较高的顶点的影响。由于各个三角只需要被罗列一次，因此由低度数的顶点中生成三点组。这可以显著减少三点组的数量，三点组是顶点度数的二次方。
 
 #### 用法
 有向或无向均可使用。该算法接收一个简单图作为输入，并输出一个 `TertiaryResult` 组成的 `DataSet`，其中包含了三个三角顶点。对于有向图的算法，还包含一个位掩码，该位掩码标记六个可能存在的连接三角的点的边。图的 ID 类型必须满足 `Comparable` 与 `Copyable`。
@@ -240,16 +218,10 @@ This greatly reduces the number of generated triplets which is quadratic in vert
 [基于超链接的主题检索](http://www.cs.cornell.edu/home/kleinber/auth.pdf) （HITS）为一个有向图的每个顶点计算两个互相独立的分数。hub 值高的顶点会指向其它权威度（Authority）高的顶点，权威度高的顶点应当与许多 hub 值高的顶点相连。
 
 #### 详情
-Every vertex is assigned the same initial hub and authority scores. The algorithm then iteratively updates the scores
-until termination. During each iteration new hub scores are computed from the authority scores, then new authority
-scores are computed from the new hub scores. The scores are then normalized and optionally tested for convergence.
-HITS is similar to [PageRank](#pagerank) but vertex scores are emitted in full to each neighbor whereas in PageRank
-the vertex score is first divided by the number of neighbors.
+每个点被分配相同的初始 hub 值和权威度值。此算法会不断地迭代更新各个分值。在每一次迭代中，新的 hub 值由权威度值计算而得，然后新的权威度值又是由新的 hub 值计算得出。这些分值接着被归一化，并测试是否收敛。HITS 算法和 [PageRank](#pagerank) 类似，不过 HITS 中，顶点的分值会完整地发送给每一个邻居，而在 PageRank 中顶点的分值需要先除以邻居的数量。
 
 #### 用法
-The algorithm takes a simple directed graph as input and outputs a `DataSet` of `UnaryResult` containing the vertex ID,
-hub score, and authority score. Termination is configured by the number of iterations and/or a convergence threshold on
-the iteration sum of the change in scores over all vertices.
+该算法接收一个简单的有向图作为输入，输出一个 `UnaryResult` 组成的 `DataSet`，其中包含了顶点的 ID，hub 分值和权威度值。可以通过配置迭代的次数、所有顶点上的得分变化的阈值来确定何时结束算法。
 
 * `setIncludeZeroDegreeVertices`：决定是否在迭代计算中包含度数为 0 的顶点
 * `setParallelism`：覆写算子的并行度设定
@@ -260,16 +232,10 @@ the iteration sum of the change in scores over all vertices.
 [PageRank](https://en.wikipedia.org/wiki/PageRank) 最初用于对 web 搜索引擎的结果进行排序。现在，这个算法和它的变体被广泛用于图的应用领域。PageRank 算法认为，重要或相关的顶点总是会倾向于和别的重要顶点连接。
 
 #### 详情
-The algorithm operates in iterations, where pages distribute their scores to their neighbors (pages they have links to)
-and subsequently update their scores based on the sum of values they receive. In order to consider the importance of a
-link from one page to another, scores are divided by the total number of out-links of the source page. Thus, a page with
-10 links will distribute 1/10 of its score to each neighbor, while a page with 100 links will distribute 1/100 of its
-score to each neighboring page.
+此算法会不断进行迭代，各个页面将它们的分值传播给它们的邻居（它们链接的页面），并根据接收到的分值更新自己的分值。为了衡量一个页面到另一个页面的链接的重要性，分值会除以源页面的外向链接的总数。因此，一个有着 10 个链接的页面会分配它的分值的 1/10 给它的邻居，而一个有着 100 个链接的页面会分配它的分值的 1/100 给它的邻居。
 
 #### 用法
-The algorithm takes a directed graph as input and outputs a `DataSet` where each `Result` contains the vertex ID and
-PageRank score. Termination is configured with a maximum number of iterations and/or a convergence threshold
-on the sum of the change in score for each vertex between iterations.
+该算法接收一个有向图作为输入，并输出一个 `DataSet`，其中每一个 `Result` 包含顶点 ID 和 PageRank 得分。可以通过配置迭代的次数、所有顶点上的得分变化的阈值来确定何时结束算法。
 
 * `setParallelism`：覆写算子的并行度设定
 
@@ -355,4 +321,3 @@ AA 指数可以衡量顶点对之间的相似度，由共享邻居上的度数�
 * `setMaximumScore`：过滤大于等于给定最大值的得分
 * `setMinimumScore`：过滤小于给定最小值的得分
 * `setParallelism`：覆写算子的并行度设定，用于处理小数据
-
