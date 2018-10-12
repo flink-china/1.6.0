@@ -1,5 +1,5 @@
 ---
-title: "Experimental Features"
+title: "实验特征"
 nav-id: experimental_features
 nav-show_overview: true
 nav-parent_id: streaming
@@ -24,23 +24,18 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-This section describes experimental features in the DataStream API. Experimental features are still evolving and can be either unstable,
-incomplete, or subject to heavy change in future versions.
+本节描述数据流API中的实验特性。实验特征仍在发展，可以是不稳定的，不完整的，或者在未来版本中发生重大变化。
 
-Reinterpreting a pre-partitioned data stream as keyed stream
+将预先划分的数据流重新定义为密钥流
 ------------------------------------------------------------
 
-We can re-interpret a pre-partitioned data stream as a keyed stream to avoid shuffling.
+我们可以重新定义预划分的数据流为密钥流，以避免混洗。
 
-**WARNING**: The re-interpreted data stream **MUST** already be pre-partitioned in **EXACTLY** the same way Flink's keyBy would partition
-the data in a shuffle w.r.t. key-group assignment.
+**警告**: 重新定义的数据流必须采用Flink的keyBy在shuffle w.r.t.key-group分配中对数据进行分区的相同方式来精确地预先分区。
 
-One use-case for this could be a materialized shuffle between two jobs: the first job performs a keyBy shuffle and materializes
-each output into a partition. A second job has sources that, for each parallel instance, reads from the corresponding partitions
-created by the first job. Those sources can now be re-interpreted as keyed streams, e.g. to apply windowing. Notice that this trick
-makes the second job embarrassingly parallel, which can be helpful for a fine-grained recovery scheme.
+这种情况的一个用例可以是两个作业之间的物化洗牌：第一个作业执行keyBy洗牌，并将每个输出物化到分区中。第二个作业中每个并行实例的读取来源是第一个作业创建的相应分区。现在可以将这些源重新解释为键流，例如应用窗口。请注意，这个技巧使第二个工作被迫并行，这对于细粒度的恢复方案是有帮助的。
 
-This re-interpretation functionality is exposed through `DataStreamUtils`:
+这种重新解释功能通过`DataStreamUtils`公开：
 
 {% highlight java %}
 	static <T, K> KeyedStream<T, K> reinterpretAsKeyedStream(
@@ -49,10 +44,9 @@ This re-interpretation functionality is exposed through `DataStreamUtils`:
 		TypeInformation<K> typeInfo)
 {% endhighlight %}
 
-Given a base stream, a key selector, and type information,
-the method creates a keyed stream from the base stream.
+给定基本流、密钥选择器和类型信息，该方法从基本流创建密钥流。
 
-Code example:
+代码示例：
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -77,3 +71,4 @@ Code example:
       .addSink(new DiscardingSink[Int])
     env.execute()
 {% endhighlight %}
+

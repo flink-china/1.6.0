@@ -1,5 +1,5 @@
 ---
-title: "Table API & SQL"
+title: "表API与SQL"
 nav-id: tableapi
 nav-parent_id: dev
 is_beta: false
@@ -25,17 +25,16 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-Apache Flink features two relational APIs - the Table API and SQL - for unified stream and batch processing. The Table API is a language-integrated query API for Scala and Java that allows the composition of queries from relational operators such as selection, filter, and join in a very intuitive way. Flink's SQL support is based on [Apache Calcite](https://calcite.apache.org) which implements the SQL standard. Queries specified in either interface have the same semantics and specify the same result regardless whether the input is a batch input (DataSet) or a stream input (DataStream).
+Apache Flink具有两个关系API——表API和SQL-用于统一流和批处理。表API是用于Scala和Java的语言集成查询API，它允许以非常直观的方式从关系运算符（如选择、筛选和连接）组成查询。Flink的SQL支持是基于实现SQL标准的 [Apache Calcite](https://calcite.apache.org) 。无论输入是批量输入（DataSet）还是流输入（DataStream），任一接口中指定的查询都具有相同的语义，并指定相同的结果。
 
-The Table API and the SQL interfaces are tightly integrated with each other as well as Flink's DataStream and DataSet APIs. You can easily switch between all APIs and libraries which build upon the APIs. For instance, you can extract patterns from a DataStream using the [CEP library]({{ site.baseurl }}/dev/libs/cep.html) and later use the Table API to analyze the patterns, or you might scan, filter, and aggregate a batch table using a SQL query before running a [Gelly graph algorithm]({{ site.baseurl }}/dev/libs/gelly) on the preprocessed data.
+表API和SQL接口是彼此紧密结合的，类似于Flink的数据流和数据集API。你可以轻松地在API上构建所有API和库之间进行切换。例如，可以使用 [CEP库]({{ site.baseurl }}/dev/libs/cep.html)从DataStream中提取模式，稍后使用Table API分析模式，或者在对预处理的数据运行 [Gelly图算法]({{ site.baseurl }}/dev/libs/gelly)之前，可以使用SQL查询扫描、筛选和聚合批处理表。
 
-**Please note that the Table API and SQL are not yet feature complete and are being actively developed. Not all operations are supported by every combination of \[Table API, SQL\] and \[stream, batch\] input.**
+**请注意，表API和SQL尚未完成功能并正在积极开发。并非所有操作都由[表API、SQL ]和[流，批]输入的每一个组合支持。**
 
-Setup
+安装
 -----
 
-The Table API and SQL are bundled in the `flink-table` Maven artifact. 
-The following dependency must be added to your project in order to use the Table API and SQL:
+表API和SQL被捆绑在Flink表Maven工件中。为了使用表API和SQL，必须将下列依赖项添加到项目中：
 
 {% highlight xml %}
 <dependency>
@@ -45,7 +44,7 @@ The following dependency must be added to your project in order to use the Table
 </dependency>
 {% endhighlight %}
 
-In addition, you need to add a dependency for either Flink's Scala batch or streaming API. For a batch query you need to add:
+此外，还需要为Flink的Scala批处理或流式API添加依赖项。对于批量查询，您需要添加：
 
 {% highlight xml %}
 <dependency>
@@ -55,7 +54,7 @@ In addition, you need to add a dependency for either Flink's Scala batch or stre
 </dependency>
 {% endhighlight %}
 
-For a streaming query you need to add:
+对于流式查询，你需要添加：
 
 {% highlight xml %}
 <dependency>
@@ -65,18 +64,18 @@ For a streaming query you need to add:
 </dependency>
 {% endhighlight %}
 
-**Note:** Due to an issue in Apache Calcite, which prevents the user classloaders from being garbage-collected, we do *not* recommend building a fat-jar that includes the `flink-table` dependency. Instead, we recommend configuring Flink to include the `flink-table` dependency in the system classloader. This can be done by copying the `flink-table.jar` file from the `./opt` folder to the `./lib` folder. See [these instructions]({{ site.baseurl }}/dev/linking.html) for further details.
+**注意：** 由于Apache Calcite中的一个问题，它阻止用户类加载器被垃圾收集，因此我们不建议构建包含 `flink-table` 依赖项的fat-jar。相反，我们建议配置Flink以包含系统类加载器中的 `flink-table` 依赖项。这可以通过将文件 `flink-table.jar`从文件夹 `./opt` 复制到文件夹 `./lib` 来实现。详情请参阅[这些说明]({{ site.baseurl }}/dev/linking.html)。
 
 {% top %}
 
-Where to go next?
+下一步可以做什么？
 -----------------
 
-* [Concepts & Common API]({{ site.baseurl }}/dev/table/common.html): Shared concepts and APIs of the Table API and SQL.
-* [Streaming Table API & SQL]({{ site.baseurl }}/dev/table/streaming.html): Streaming-specific documentation for the Table API or SQL such as configuration of time attributes and handling of updating results.
-* [Table API]({{ site.baseurl }}/dev/table/tableApi.html): Supported operations and API for the Table API.
-* [SQL]({{ site.baseurl }}/dev/table/sql.html): Supported operations and syntax for SQL
-* [Table Sources & Sinks]({{ site.baseurl }}/dev/table/sourceSinks.html): Reading tables from and emitting tables to external storage systems.
-* [User-Defined Functions]({{ site.baseurl }}/dev/table/udfs.html): Definition and usage of user-defined functions.
+* [概念与通用API]({{ site.baseurl }}/dev/table/common.html): 表API和SQL的共享概念和API。
+* [流表API与SQL]({{ site.baseurl }}/dev/table/streaming.html): 表API或SQL的特定于流的文档，如时间属性的配置和更新结果的处理。
+* [表API]({{ site.baseurl }}/dev/table/tableApi.html): 支持表API的操作和API。
+* [SQL]({{ site.baseurl }}/dev/table/sql.html): 支持SQL的操作和语法。
+* [表来源与落地]({{ site.baseurl }}/dev/table/sourceSinks.html): 从外部存储系统读取表并将表发送到外部存储系统。
+* [自定义函数]({{ site.baseurl }}/dev/table/udfs.html): 用户定义函数的定义和使用。
 
 {% top %}

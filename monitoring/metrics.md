@@ -22,24 +22,22 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-Flink exposes a metric system that allows gathering and exposing metrics to external systems.
+Flink公开了允许收集和向外部系统公开度量的度量系统。
 
 * This will be replaced by the TOC
 {:toc}
 
-## Registering metrics
+## 注册度量
 
-You can access the metric system from any user function that extends [RichFunction]({{ site.baseurl }}/dev/api_concepts.html#rich-functions) by calling `getRuntimeContext().getMetricGroup()`.
-This method returns a `MetricGroup` object on which you can create and register new metrics.
+通过调用`getRuntimeContext().getMetricGroup()`，从扩展 [RichFunction]({{ site.baseurl }}/dev/api_concepts.html#rich-functions) 的任何用户函数访问调度系统。此方法返回一个可以创建和注册新度量的`MetricGroup`对象 。
 
-### Metric types
+### 度量类型
 
-Flink supports `Counters`, `Gauges`, `Histograms` and `Meters`.
+Flink 支持 计数器， 仪表， 直方图和`Meters`。
 
-#### Counter
+#### 计数器
 
-A `Counter` is used to count something. The current value can be in- or decremented using `inc()/inc(long n)` or `dec()/dec(long n)`.
-You can create and register a `Counter` by calling `counter(String name)` on a `MetricGroup`.
+计数器用来计算物品的个数。当前值可以使用`inc()/inc(long n)`或`dec()/dec(long n)`来增加或减小。可以通过在`MetricGroup`上调用 `counter(String name)`来创建和注册计数器。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -88,7 +86,7 @@ class MyMapper extends RichMapFunction[String,String] {
 
 </div>
 
-Alternatively you can also use your own `Counter` implementation:
+另外，你也可以使用自己的计数器实现：
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -138,11 +136,9 @@ class MyMapper extends RichMapFunction[String,String] {
 
 </div>
 
-#### Gauge
+#### 仪表
 
-A `Gauge` provides a value of any type on demand. In order to use a `Gauge` you must first create a class that implements the `org.apache.flink.metrics.Gauge` interface.
-There is no restriction for the type of the returned value.
-You can register a gauge by calling `gauge(String name, Gauge gauge)` on a `MetricGroup`.
+ 仪表按需提供任何类型的值。你必须先创建一个接口`org.apache.flink.metrics.Gauge`的实现类，才可以使用 `Gauge` 。对返回值的类型是没有限制的。你可以在`MetricGroup`上调用 `gauge(String name, Gauge gauge)`来注册一个计量器。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -196,12 +192,12 @@ new class MyMapper extends RichMapFunction[String,String] {
 
 </div>
 
-Note that reporters will turn the exposed object into a `String`, which means that a meaningful `toString()` implementation is required.
+注意的是，很有必要实现有意义的`toString()`，因为结果将会被转换为`String`。
 
-#### Histogram
+#### 直方图
 
-A `Histogram` measures the distribution of long values.
-You can register one by calling `histogram(String name, Histogram histogram)` on a `MetricGroup`.
+直方图测量长值的分布。
+在`MetricGroup`上调用 `histogram(String name, Histogram histogram)` 可以注册一个直方图。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -248,8 +244,8 @@ class MyMapper extends RichMapFunction[Long,Long] {
 
 </div>
 
-Flink does not provide a default implementation for `Histogram`, but offers a {% gh_link flink-metrics/flink-metrics-dropwizard/src/main/java/org/apache/flink/dropwizard/metrics/DropwizardHistogramWrapper.java "Wrapper" %} that allows usage of Codahale/DropWizard histograms.
-To use this wrapper add the following dependency in your `pom.xml`:
+Flink没有提供直方图的默认实现，但是提供了允许使用Codahale/DropWizard直方图的 [包装器](https://github.com/apache/flink/blob/master/flink-metrics/flink-metrics-dropwizard/src/main/java/org/apache/flink/dropwizard/metrics/DropwizardHistogramWrapper.java) 。
+若要使用此包装器，请在pom.xml中添加以下依赖项：
 {% highlight xml %}
 <dependency>
       <groupId>org.apache.flink</groupId>
@@ -258,14 +254,13 @@ To use this wrapper add the following dependency in your `pom.xml`:
 </dependency>
 {% endhighlight %}
 
-You can then register a Codahale/DropWizard histogram like this:
+你可以注册一个像这样的Codahale/DropWizard 直方图：
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
 {% highlight java %}
 public class MyMapper extends RichMapFunction<Long, Long> {
   private transient Histogram histogram;
-
   @Override
   public void open(Configuration config) {
     com.codahale.metrics.Histogram dropwizardHistogram =
@@ -275,7 +270,7 @@ public class MyMapper extends RichMapFunction<Long, Long> {
       .getMetricGroup()
       .histogram("myHistogram", new DropwizardHistogramWrapper(dropwizardHistogram));
   }
-  
+
   @Override
   public Long map(Long value) throws Exception {
     this.histogram.update(value);
@@ -299,7 +294,7 @@ class MyMapper extends RichMapFunction[Long, Long] {
       .getMetricGroup()
       .histogram("myHistogram", new DropwizardHistogramWrapper(dropwizardHistogram))
   }
-  
+
   override def map(value: Long): Long = {
     histogram.update(value)
     value
@@ -313,8 +308,7 @@ class MyMapper extends RichMapFunction[Long, Long] {
 
 #### Meter
 
-A `Meter` measures an average throughput. An occurrence of an event can be registered with the `markEvent()` method. Occurrence of multiple events at the same time can be registered with `markEvent(long n)` method.
-You can register a meter by calling `meter(String name, Meter meter)` on a `MetricGroup`.
+`Meter` 测量平均吞吐量。一个事件的产生可以通过方法`markEvent()` 来注册。如果有多个事件同时产生可以使用方法`markEvent(long n)` 来注册。你可以在`MetricGroup`上采用 `meter(String name, Meter meter)` 注册一个Meter。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -361,8 +355,7 @@ class MyMapper extends RichMapFunction[Long,Long] {
 
 </div>
 
-Flink offers a {% gh_link flink-metrics/flink-metrics-dropwizard/src/main/java/org/apache/flink/dropwizard/metrics/DropwizardMeterWrapper.java "Wrapper" %} that allows usage of Codahale/DropWizard meters.
-To use this wrapper add the following dependency in your `pom.xml`:
+Flink提供了一个允许使用Codahale/DropWizard meters的[包装器](https://github.com/apache/flink/blob/master/flink-metrics/flink-metrics-dropwizard/src/main/java/org/apache/flink/dropwizard/metrics/DropwizardMeterWrapper.java)。若要使用此包装器，请在pom.xml中添加以下依赖项：
 {% highlight xml %}
 <dependency>
       <groupId>org.apache.flink</groupId>
@@ -371,7 +364,7 @@ To use this wrapper add the following dependency in your `pom.xml`:
 </dependency>
 {% endhighlight %}
 
-You can then register a Codahale/DropWizard meter like this:
+你可以注册一个像这样的Codahale/DropWizard meters：
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -405,7 +398,7 @@ class MyMapper extends RichMapFunction[Long,Long] {
 
   override def open(config: Configuration): Unit = {
     com.codahale.metrics.Meter dropwizardMeter = new com.codahale.metrics.Meter()
-  
+
     meter = getRuntimeContext()
       .getMetricGroup()
       .meter("myMeter", new DropwizardMeterWrapper(dropwizardMeter))
@@ -422,24 +415,21 @@ class MyMapper extends RichMapFunction[Long,Long] {
 
 </div>
 
-## Scope
+## 范围
 
-Every metric is assigned an identifier and a set of key-value pairs under which the metric will be reported.
+带有一个标识符和一组键值对的度量才会被上报。
 
-The identifier is based on 3 components: a user-defined name when registering the metric, an optional user-defined scope and a system-provided scope.
-For example, if `A.B` is the system scope, `C.D` the user scope and `E` the name, then the identifier for the metric will be `A.B.C.D.E`.
+该标识符基于3个组件：注册度量时的用户定义名称、可选的用户定义范围和系统提供的范围。例如，如果A.B代表系统范围，C.D代表用户范围，E代表名称，那么度规的标识符是A.B.C.D.E。
 
-You can configure which delimiter to use for the identifier (default: `.`) by setting the `metrics.scope.delimiter` key in `conf/flink-conf.yaml`.
+ 在 `conf/flink-conf.yaml设置metrics.scope.delimiter`的值，来配置表示的分隔符。
 
-### User Scope
+### 用户范围
 
-You can define a user scope by calling `MetricGroup#addGroup(String name)`, `MetricGroup#addGroup(int name)` or `Metric#addGroup(String key, String value)`.
-These methods affect what `MetricGroup#getMetricIdentifier` and `MetricGroup#getScopeComponents` return.
+可以通过调用`MetricGroup#addGroup(String name)`，`MetricGroup#addGroup(int name)`或者 `Metric#addGroup(String key, String value)`来定义用户范围，相应的也会影响 `MetricGroup#getMetricIdentifier` 和 `MetricGroup#getScopeComponents` 返回值。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
 {% highlight java %}
-
 counter = getRuntimeContext()
   .getMetricGroup()
   .addGroup("MyMetrics")
@@ -471,62 +461,60 @@ counter = getRuntimeContext()
 
 </div>
 
-### System Scope
+### 系统范围
 
-The system scope contains context information about the metric, for example in which task it was registered or what job that task belongs to.
+系统范围包含了度量的上下文信息，比如，度量注册所在任务或者任务所属的作业。
 
-Which context information should be included can be configured by setting the following keys in `conf/flink-conf.yaml`.
-Each of these keys expect a format string that may contain constants (e.g. "taskmanager") and variables (e.g. "&lt;task_id&gt;") which will be replaced at runtime.
+在 `conf/flink-conf.yaml`可以配置要包含的上下文信息。
+这些键中的每一个都会有一个格式字符串，该字符串可以包含常量（例如“taskmanager”）和变量（例如“<task_id”），在运行时替换这些字符串。
 
 - `metrics.scope.jm`
-  - Default: &lt;host&gt;.jobmanager
-  - Applied to all metrics that were scoped to a job manager.
+  - 默认值: &lt;host&gt;.jobmanager
+  - 应用于范围为作业管理器的所有度量。
 - `metrics.scope.jm.job`
-  - Default: &lt;host&gt;.jobmanager.&lt;job_name&gt;
-  - Applied to all metrics that were scoped to a job manager and job.
+  - 默认值: &lt;host&gt;.jobmanager.&lt;job_name&gt;
+  - 应用于所有范围到作业管理器和作业的度量。
 - `metrics.scope.tm`
-  - Default: &lt;host&gt;.taskmanager.&lt;tm_id&gt;
-  - Applied to all metrics that were scoped to a task manager.
+  - 默认值: &lt;host&gt;.taskmanager.&lt;tm_id&gt;
+  - 应用于所有范围到任务管理器的度量。
 - `metrics.scope.tm.job`
-  - Default: &lt;host&gt;.taskmanager.&lt;tm_id&gt;.&lt;job_name&gt;
-  - Applied to all metrics that were scoped to a task manager and job.
+  - 默认值: &lt;host&gt;.taskmanager.&lt;tm_id&gt;.&lt;job_name&gt;
+  - 应用于所有范围到任务管理器和作业的度量。
 - `metrics.scope.task`
-  - Default: &lt;host&gt;.taskmanager.&lt;tm_id&gt;.&lt;job_name&gt;.&lt;task_name&gt;.&lt;subtask_index&gt;
-   - Applied to all metrics that were scoped to a task.
+  - 默认值: &lt;host&gt;.taskmanager.&lt;tm_id&gt;.&lt;job_name&gt;.&lt;task_name&gt;.&lt;subtask_index&gt;
+   - 应用于所有作用于任务的度量。
 - `metrics.scope.operator`
-  - Default: &lt;host&gt;.taskmanager.&lt;tm_id&gt;.&lt;job_name&gt;.&lt;operator_name&gt;.&lt;subtask_index&gt;
-  - Applied to all metrics that were scoped to an operator.
+  - 默认值: &lt;host&gt;.taskmanager.&lt;tm_id&gt;.&lt;job_name&gt;.&lt;operator_name&gt;.&lt;subtask_index&gt;
+  - 应用于所有操作范围的度量。
 
-There are no restrictions on the number or order of variables. Variables are case sensitive.
+变量的数量或顺序没有限制。变量是区分大小写的。
 
-The default scope for operator metrics will result in an identifier akin to `localhost.taskmanager.1234.MyJob.MyOperator.0.MyMetric`
+运算符度量的默认范围将导致一个标识符类似于`localhost.taskmanager.1234.MyJob.MyOperator.0.MyMetric`
 
-If you also want to include the task name but omit the task manager information you can specify the following format:
+如果你还希望包含任务名称，但省略任务管理器信息，则可以指定以下格式：
 
 `metrics.scope.operator: <host>.<job_name>.<task_name>.<operator_name>.<subtask_index>`
 
-This could create the identifier `localhost.MyJob.MySource_->_MyOperator.MyOperator.0.MyMetric`.
+创建标识符也许是 `localhost.MyJob.MySource_->_MyOperator.MyOperator.0.MyMetric`。
 
-Note that for this format string an identifier clash can occur should the same job be run multiple times concurrently, which can lead to inconsistent metric data.
-As such it is advised to either use format strings that provide a certain degree of uniqueness by including IDs (e.g &lt;job_id&gt;)
-or by assigning unique names to jobs and operators.
+注意，对于此格式字符串，如果同一作业同时运行多次，则可能发生标识符冲突，这可能导致不一致的度量数据。因此，建议使用通过包括ID（例如<job_id>）来提供一定程度的惟一性的格式字符串，或者通过向作业和操作符分配惟一名称来提供某种程度的惟一性。
 
-### List of all Variables
+### 所有变量列表
 
-- JobManager: &lt;host&gt;
-- TaskManager: &lt;host&gt;, &lt;tm_id&gt;
-- Job: &lt;job_id&gt;, &lt;job_name&gt;
-- Task: &lt;task_id&gt;, &lt;task_name&gt;, &lt;task_attempt_id&gt;, &lt;task_attempt_num&gt;, &lt;subtask_index&gt;
-- Operator: &lt;operator_id&gt;,&lt;operator_name&gt;, &lt;subtask_index&gt;
+- 作业管理器: &lt;host&gt;
+- 任务管理器: &lt;host&gt;, &lt;tm_id&gt;
+- 作业: &lt;job_id&gt;, &lt;job_name&gt;
+- 任务: &lt;task_id&gt;, &lt;task_name&gt;, &lt;task_attempt_id&gt;, &lt;task_attempt_num&gt;, &lt;subtask_index&gt;
+- 操作符: &lt;operator_id&gt;,&lt;operator_name&gt;, &lt;subtask_index&gt;
 
-**Important:** For the Batch API, &lt;operator_id&gt; is always equal to &lt;task_id&gt;.
+**重要：** 对于批处理API，<operator_id>总是等于<task_id>。
 
-### User Variables
+### 用户变量
 
-You can define a user variable by calling `MetricGroup#addGroup(String key, String value)`.
-This method affects what `MetricGroup#getMetricIdentifier`, `MetricGroup#getScopeComponents` and `MetricGroup#getAllVariables()` returns.
+可以通过调用`MetricGroup#addGroup(String key, String value)`来定义用户变量。
+该方法会影响`MetricGroup#getMetricIdentifier`, `MetricGroup#getScopeComponents` 和`MetricGroup#getAllVariables()` 的返回值。
 
-**Important:** User variables cannot be used in scope formats.
+**重要：** 用户变量不能在范围格式中使用。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -553,21 +541,19 @@ counter = getRuntimeContext()
 
 </div>
 
-## Reporter
+## 报告器
 
-Metrics can be exposed to an external system by configuring one or several reporters in `conf/flink-conf.yaml`. These
-reporters will be instantiated on each job and task manager when they are started.
+度量可以通过在`conf/flink-conf.yaml`中配置的一个或多个报告器来公开给外部系统。 这些报告器将在工作管理器或者任务管理器启动时被实例化。
 
-- `metrics.reporter.<name>.<config>`: Generic setting `<config>` for the reporter named `<name>`.
-- `metrics.reporter.<name>.class`: The reporter class to use for the reporter named `<name>`.
-- `metrics.reporter.<name>.interval`: The reporter interval to use for the reporter named `<name>`.
-- `metrics.reporter.<name>.scope.delimiter`: The delimiter to use for the identifier (default value use `metrics.scope.delimiter`) for the reporter named `<name>`.
-- `metrics.reporters`: (optional) A comma-separated include list of reporter names. By default all configured reporters will be used.
+- `metrics.reporter.<name>.<config>`：报告器`<name>`的通用配置`<config>`。
+- `metrics.reporter.<name>.class`：报告器`<name>`的类。
+- `metrics.reporter.<name>.interval`：报告器`<name>`的上报间隔时间.
+- `metrics.reporter.<name>.scope.delimiter`：报告器`<name>`的标识符的分隔符（默认值 `metrics.scope.delimiter`）。
+- `metrics.reporters`：（可选）以逗号分隔的报告器名称列表。默认情况下，所有配置的报告器都会被使用。
 
-All reporters must at least have the `class` property, some allow specifying a reporting `interval`. Below,
-we will list more settings specific to each reporter.
+所有报告器都必须至少有`class`属性，允许一些指定的报告`interval`。下面，我们将列出具体到每一个报告器的更多设置。
 
-Example reporter configuration that specifies multiple reporters:
+指定多个报告器的示例配置：
 
 {% highlight yaml %}
 metrics.reporters: my_jmx_reporter,my_other_reporter
@@ -581,27 +567,22 @@ metrics.reporter.my_other_reporter.port: 10000
 
 {% endhighlight %}
 
-**Important:** The jar containing the reporter must be accessible when Flink is started by placing it in the /lib folder.
+**重要：** 包含报告器的jar包放置在目录/lib下，才能够在Flink启动时被访问到。
 
-You can write your own `Reporter` by implementing the `org.apache.flink.metrics.reporter.MetricReporter` interface.
-If the Reporter should send out reports regularly you have to implement the `Scheduled` interface as well.
+你也可以通过实现接口`org.apache.flink.metrics.reporter.MetricReporter`来实现自定义 `Reporter`。如果报告器需要定期发送报告，你也必须要实现接口`Scheduled`。
 
-The following sections list the supported reporters.
+以下部分列出了支持的报告器。
 
 ### JMX (org.apache.flink.metrics.jmx.JMXReporter)
 
-You don't have to include an additional dependency since the JMX reporter is available by default
-but not activated.
+JMX报告器默认可用但未被激活，所以你不需要提供额外的依赖。
 
-Parameters:
+参数：
 
-- `port` - (optional) the port on which JMX listens for connections.
-In order to be able to run several instances of the reporter on one host (e.g. when one TaskManager is colocated with the JobManager) it is advisable to use a port range like `9250-9260`.
-When a range is specified the actual port is shown in the relevant job or task manager log.
-If this setting is set Flink will start an extra JMX connector for the given port/range.
-Metrics are always available on the default local JMX interface.
+- `port` - （可选）JMX监听连接的端口。
+  为了能够在一台主机上运行多个报告器实例（例如，当一个TaskManager与JobManager对接时），建议使用9250-9260这样的端口范围。当指定一个范围时，实际的端口在相关的作业或任务管理器日志中显示。如果此设置被设置，Flink将为给定端口/范围启动额外的JMX连接器。度量值总是在缺省本地JMX接口上可用。
 
-Example configuration:
+样例配置：
 
 {% highlight yaml %}
 
@@ -610,33 +591,28 @@ metrics.reporter.jmx.port: 8789
 
 {% endhighlight %}
 
-Metrics exposed through JMX are identified by a domain and a list of key-properties, which together form the object name.
+通过JMX公开的度量通过域和关键属性列表来标识，这些属性共同构成对象名称。
 
-The domain always begins with `org.apache.flink` followed by a generalized metric identifier. In contrast to the usual
-identifier it is not affected by scope-formats, does not contain any variables and is constant across jobs.
-An example for such a domain would be `org.apache.flink.job.task.numBytesOut`.
+域总是以 `org.apache.flink` 开始，随后是广义度量标识符。与通常的标识符不同，它不受范围格式的影响，不包含任何变量，而是跨作业的常数。这样的域的一个例子是 `org.apache.flink.job.task.numBytesOut`。
 
-The key-property list contains the values for all variables, regardless of configured scope formats, that are associated
-with a given metric.
-An example for such a list would be `host=localhost,job_name=MyJob,task_name=MyTask`.
+键属性列表包含与给定度量关联的所有变量的值，而不管配置的范围格式如何。这样的列表的一个例子是 `host=localhost,job_name=MyJob,task_name=MyTask`.
 
-The domain thus identifies a metric class, while the key-property list identifies one (or multiple) instances of that metric.
+一个域标识一个度量类，而密钥属性列表标识该度量的一个（或多个）实例。
 
-### Ganglia (org.apache.flink.metrics.ganglia.GangliaReporter)
+### 监控软件(org.apache.flink.metrics.ganglia.GangliaReporter)
 
-In order to use this reporter you must copy `/opt/flink-metrics-ganglia-{{site.version}}.jar` into the `/lib` folder
-of your Flink distribution.
+为了使用此报告，您必须复制 `/opt/flink-metrics-ganglia-{{site.version}}.jar` 到Flink分发的`/lib` 文件夹中。
 
-Parameters:
+参数：
 
-- `host` - the gmond host address configured under `udp_recv_channel.bind` in `gmond.conf`
-- `port` - the gmond port configured under `udp_recv_channel.port` in `gmond.conf`
-- `tmax` - soft limit for how long an old metric should be retained
-- `dmax` - hard limit for how long an old metric should be retained
-- `ttl` - time-to-live for transmitted UDP packets
-- `addressingMode` - UDP addressing mode to use (UNICAST/MULTICAST)
+- `host` -  在 `gmond.conf`中配置在`udp_recv_channel.bind`上的gmond主机地址。
+- `port` -  在 `gmond.conf`中配置在`udp_recv_channel.port`上的gmond端口。
+- `tmax` - 旧度量可以保留多长时间的软极限
+- `dmax` -  旧度量可以保留多长时间的硬极限
+- `ttl` -  传输UDP数据包的生存时间
+- `addressingMode` - 使用UDP寻址模式（单播/多播）
 
-Example configuration:
+样例配置：
 
 {% highlight yaml %}
 
@@ -650,18 +626,17 @@ metrics.reporter.gang.addressingMode: MULTICAST
 
 {% endhighlight %}
 
-### Graphite (org.apache.flink.metrics.graphite.GraphiteReporter)
+### 石墨(org.apache.flink.metrics.graphite.GraphiteReporter)
 
-In order to use this reporter you must copy `/opt/flink-metrics-graphite-{{site.version}}.jar` into the `/lib` folder
-of your Flink distribution.
+为了使用此报告，您必须复制 `/opt/flink-metrics-graphite-{{site.version}}.jar` 到Flink分发的`/lib` 文件夹中。
 
-Parameters:
+参数：
 
-- `host` - the Graphite server host
-- `port` - the Graphite server port
-- `protocol` - protocol to use (TCP/UDP)
+- `host` - 石墨服务器主机
+- `port` - 石墨服务器端口
+- `protocol` - （TCP / UDP）使用协议
 
-Example configuration:
+样例：
 
 {% highlight yaml %}
 
@@ -672,16 +647,15 @@ metrics.reporter.grph.protocol: TCP
 
 {% endhighlight %}
 
-### Prometheus (org.apache.flink.metrics.prometheus.PrometheusReporter)
+### 普罗米修斯(org.apache.flink.metrics.prometheus.PrometheusReporter)
 
-In order to use this reporter you must copy `/opt/flink-metrics-prometheus-{{site.version}}.jar` into the `/lib` folder
-of your Flink distribution.
+为了使用此报告，您必须复制`/opt/flink-metrics-prometheus-{{site.version}}.jar` 到Flink分发的`/lib` 文件夹中。
 
-Parameters:
+参数：
 
-- `port` - (optional) the port the Prometheus exporter listens on, defaults to [9249](https://github.com/prometheus/prometheus/wiki/Default-port-allocations). In order to be able to run several instances of the reporter on one host (e.g. when one TaskManager is colocated with the JobManager) it is advisable to use a port range like `9250-9260`.
+- `port` - （可选）普罗米修斯输出监听的端口，默认为9249。为了能够在一台主机上运行多个报告器实例（例如，当一个TaskManager与JobManager对接时），建议使用9250-9260这样的端口范围。
 
-Example configuration:
+样例：
 
 {% highlight yaml %}
 
@@ -689,27 +663,26 @@ metrics.reporter.prom.class: org.apache.flink.metrics.prometheus.PrometheusRepor
 
 {% endhighlight %}
 
-Flink metric types are mapped to Prometheus metric types as follows: 
+Flink度量类型映射到普罗米修斯 度量类型如下：
 
-| Flink     | Prometheus | Note                                     |
-| --------- |------------|------------------------------------------|
-| Counter   | Gauge      |Prometheus counters cannot be decremented.|
-| Gauge     | Gauge      |Only numbers and booleans are supported.  |
-| Histogram | Summary    |Quantiles .5, .75, .95, .98, .99 and .999 |
-| Meter     | Gauge      |The gauge exports the meter's rate.       |
+| Flink     | Prometheus | Note                                |
+| --------- | ---------- | ----------------------------------- |
+| 计数器    | 仪表       | 普罗米修斯计数器不可以递减          |
+| 仪表      | 仪表       | 仅支持数值和布尔类型                |
+| Histogram | Summary    | 分位数.5, .75, .95, .98, .99 和.999 |
+| Meter     | 仪表       | 仪表输出流量计的速率                |
 
-All Flink metrics variables (see [List of all Variables](#list-of-all-variables)) are exported to Prometheus as labels. 
+所有Flink度量变量（参见 [List of all Variables](#list-of-all-variables)）都被输出到作为标签。
 
 ### PrometheusPushGateway (org.apache.flink.metrics.prometheus.PrometheusPushGatewayReporter)
 
-In order to use this reporter you must copy `/opt/flink-metrics-prometheus-{{site.version}}.jar` into the `/lib` folder
-of your Flink distribution.
+为了使用此报告，您必须复制`/opt/flink-metrics-prometheus-{{site.version}}.jar`到Flink分发的`/lib` 文件夹中。
 
-Parameters:
+参数：
 
 {% include generated/prometheus_push_gateway_reporter_configuration.html %}
 
-Example configuration:
+样例：
 
 {% highlight yaml %}
 
@@ -722,21 +695,20 @@ metrics.reporter.promgateway.deleteOnShutdown: false
 
 {% endhighlight %}
 
-The PrometheusPushGatewayReporter pushes metrics to a [Pushgateway](https://github.com/prometheus/pushgateway), which can be scraped by Prometheus.
+PrometheusPushGatewayReporter将度量值推送到可以供Prometheus使用的[推送网关](https://github.com/prometheus/pushgateway)。
 
-Please see the [Prometheus documentation](https://prometheus.io/docs/practices/pushing/) for use-cases.
+用户案例请查看 [普罗米修斯文档](https://prometheus.io/docs/practices/pushing/)。
 
 ### StatsD (org.apache.flink.metrics.statsd.StatsDReporter)
 
-In order to use this reporter you must copy `/opt/flink-metrics-statsd-{{site.version}}.jar` into the `/lib` folder
-of your Flink distribution.
+为了使用此报告，您必须复制 `/opt/flink-metrics-statsd-{{site.version}}.jar` 到Flink分发的`/lib` 文件夹中。
 
-Parameters:
+参数：
 
-- `host` - the StatsD server host
-- `port` - the StatsD server port
+- `host` - StatsD服务器主机
+- `port` - StatsD服务器端口
 
-Example configuration:
+样例配置：
 
 {% highlight yaml %}
 
@@ -748,18 +720,16 @@ metrics.reporter.stsd.port: 8125
 
 ### Datadog (org.apache.flink.metrics.datadog.DatadogHttpReporter)
 
-In order to use this reporter you must copy `/opt/flink-metrics-datadog-{{site.version}}.jar` into the `/lib` folder
-of your Flink distribution.
+为了使用此报告，您必须复制 `/opt/flink-metrics-datadog-{{site.version}}.jar` 到Flink分发的`/lib` 文件夹中。
 
-Note any variables in Flink metrics, such as `<host>`, `<job_name>`, `<tm_id>`, `<subtask_index>`, `<task_name>`, and `<operator_name>`,
-will be sent to Datadog as tags. Tags will look like `host:localhost` and `job_name:myjobname`.
+注意Flink度量中的任何变量，会以标签的形式发送到Datadog，如 `<host>`， `<job_name>`， `<tm_id>`，`<subtask_index>`， `<task_name>`，和`<operator_name>`，这些类似`host:localhost` 和`job_name:myjobname`。
 
-Parameters:
+参数
 
-- `apikey` - the Datadog API key
-- `tags` - (optional) the global tags that will be applied to metrics when sending to Datadog. Tags should be separated by comma only
+- `apikey` - Datadog API密钥
+- `tags` - （可选）在发送到Datadog时将应用于度量的全局标记。标签只能用逗号分隔。
 
-Example configuration:
+样例配置：
 
 {% highlight yaml %}
 
@@ -772,10 +742,9 @@ metrics.reporter.dghttp.tags: myflinkapp,prod
 
 ### Slf4j (org.apache.flink.metrics.slf4j.Slf4jReporter)
 
-In order to use this reporter you must copy `/opt/flink-metrics-slf4j-{{site.version}}.jar` into the `/lib` folder
-of your Flink distribution.
+为了使用此报告，您必须复制 `/opt/flink-metrics-slf4j-{{site.version}}.jar` 到Flink分发的`/lib` 文件夹中。
 
-Example configuration:
+样例配置：
 
 {% highlight yaml %}
 
@@ -784,652 +753,644 @@ metrics.reporter.slf4j.interval: 60 SECONDS
 
 {% endhighlight %}
 
-## System metrics
+## 系统度量
 
-By default Flink gathers several metrics that provide deep insights on the current state.
-This section is a reference of all these metrics.
+默认情况下，Flink收集了一些对当前状态提供深刻洞察力的度量。本节是所有这些度量的参考。
 
-The tables below generally feature 5 columns:
+下表以5列代表相关特征：
 
-* The "Scope" column describes which scope format is used to generate the system scope.
-  For example, if the cell contains "Operator" then the scope format for "metrics.scope.operator" is used.
-  If the cell contains multiple values, separated by a slash, then the metrics are reported multiple
-  times for different entities, like for both job- and taskmanagers.
+* “作用域”列描述了使用哪种作用域格式来生成系统范围。例如，如果单元格包含“运算符”，则使用“metrics.scope.operator”的范围格式。如果单元格包含多个值，用斜线分隔，那么对于不同的实体，例如对于作业和任务管理器，将多次报告度量。
 
-* The (optional)"Infix" column describes which infix is appended to the system scope.
+* （可选）“中缀”列描述向系统范围追加哪一个中缀。
 
-* The "Metrics" column lists the names of all metrics that are registered for the given scope and infix.
+* “度量”列列出为给定范围和中缀注册的所有度量的名称。
 
-* The "Description" column provides information as to what a given metric is measuring.
+* 描述”栏提供关于给定度量的度量的信息。
 
-* The "Type" column describes which metric type is used for the measurement.
+* “类型”列描述用于测量的度量类型。
 
-Note that all dots in the infix/metric name columns are still subject to the "metrics.delimiter" setting.
+注意，中缀/度量名列中的所有点仍然受到"metrics.delimiter"设置的影响。
 
-Thus, in order to infer the metric identifier:
+因此，为了推断度量标识符：
 
-1. Take the scope-format based on the "Scope" column
-2. Append the value in the "Infix" column if present, and account for the "metrics.delimiter" setting
-3. Append metric name.
+1. 以“范围”列为基础的范围格式
+2. 如果存在，在“中缀”列中追加值，并解释“度量。定界符”设置。
+3. 追加度量名。
 
 ### CPU
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 18%">Scope</th>
-      <th class="text-left" style="width: 22%">Infix</th>
-      <th class="text-left" style="width: 20%">Metrics</th>
-      <th class="text-left" style="width: 32%">Description</th>
-      <th class="text-left" style="width: 8%">Type</th>
+      <th class="text-left" style="width: 18%">范围</th>
+      <th class="text-left" style="width: 22%">中缀</th>
+      <th class="text-left" style="width: 20%">度量</th>
+      <th class="text-left" style="width: 32%">描述</th>
+      <th class="text-left" style="width: 8%">类型</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th rowspan="2"><strong>Job-/TaskManager</strong></th>
+      <th rowspan="2"><strong>作业/任务管理器</strong></th>
       <td rowspan="2">Status.JVM.CPU</td>
-      <td>Load</td>
-      <td>The recent CPU usage of the JVM.</td>
-      <td>Gauge</td>
+      <td>负载</td>
+      <td>JVM的当前CPU使用情况</td>
+      <td>仪表</td>
     </tr>
     <tr>
-      <td>Time</td>
-      <td>The CPU time used by the JVM.</td>
-      <td>Gauge</td>
+      <td>时间</td>
+      <td>JVM的当前CPU运行时长</td>
+      <td>仪表</td>
     </tr>
   </tbody>
 </table>
 
-### Memory
+
+### 内存
 <table class="table table-bordered">                               
   <thead>                                                          
     <tr>                                                           
-      <th class="text-left" style="width: 18%">Scope</th>
-      <th class="text-left" style="width: 22%">Infix</th>          
-      <th class="text-left" style="width: 20%">Metrics</th>                           
-      <th class="text-left" style="width: 32%">Description</th>
-      <th class="text-left" style="width: 8%">Type</th>                       
+      <th class="text-left" style="width: 18%">范围</th>
+      <th class="text-left" style="width: 22%">中缀</th>          
+      <th class="text-left" style="width: 20%">度量</th>                           
+      <th class="text-left" style="width: 32%">描述</th>
+      <th class="text-left" style="width: 8%">类型</th>                       
     </tr>                                                          
   </thead>                                                         
   <tbody>                                                          
     <tr>                                                           
-      <th rowspan="12"><strong>Job-/TaskManager</strong></th>
+      <th rowspan="12"><strong>作业/任务管理器</strong></th>
       <td rowspan="12">Status.JVM.Memory</td>
       <td>Heap.Used</td>
-      <td>The amount of heap memory currently used (in bytes).</td>
-      <td>Gauge</td>
+      <td>堆内存当前使用量（以字节为单位）。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>Heap.Committed</td>
-      <td>The amount of heap memory guaranteed to be available to the JVM (in bytes).</td>
-      <td>Gauge</td>
+      <td>保证为JVM可用的堆内存数量（以字节为单位）。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>Heap.Max</td>
-      <td>The maximum amount of heap memory that can be used for memory management (in bytes).</td>
-      <td>Gauge</td>
+      <td>可用于内存管理（以字节为单位）的堆内存的最大量。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>NonHeap.Used</td>
-      <td>The amount of non-heap memory currently used (in bytes).</td>
-      <td>Gauge</td>
+      <td>当前使用的非堆内存的数量（以字节为单位）</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>NonHeap.Committed</td>
-      <td>The amount of non-heap memory guaranteed to be available to the JVM (in bytes).</td>
-      <td>Gauge</td>
+      <td>保证为JVM可用的非堆内存数量（以字节为单位）。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>NonHeap.Max</td>
-      <td>The maximum amount of non-heap memory that can be used for memory management (in bytes).</td>
-      <td>Gauge</td>
+      <td>可用于内存管理（以字节为单位）的最大堆内存量。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>Direct.Count</td>
-      <td>The number of buffers in the direct buffer pool.</td>
-      <td>Gauge</td>
+      <td>直接缓冲池中的缓冲区数量。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>Direct.MemoryUsed</td>
-      <td>The amount of memory used by the JVM for the direct buffer pool (in bytes).</td>
-      <td>Gauge</td>
+      <td>JVM为直接缓冲池（以字节为单位）使用的内存量。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>Direct.TotalCapacity</td>
-      <td>The total capacity of all buffers in the direct buffer pool (in bytes).</td>
-      <td>Gauge</td>
+      <td>直接缓冲池中所有缓冲区的总容量（以字节为单位）。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>Mapped.Count</td>
-      <td>The number of buffers in the mapped buffer pool.</td>
-      <td>Gauge</td>
+      <td>映射缓冲池中的缓冲区数量。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>Mapped.MemoryUsed</td>
-      <td>The amount of memory used by the JVM for the mapped buffer pool (in bytes).</td>
-      <td>Gauge</td>
+      <td>JVM用于映射缓冲池（以字节为单位）的内存量。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>Mapped.TotalCapacity</td>
-      <td>The number of buffers in the mapped buffer pool (in bytes).</td>
-      <td>Gauge</td>
+      <td>映射缓冲池中的缓冲区数目（以字节为单位）。</td>
+      <td>仪表</td>
     </tr>                                                         
   </tbody>                                                         
 </table>
 
-### Threads
+
+### 线程
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 18%">Scope</th>
-      <th class="text-left" style="width: 22%">Infix</th>
-      <th class="text-left" style="width: 20%">Metrics</th>
-      <th class="text-left" style="width: 32%">Description</th>
-      <th class="text-left" style="width: 8%">Type</th>
+      <th class="text-left" style="width: 18%">范围</th>
+      <th class="text-left" style="width: 22%">中缀</th>
+      <th class="text-left" style="width: 20%">度量</th>
+      <th class="text-left" style="width: 32%">描述</th>
+      <th class="text-left" style="width: 8%">类型</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th rowspan="1"><strong>Job-/TaskManager</strong></th>
+      <th rowspan="1"><strong>作业/任务管理器</strong></th>
       <td rowspan="1">Status.JVM.Threads</td>
       <td>Count</td>
-      <td>The total number of live threads.</td>
-      <td>Gauge</td>
+      <td>活线程的总数。</td>
+      <td>仪表</td>
     </tr>
   </tbody>
 </table>
 
-### GarbageCollection
+
+### 垃圾回收
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 18%">Scope</th>
-      <th class="text-left" style="width: 22%">Infix</th>
-      <th class="text-left" style="width: 20%">Metrics</th>
-      <th class="text-left" style="width: 32%">Description</th>
-      <th class="text-left" style="width: 8%">Type</th>
+      <th class="text-left" style="width: 18%">范围</th>
+      <th class="text-left" style="width: 22%">中缀</th>
+      <th class="text-left" style="width: 20%">度量</th>
+      <th class="text-left" style="width: 32%">描述</th>
+      <th class="text-left" style="width: 8%">类型</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th rowspan="2"><strong>Job-/TaskManager</strong></th>
+      <th rowspan="2"><strong>作业/任务管理器</strong></th>
       <td rowspan="2">Status.JVM.GarbageCollector</td>
       <td>&lt;GarbageCollector&gt;.Count</td>
-      <td>The total number of collections that have occurred.</td>
-      <td>Gauge</td>
+      <td>已发生的集合的总数。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>&lt;GarbageCollector&gt;.Time</td>
-      <td>The total time spent performing garbage collection.</td>
-      <td>Gauge</td>
+      <td>执行垃圾收集所花费的总时间。</td>
+      <td>仪表</td>
     </tr>
   </tbody>
 </table>
 
-### ClassLoader
+
+### 类加载
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 18%">Scope</th>
-      <th class="text-left" style="width: 22%">Infix</th>
-      <th class="text-left" style="width: 20%">Metrics</th>
-      <th class="text-left" style="width: 32%">Description</th>
-      <th class="text-left" style="width: 8%">Type</th>
+      <th class="text-left" style="width: 18%">范围</th>
+      <th class="text-left" style="width: 22%">中缀</th>
+      <th class="text-left" style="width: 20%">度量</th>
+      <th class="text-left" style="width: 32%">描述</th>
+      <th class="text-left" style="width: 8%">类型</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th rowspan="2"><strong>Job-/TaskManager</strong></th>
+      <th rowspan="2"><strong>作业/任务管理器</strong></th>
       <td rowspan="2">Status.JVM.ClassLoader</td>
       <td>ClassesLoaded</td>
-      <td>The total number of classes loaded since the start of the JVM.</td>
-      <td>Gauge</td>
+      <td>自JVM启动以来加载的类的总数。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>ClassesUnloaded</td>
-      <td>The total number of classes unloaded since the start of the JVM.</td>
-      <td>Gauge</td>
+      <td>自JVM启动以来卸载的类的总数。</td>
+      <td>仪表</td>
     </tr>
   </tbody>
 </table>
 
-### Network
+
+### 网络
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 18%">Scope</th>
-      <th class="text-left" style="width: 22%">Infix</th>
-      <th class="text-left" style="width: 22%">Metrics</th>
-      <th class="text-left" style="width: 30%">Description</th>
-      <th class="text-left" style="width: 8%">Type</th>
+      <th class="text-left" style="width: 18%">范围</th>
+      <th class="text-left" style="width: 22%">中缀</th>
+      <th class="text-left" style="width: 22%">度量</th>
+      <th class="text-left" style="width: 30%">描述</th>
+      <th class="text-left" style="width: 8%">类型</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th rowspan="2"><strong>TaskManager</strong></th>
+      <th rowspan="2"><strong>任务管理器</strong></th>
       <td rowspan="2">Status.Network</td>
       <td>AvailableMemorySegments</td>
-      <td>The number of unused memory segments.</td>
-      <td>Gauge</td>
+      <td>未使用的内存段的数目。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>TotalMemorySegments</td>
-      <td>The number of allocated memory segments.</td>
-      <td>Gauge</td>
+      <td>分配的内存段的数目。</td>
+      <td>仪表</td>
     </tr>
     <tr>
-      <th rowspan="8">Task</th>
+      <th rowspan="8">任务</th>
       <td rowspan="4">buffers</td>
       <td>inputQueueLength</td>
-      <td>The number of queued input buffers.</td>
-      <td>Gauge</td>
+      <td>排队输入缓冲区的数量。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>outputQueueLength</td>
-      <td>The number of queued output buffers.</td>
-      <td>Gauge</td>
+      <td>队列输出缓冲区的数量。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>inPoolUsage</td>
-      <td>An estimate of the input buffers usage.</td>
-      <td>Gauge</td>
+      <td>输入缓冲器使用的估计。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>outPoolUsage</td>
-      <td>An estimate of the output buffers usage.</td>
-      <td>Gauge</td>      
+      <td>输出缓冲器使用的估计。</td>
+      <td>仪表</td>      
     </tr>
     <tr>
       <td rowspan="4">Network.&lt;Input|Output&gt;.&lt;gate&gt;<br />
-        <strong>(only available if <tt>taskmanager.net.detailed-metrics</tt> config option is set)</strong></td>
+        <strong>(只有<tt>taskmanager.net.detailed-metrics</tt>度量配置选项被设置时才可用。</strong></td>
       <td>totalQueueLen</td>
-      <td>Total number of queued buffers in all input/output channels.</td>
-      <td>Gauge</td>
+      <td>在所有输入/输出通道中排队缓冲区的总数。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>minQueueLen</td>
-      <td>Minimum number of queued buffers in all input/output channels.</td>
-      <td>Gauge</td>
+      <td>在所有输入/输出通道中排队缓冲区的最小数目。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>maxQueueLen</td>
-      <td>Maximum number of queued buffers in all input/output channels.</td>
-      <td>Gauge</td>
+      <td>在所有输入/输出通道中排队缓冲区的最大数目。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>avgQueueLen</td>
-      <td>Average number of queued buffers in all input/output channels.</td>
-      <td>Gauge</td>
+      <td>在所有输入/输出通道中排队缓冲区的平均数目。</td>
+      <td>仪表</td>
     </tr>
   </tbody>
 </table>
 
-### Cluster
+
+### 集群
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 18%">Scope</th>
-      <th class="text-left" style="width: 26%">Metrics</th>
-      <th class="text-left" style="width: 48%">Description</th>
-      <th class="text-left" style="width: 8%">Type</th>
+      <th class="text-left" style="width: 18%">范围</th>
+      <th class="text-left" style="width: 26%">度量</th>
+      <th class="text-left" style="width: 48%">描述</th>
+      <th class="text-left" style="width: 8%">类型</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th rowspan="4"><strong>JobManager</strong></th>
+      <th rowspan="4"><strong>作业管理器</strong></th>
       <td>numRegisteredTaskManagers</td>
-      <td>The number of registered taskmanagers.</td>
-      <td>Gauge</td>
+      <td>已注册任务管理器的数量</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>numRunningJobs</td>
-      <td>The number of running jobs.</td>
-      <td>Gauge</td>
+      <td>运行中作业的数量</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>taskSlotsAvailable</td>
-      <td>The number of available task slots.</td>
-      <td>Gauge</td>
+      <td>可用任务槽的数目。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>taskSlotsTotal</td>
-      <td>The total number of task slots.</td>
-      <td>Gauge</td>
+      <td>任务槽的总数。</td>
+      <td>仪表</td>
     </tr>
   </tbody>
 </table>
 
-### Availability
+
+### 可用性
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 18%">Scope</th>
-      <th class="text-left" style="width: 26%">Metrics</th>
-      <th class="text-left" style="width: 48%">Description</th>
-      <th class="text-left" style="width: 8%">Type</th>
+      <th class="text-left" style="width: 18%">范围</th>
+      <th class="text-left" style="width: 26%">度量</th>
+      <th class="text-left" style="width: 48%">描述</th>
+      <th class="text-left" style="width: 8%">类型</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th rowspan="4"><strong>Job (only available on JobManager)</strong></th>
+      <th rowspan="4"><strong>作业（仅在作业管理器上可用）</strong></th>
       <td>restartingTime</td>
-      <td>The time it took to restart the job, or how long the current restart has been in progress (in milliseconds).</td>
-      <td>Gauge</td>
+      <td>重新启动作业所需的时间，或者当前重新启动的时间（毫秒）。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>uptime</td>
       <td>
-        The time that the job has been running without interruption.
-        <p>Returns -1 for completed jobs (in milliseconds).</p>
+        作业没有中断地运行的时间。
+        <p>返回（-1）完成的作业（以毫秒为单位）</p>
       </td>
-      <td>Gauge</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>downtime</td>
       <td>
-        For jobs currently in a failing/recovering situation, the time elapsed during this outage.
-        <p>Returns 0 for running jobs and -1 for completed jobs (in milliseconds).</p>
+        对于当前处于故障/恢复状态的作业，在该停机期间所花费的时间。
+        <p>返回0用于运行的作业，-1完成作业（以毫秒为单位）。</p>
       </td>
-      <td>Gauge</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>fullRestarts</td>
-      <td>The total number of full restarts since this job was submitted (in milliseconds).</td>
+      <td>提交此作业的全部重新启动的总数（毫秒）。</td>
       <td>Gauge</td>
     </tr>
   </tbody>
 </table>
 
-### Checkpointing
+- 检查点
+
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 18%">Scope</th>
-      <th class="text-left" style="width: 26%">Metrics</th>
-      <th class="text-left" style="width: 48%">Description</th>
-      <th class="text-left" style="width: 8%">Type</th>
+      <th class="text-left" style="width: 18%">范围</th>
+      <th class="text-left" style="width: 26%">度量</th>
+      <th class="text-left" style="width: 48%">描述</th>
+      <th class="text-left" style="width: 8%">类型</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th rowspan="9"><strong>Job (only available on JobManager)</strong></th>
+      <th rowspan="9"><strong>作业（仅在作业管理器上可用）</strong></th>
       <td>lastCheckpointDuration</td>
-      <td>The time it took to complete the last checkpoint (in milliseconds).</td>
-      <td>Gauge</td>
+      <td>完成最后一个检查点（以毫秒为单位）所花费的时间。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>lastCheckpointSize</td>
-      <td>The total size of the last checkpoint (in bytes).</td>
-      <td>Gauge</td>
+      <td>最后一个检查点的总大小（以字节为单位）。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>lastCheckpointExternalPath</td>
-      <td>The path where the last external checkpoint was stored.</td>
-      <td>Gauge</td>
+      <td>最后一个外部检查点被存储的路径</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>lastCheckpointRestoreTimestamp</td>
-      <td>Timestamp when the last checkpoint was restored at the coordinator (in milliseconds).</td>
-      <td>Gauge</td>
+      <td>当最后一个检查点在协调器（以毫秒为单位）恢复时的时间戳。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>lastCheckpointAlignmentBuffered</td>
-      <td>The number of buffered bytes during alignment over all subtasks for the last checkpoint (in bytes).</td>
-      <td>Gauge</td>
+      <td>在最后一个检查点（以字节为单位）的所有子任务上对齐时的缓冲字节数。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>numberOfInProgressCheckpoints</td>
-      <td>The number of in progress checkpoints.</td>
-      <td>Gauge</td>
+      <td>正在进行的检查点的数量。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>numberOfCompletedCheckpoints</td>
-      <td>The number of successfully completed checkpoints.</td>
-      <td>Gauge</td>
+      <td>成功完成的检查点的数量。</td>
+      <td>仪表</td>
     </tr>            
     <tr>
       <td>numberOfFailedCheckpoints</td>
-      <td>The number of failed checkpoints.</td>
-      <td>Gauge</td>
+      <td>检查点失败的数量。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>totalNumberOfCheckpoints</td>
-      <td>The number of total checkpoints (in progress, completed, failed).</td>
-      <td>Gauge</td>
+      <td>总检查点的数量（正在进行、完成、失败）。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <th rowspan="1">Task</th>
       <td>checkpointAlignmentTime</td>
-      <td>The time in nanoseconds that the last barrier alignment took to complete, or how long the current alignment has taken so far (in nanoseconds).</td>
-      <td>Gauge</td>
+      <td>最后一次势垒对齐完成所需的时间，或者当前对齐迄今为止所花费的时间（以纳秒为单位）。</td>
+      <td>仪表</td>
     </tr>
   </tbody>
 </table>
+
 
 ### IO
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 18%">Scope</th>
-      <th class="text-left" style="width: 26%">Metrics</th>
-      <th class="text-left" style="width: 48%">Description</th>
-      <th class="text-left" style="width: 8%">Type</th>
+      <th class="text-left" style="width: 18%">范围</th>
+      <th class="text-left" style="width: 26%">度量</th>
+      <th class="text-left" style="width: 48%">描述</th>
+      <th class="text-left" style="width: 8%">类型</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th rowspan="1"><strong>Job (only available on TaskManager)</strong></th>
+      <th rowspan="1"><strong>作业（仅在任务管理器上可用）</strong></th>
       <td>&lt;source_id&gt;.&lt;source_subtask_index&gt;.&lt;operator_id&gt;.&lt;operator_subtask_index&gt;.latency</td>
-      <td>The latency distributions from a given source subtask to an operator subtask (in milliseconds).</td>
-      <td>Histogram</td>
+      <td>从给定源子任务到操作员子任务（以毫秒为单位）的延迟分布。</td>
+      <td>直方图</td>
     </tr>
     <tr>
-      <th rowspan="6"><strong>Task</strong></th>
+      <th rowspan="6"><strong>作业</strong></th>
       <td>numBytesInLocal</td>
-      <td>The total number of bytes this task has read from a local source.</td>
-      <td>Counter</td>
+      <td>此任务从本地源读取的字节总数。</td>
+      <td>计数器</td>
     </tr>
     <tr>
       <td>numBytesInLocalPerSecond</td>
-      <td>The number of bytes this task reads from a local source per second.</td>
+      <td>该任务从本地源每秒读取的字节数。</td>
       <td>Meter</td>
     </tr>
     <tr>
       <td>numBytesInRemote</td>
-      <td>The total number of bytes this task has read from a remote source.</td>
-      <td>Counter</td>
+      <td>此任务从远程源读取的字节总数。</td>
+      <td>计数器</td>
     </tr>
     <tr>
       <td>numBytesInRemotePerSecond</td>
-      <td>The number of bytes this task reads from a remote source per second.</td>
+      <td>此任务从每秒远程源读取的字节数。</td>
       <td>Meter</td>
     </tr>
     <tr>
-      <th rowspan="6"><strong>Task</strong></th>
+      <th rowspan="6"><strong>作业</strong></th>
       <td>numBuffersInLocal</td>
-      <td>The total number of network buffers this task has read from a local source.</td>
-      <td>Counter</td>
+      <td>此任务从本地源读取的网络缓冲区总数。</td>
+      <td>计数器</td>
     </tr>
     <tr>
       <td>numBuffersInLocalPerSecond</td>
-      <td>The number of network buffers this task reads from a local source per second.</td>
+      <td>此任务从本地源读取每秒的网络缓冲区数。</td>
       <td>Meter</td>
     </tr>
     <tr>
       <td>numBuffersInRemote</td>
-      <td>The total number of network buffers this task has read from a remote source.</td>
-      <td>Counter</td>
+      <td>此任务从远程源读取的网络缓冲区总数。</td>
+      <td>计数器</td>
     </tr>
     <tr>
       <td>numBuffersInRemotePerSecond</td>
-      <td>The number of network buffers this task reads from a remote source per second.</td>
+      <td>此任务从每秒远程源读取的网络缓冲区数。</td>
       <td>Meter</td>
     </tr>
     <tr>
       <td>numBytesOut</td>
-      <td>The total number of bytes this task has emitted.</td>
-      <td>Counter</td>
+      <td>此任务发出的字节总数。</td>
+      <td>计数器</td>
     </tr>
     <tr>
       <td>numBytesOutPerSecond</td>
-      <td>The number of bytes this task emits per second.</td>
+      <td>该任务每秒发出的字节数。</td>
       <td>Meter</td>
     </tr>
     <tr>
       <td>numBuffersOut</td>
-      <td>The total number of network buffers this task has emitted.</td>
-      <td>Counter</td>
+      <td>此任务已发出的网络缓冲区总数。</td>
+      <td>计数器</td>
     </tr>
     <tr>
       <td>numBuffersOutPerSecond</td>
-      <td>The number of network buffers this task emits per second.</td>
+      <td>该任务每秒发出的网络缓冲区数。</td>
       <td>Meter</td>
     </tr>
     <tr>
-      <th rowspan="6"><strong>Task/Operator</strong></th>
+      <th rowspan="6"><strong>任务/操作符</strong></th>
       <td>numRecordsIn</td>
-      <td>The total number of records this operator/task has received.</td>
-      <td>Counter</td>
+      <td>此操作员/任务已接收的记录总数。</td>
+      <td>计数器</td>
     </tr>
     <tr>
       <td>numRecordsInPerSecond</td>
-      <td>The number of records this operator/task receives per second.</td>
+      <td>该操作员/任务每秒接收的记录数。</td>
       <td>Meter</td>
     </tr>
     <tr>
       <td>numRecordsOut</td>
-      <td>The total number of records this operator/task has emitted.</td>
-      <td>Counter</td>
+      <td>操作员/任务发出的记录总数。</td>
+      <td>计数器</td>
     </tr>
     <tr>
       <td>numRecordsOutPerSecond</td>
-      <td>The number of records this operator/task sends per second.</td>
+      <td>这个操作员/任务每秒发送的记录数。</td>
       <td>Meter</td>
     </tr>
     <tr>
       <td>numLateRecordsDropped</td>
-      <td>The number of records this operator/task has dropped due to arriving late.</td>
-      <td>Counter</td>
+      <td>由于迟到，操作员/任务已丢失的记录数。</td>
+      <td>计数器</td>
     </tr>
     <tr>
       <td>currentInputWatermark</td>
       <td>
-        The last watermark this operator/tasks has received (in milliseconds).
-        <p><strong>Note:</strong> For operators/tasks with 2 inputs this is the minimum of the last received watermarks.</p>
+        这个操作符/任务接收到的最后一个水印（毫秒）。
+        <p><strong>注意：</strong> 对于具有2个输入的操作符/任务，这是最后接收到的水印的最小值。</p>
       </td>
-      <td>Gauge</td>
+      <td>仪表</td>
     </tr>
     <tr>
-      <th rowspan="4"><strong>Operator</strong></th>
+      <th rowspan="4"><strong>操作符</strong></th>
       <td>currentInput1Watermark</td>
-      <td>
-        The last watermark this operator has received in its first input (in milliseconds).
-        <p><strong>Note:</strong> Only for operators with 2 inputs.</p>
+      <td>该操作符在其第一次输入（毫秒）中接收到的最后一个水印。
+        <p><strong>注意：</strong> 仅适用于具有2个输入的操作员。</p>
       </td>
-      <td>Gauge</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>currentInput2Watermark</td>
-      <td>
-        The last watermark this operator has received in its second input (in milliseconds).
-        <p><strong>Note:</strong> Only for operators with 2 inputs.</p>
+      <td>这个操作符在第二个输入（毫秒）中接收到的最后一个水印。
+        <p><strong>注意：</strong> 仅适用于具有2个输入的操作员。</p>
       </td>
-      <td>Gauge</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>currentOutputWatermark</td>
-      <td>
-        The last watermark this operator has emitted (in milliseconds).
-      </td>
-      <td>Gauge</td>
+      <td>这个操作符发出的最后一个水印（以毫秒为单位）。</td>
+      <td>仪表</td>
     </tr>
     <tr>
       <td>numSplitsProcessed</td>
-      <td>The total number of InputSplits this data source has processed (if the operator is a data source).</td>
-      <td>Gauge</td>
+      <td>此数据源已处理的输入总数（如果运算符是数据源）。</td>
+      <td>仪表</td>
     </tr>
   </tbody>
 </table>
 
-### Connectors
 
-#### Kafka Connectors
+### 连接器
+
+#### Kafka连接器
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 15%">Scope</th>
-      <th class="text-left" style="width: 18%">Metrics</th>
-      <th class="text-left" style="width: 18%">User Variables</th>
-      <th class="text-left" style="width: 39%">Description</th>
-      <th class="text-left" style="width: 10%">Type</th>
+      <th class="text-left" style="width: 15%">范围</th>
+      <th class="text-left" style="width: 18%">度量</th>
+      <th class="text-left" style="width: 18%">用户变量</th>
+      <th class="text-left" style="width: 39%">描述</th>
+      <th class="text-left" style="width: 10%">类型</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th rowspan="1">Operator</th>
+      <th rowspan="1">操作符</th>
       <td>commitsSucceeded</td>
       <td>n/a</td>
-      <td>The total number of successful offset commits to Kafka, if offset committing is turned on and checkpointing is enabled.</td>
-      <td>Counter</td>
+      <td>如果启用了偏移提交和检查点启用，则成功偏移量的总数将提交给Kafka。</td>
+      <td>计数器</td>
     </tr>
     <tr>
        <th rowspan="1">Operator</th>
        <td>commitsFailed</td>
        <td>n/a</td>
-       <td>The total number of offset commit failures to Kafka, if offset committing is
-       turned on and checkpointing is enabled. Note that committing offsets back to Kafka
-       is only a means to expose consumer progress, so a commit failure does not affect
-       the integrity of Flink's checkpointed partition offsets.</td>
-       <td>Counter</td>
+       <td>如果启用了偏移提交并启用检查点，则对Kafka的偏移提交失败的总数。请注意，向Kafka提交偏移量只是公开使用者进度的一种方法，因此提交失败不会影响Flink的检查点分区偏移的完整性。</td>
+       <td>计数器</td>
     </tr>
     <tr>
-       <th rowspan="1">Operator</th>
+       <th rowspan="1">操作符</th>
        <td>committedOffsets</td>
        <td>topic, partition</td>
-       <td>The last successfully committed offsets to Kafka, for each partition.
-       A particular partition's metric can be specified by topic name and partition id.</td>
-       <td>Gauge</td>
+       <td>最后成功地提交给每个分区的Kafka。特定分区的度量可以由主题名称和分区ID指定。</td>
+       <td>仪表</td>
     </tr>
     <tr>
       <th rowspan="1">Operator</th>
       <td>currentOffsets</td>
       <td>topic, partition</td>
-      <td>The consumer's current read offset, for each partition. A particular
-      partition's metric can be specified by topic name and partition id.</td>
-      <td>Gauge</td>
+      <td>每个分区的用户当前读取偏移量。特定分区的度量可以由主题名称和分区ID指定</td>
+      <td>仪表</td>
     </tr>
   </tbody>
 </table>
 
-#### Kinesis Connectors
+
+#### Kinesis连接器
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 15%">Scope</th>
-      <th class="text-left" style="width: 18%">Metrics</th>
-      <th class="text-left" style="width: 18%">User Variables</th>
-      <th class="text-left" style="width: 39%">Description</th>
-      <th class="text-left" style="width: 10%">Type</th>
+      <th class="text-left" style="width: 15%">范围</th>
+      <th class="text-left" style="width: 18%">度量</th>
+      <th class="text-left" style="width: 18%">用户变量</th>
+      <th class="text-left" style="width: 39%">描述</th>
+      <th class="text-left" style="width: 10%">类型</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th rowspan="1">Operator</th>
+      <th rowspan="1">操作符</th>
       <td>millisBehindLatest</td>
       <td>stream, shardId</td>
-      <td>The number of milliseconds the consumer is behind the head of the stream,
-      indicating how far behind current time the consumer is, for each Kinesis shard.
-      A particular shard's metric can be specified by stream name and shard id.
-      A value of 0 indicates record processing is caught up, and there are no new records
-      to process at this moment. A value of -1 indicates that there is no reported value for the metric, yet.
-      </td>
-      <td>Gauge</td>
+      <td>对于每个Kinesis碎片，使用者在流头后面的毫秒数，指示使用者在当前时间后面的距离。可以通过流名称和碎片id指定特定碎片的度量。值为0表示记录处理被占用，此时没有新的记录要处理。值1表示度量值没有报告值。 </td>
+      <td>仪表</td>
     </tr>
     <tr>
-      <th rowspan="1">Operator</th>
+      <th rowspan="1">操作符</th>
       <td>sleepTimeMillis</td>
       <td>stream, shardId</td>
-      <td>The number of milliseconds the consumer spends sleeping before fetching records from Kinesis.
-      A particular shard's metric can be specified by stream name and shard id.
+      <td>消费者在从运动中获取记录之前睡眠的毫秒数。特定碎片的度量可以通过流名和碎片ID来指定。
       </td>
       <td>Gauge</td>
     </tr>
@@ -1437,113 +1398,102 @@ Thus, in order to infer the metric identifier:
       <th rowspan="1">Operator</th>
       <td>maxNumberOfRecordsPerFetch</td>
       <td>stream, shardId</td>
-      <td>The maximum number of records requested by the consumer in a single getRecords call to Kinesis. If ConsumerConfigConstants.SHARD_USE_ADAPTIVE_READS
-      is set to true, this value is adaptively calculated to maximize the 2 Mbps read limits from Kinesis.
+      <td>消费者在单个Kinesis中调用的最大记录数。如果ConsumerConfigConst.SHARD_USE_ADAPTIVE_READS设置为true，则自适应地计算该值以使来自Kinesis的2Mbps读取限制最大化。
       </td>
-      <td>Gauge</td>
+      <td>仪表</td>
     </tr>
     <tr>
-      <th rowspan="1">Operator</th>
+      <th rowspan="1">操作符</th>
       <td>numberOfAggregatedRecordsPerFetch</td>
       <td>stream, shardId</td>
-      <td>The number of aggregated Kinesis records fetched by the consumer in a single getRecords call to Kinesis.
+      <td>在一个单一的Kinesis中调用消费者聚集的动态记录的数量。
       </td>
-      <td>Gauge</td>
+      <td>仪表</td>
     </tr>
     <tr>
-      <th rowspan="1">Operator</th>
+      <th rowspan="1">操作符</th>
       <td>numberOfDeggregatedRecordsPerFetch</td>
       <td>stream, shardId</td>
-      <td>The number of deaggregated Kinesis records fetched by the consumer in a single getRecords call to Kinesis.
+      <td>在一个单一的getRecords调用中，由消费者获取的去聚集运动记录的数量。
       </td>
-      <td>Gauge</td>
+      <td>仪表</td>
     </tr>
     <tr>
-      <th rowspan="1">Operator</th>
+      <th rowspan="1">操作符</th>
       <td>averageRecordSizeBytes</td>
       <td>stream, shardId</td>
-      <td>The average size of a Kinesis record in bytes, fetched by the consumer in a single getRecords call.
+      <td>在一个单一的getRecords调用中由消费者获取的字节动态记录的平均大小。
       </td>
-      <td>Gauge</td>
+      <td>仪表</td>
     </tr>
     <tr>
-      <th rowspan="1">Operator</th>
+      <th rowspan="1">操作符</th>
       <td>runLoopTimeNanos</td>
       <td>stream, shardId</td>
-      <td>The actual time taken, in nanoseconds, by the consumer in the run loop.
+      <td>在运行周期中，消费者在纳秒中花费的实际时间。
       </td>
-      <td>Gauge</td>
+      <td>仪表</td>
     </tr>
     <tr>
-      <th rowspan="1">Operator</th>
+      <th rowspan="1">操作符</th>
       <td>loopFrequencyHz</td>
       <td>stream, shardId</td>
-      <td>The number of calls to getRecords in one second. 
+      <td>在一秒钟内获取getRecords的调用数。
       </td>
-      <td>Gauge</td>
+      <td>仪表</td>
     </tr>
     <tr>
-      <th rowspan="1">Operator</th>
+      <th rowspan="1">操作符</th>
       <td>bytesRequestedPerFetch</td>
       <td>stream, shardId</td>
-      <td>The bytes requested (2 Mbps / loopFrequencyHz) in a single call to getRecords.
+      <td>在一次调用getRecords中请求字节(2 Mbps / loopFrequencyHz)。
       </td>
-      <td>Gauge</td>
+      <td>仪表</td>
     </tr>
   </tbody>
 </table>
 
-## Latency tracking
 
-Flink allows to track the latency of records traveling through the system. To enable the latency tracking
-a `latencyTrackingInterval` (in milliseconds) has to be set to a positive value in the `ExecutionConfig`.
+## 时延跟踪
 
-At the `latencyTrackingInterval`, the sources will periodically emit a special record, called a `LatencyMarker`.
-The marker contains a timestamp from the time when the record has been emitted at the sources.
-Latency markers can not overtake regular user records, thus if records are queuing up in front of an operator, 
-it will add to the latency tracked by the marker.
+Flink允许跟踪通过系统运行的记录的延迟。为了启用延迟跟踪，必须在`ExecutionConfig`中将 `latencyTrackingInterval` （以毫秒为单位）设置为正值。
 
-Note that the latency markers are not accounting for the time user records spend in operators as they are
-bypassing them. In particular the markers are not accounting for the time records spend for example in window buffers.
-Only if operators are not able to accept new records, thus they are queuing up, the latency measured using
-the markers will reflect that.
+在`latencyTrackingInterval`区间，源将周期性地发射一个特殊的记录，称为 `LatencyMarker`。标记包含从源发出的记录时的时间戳。延迟标记不能超过常规用户记录，因此如果记录在操作符前面排队，它将添加到标记跟踪的延迟中。
 
-All intermediate operators keep a list of the last `n` latencies from each source to compute 
-a latency distribution.
-The sink operators keep a list from each source, and each parallel source instance to allow detecting 
-latency issues caused by individual machines.
+注意，延迟标记不考虑操作符在绕过它们时花费在操作符上的时间。特别地，标记不考虑例如在窗口缓冲器中花费的时间记录。只有当操作符不能接受新的记录，因此他们正在排队时，使用标记测量的延迟才会反映这一点。
 
-Currently, Flink assumes that the clocks of all machines in the cluster are in sync. We recommend setting
-up an automated clock synchronisation service (like NTP) to avoid false latency results.
+所有中间运算符保留来自每个源的最后N个延迟的列表，以计算延迟分布。接收器操作符保存来自每个源和每个并行源实例的列表，以允许检测由各个机器引起的延迟问题。
 
-## REST API integration
+目前，Flink假设集群中所有机器的时钟都处于同步状态。我们建议设置一个自动时钟同步服务（如NTP），以避免错误的延迟结果。
 
-Metrics can be queried through the [Monitoring REST API]({{ site.baseurl }}/monitoring/rest_api.html).
+## REST API集成
 
-Below is a list of available endpoints, with a sample JSON response. All endpoints are of the sample form `http://hostname:8081/jobmanager/metrics`, below we list only the *path* part of the URLs.
+可以通过 [Monitoring REST API]({{ site.baseurl }}/monitoring/rest_api.html)查询度量值.
 
-Values in angle brackets are variables, for example `http://hostname:8081/jobs/<jobid>/metrics` will have to be requested for example as `http://hostname:8081/jobs/7684be6004e4e955c2a558a9bc463f65/metrics`.
+下面是可用端点的列表，带有示例JSON响应。所有端点都是样本形式`http://hostname:8081/jobmanager/metrics`，下面我们只列出URL的路径部分。
 
-Request metrics for a specific entity:
+角括号中的值是变量，例如`http://hostname:8081/jobs/<jobid>/metrics` 将会以样例`http://hostname:8081/jobs/7684be6004e4e955c2a558a9bc463f65/metrics`来请求。
+
+特定实体的请求度量：
 
   - `/jobmanager/metrics`
   - `/taskmanagers/<taskmanagerid>/metrics`
   - `/jobs/<jobid>/metrics`
   - `/jobs/<jobid>/vertices/<vertexid>/subtasks/<subtaskindex>`
 
-Request metrics aggregated across all entities of the respective type:
+聚集在各个类型的所有实体上的请求度量：
 
   - `/taskmanagers/metrics`
   - `/jobs/metrics`
   - `/jobs/<jobid>/vertices/<vertexid>/subtasks/metrics`
 
-Request metrics aggregated over a subset of all entities of the respective type:
+聚集在各个类型的所有实体的子集上的请求度量：
 
   - `/taskmanagers/metrics?taskmanagers=A,B,C`
   - `/jobs/metrics?jobs=D,E,F`
   - `/jobs/<jobid>/vertices/<vertexid>/subtasks/metrics?subtask=1,2,3`
 
-Request a list of available metrics:
+请求可用度量表：
 
 `GET /jobmanager/metrics`
 
@@ -1558,7 +1508,7 @@ Request a list of available metrics:
 ]
 {% endhighlight %}
 
-Request the values for specific (unaggregated) metrics:
+请求特定（未聚合）度量值：
 
 `GET taskmanagers/ABCDE/metrics?get=metric1,metric2`
 
@@ -1575,7 +1525,7 @@ Request the values for specific (unaggregated) metrics:
 ]
 {% endhighlight %}
 
-Request aggregated values for specific metrics:
+请求特定度量的聚合值：
 
 `GET /taskmanagers/metrics?get=metric1,metric2`
 
@@ -1598,7 +1548,7 @@ Request aggregated values for specific metrics:
 ]
 {% endhighlight %}
 
-Request specific aggregated values for specific metrics:
+请求特定度量的特定聚合值：
 
 `GET /taskmanagers/metrics?get=metric1,metric2&agg=min,max`
 
@@ -1617,18 +1567,15 @@ Request specific aggregated values for specific metrics:
 ]
 {% endhighlight %}
 
-## Dashboard integration
+## 仪表板集成
 
-Metrics that were gathered for each task or operator can also be visualized in the Dashboard. On the main page for a
-job, select the `Metrics` tab. After selecting one of the tasks in the top graph you can select metrics to display using
-the `Add Metric` drop-down menu.
+为每个任务或操作符收集的度量也可以在仪表板中可视化。在作业的主页上，选择“度量”选项卡。在选择顶部图中的一个任务之后，可以选择使用添加度量下拉菜单显示的度量。
 
-* Task metrics are listed as `<subtask_index>.<metric_name>`.
-* Operator metrics are listed as `<subtask_index>.<operator_name>.<metric_name>`.
+* 任务度量被列为 `<subtask_index>.<metric_name>`.
+* 运算符度量被列为`<subtask_index>.<operator_name>.<metric_name>`.
 
-Each metric will be visualized as a separate graph, with the x-axis representing time and the y-axis the measured value.
-All graphs are automatically updated every 10 seconds, and continue to do so when navigating to another page.
+每个度量将被可视化为单独的图，X轴表示时间，Y轴表示测量值。每隔10秒自动更新所有图表，并在导航到另一页时继续这样做。
 
-There is no limit as to the number of visualized metrics; however only numeric metrics can be visualized.
+对于可视化度量的数量没有限制，但是只有数字度量可以被可视化。
 
 {% top %}
