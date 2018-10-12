@@ -1,5 +1,5 @@
 ---
-title: "Java Lambda Expressions"
+title: "Java Lambda 表达式"
 nav-parent_id: api-concepts
 nav-pos: 20
 ---
@@ -22,19 +22,17 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-Java 8 introduced several new language features designed for faster and clearer coding. With the most important feature,
-the so-called "Lambda Expressions", it opened the door to functional programming. Lambda expressions allow for implementing and
-passing functions in a straightforward way without having to declare additional (anonymous) classes.
+Java 8 引入了一系列新的语言特性，以便开发者更快速更清晰地进行编程。其最重要的特性，被称为“Lambda 表达式”，打开了通往函数式编程的大门。Lambda 表达式允许更加直接的方式实现并传递方法，而不必去声明额外的（匿名）类。
 
-<span class="label label-danger">Attention</span> Flink supports the usage of lambda expressions for all operators of the Java API, however, whenever a lambda expression uses Java generics you need to declare type information *explicitly*. 
+<span class="label label-danger">注意</span> Flink 为所有 operator 的 Java API 提供了 lambda 表达式支持，然而每当 lambda 表达式使用 Java 泛型时，你必须*显式*声明类型信息。
 
-This document shows how to use lambda expressions and describes current limitations. For a general introduction to the
-Flink API, please refer to the [Programming Guide]({{ site.baseurl }}/dev/api_concepts.html)
+本文档展示了如何使用 lambda 表达式以及描述了目前局限性。关于 Filnk API 综合介绍请参考 [Programming Guide]({{ site.baseurl }}/dev/api_concepts.html)
 
-### Examples and Limitations
+### 示例和限制
 
-The following example illustrates how to implement a simple, inline `map()` function that squares its input using a lambda expression.
-The types of input `i` and output parameters of the `map()` function need not to be declared as they are inferred by the Java compiler.
+以下例子展示了如何实现一个简单的，内联 `map()` 函数，该函数使用 lambda 表达式计算乘方。
+
+输入参数 `i` 和 `map()` 方法输出参数的类型不需要声明，因为 Java 编译器能够推测出其类型。
 
 {% highlight java %}
 env.fromElements(1, 2, 3)
@@ -43,20 +41,20 @@ env.fromElements(1, 2, 3)
 .print();
 {% endhighlight %}
 
-Flink can automatically extract the result type information from the implementation of the method signature `OUT map(IN value)` because `OUT` is not generic but `Integer`.
+Flink 能够从 `OUT map(IN value)` 方法签名的实现中自动解析出结果的类型信息，因为 `OUT` 不是泛化类型而是 `Integer`。
 
-Unfortunately, functions such as `flatMap()` with a signature `void flatMap(IN value, Collector<OUT> out)` are compiled into `void flatMap(IN value, Collector out)` by the Java compiler. This makes it impossible for Flink to infer the type information for the output type automatically.
+遗憾的是，例如 `flatMap()` 方法的签名 `void flatMap(IN value, Collector<OUT> out)` 会被Java编译器编译成 `void flatMap(IN value, Collector out)`。这使得 Flink 无法自动推测出输出类型的类型信息。
 
-Flink will most likely throw an exception similar to the following:
+Flink 通常会抛出如下类似异常：
 
 {% highlight plain%}
 org.apache.flink.api.common.functions.InvalidTypesException: The generic type parameters of 'Collector' are missing.
-    In many cases lambda methods don't provide enough information for automatic type extraction when Java generics are involved.
-    An easy workaround is to use an (anonymous) class instead that implements the 'org.apache.flink.api.common.functions.FlatMapFunction' interface.
-    Otherwise the type has to be specified explicitly using type information.
+    许多情形下lambda方法在涉及到Java泛型时无法提供足够信息来自动类型解析。
+    一个简单的解决方案是使用一个（匿名）类代替实现'org.apache.flink.api.common.functions.FlatMapFunction'接口。
+    否则必须显式指定类型信息。
 {% endhighlight %}
 
-In this case, the type information needs to be *specified explicitly*, otherwise the output will be treated as type `Object` which leads to unefficient serialization.
+在这种情况下，类型信息必须被*显式指定*，否则输出将被转换为 `Object` 类型，导致序列化效率低下。
 
 {% highlight java %}
 import org.apache.flink.api.common.typeinfo.Types;
@@ -79,7 +77,7 @@ input.flatMap((Integer number, Collector<String> out) -> {
 .print();
 {% endhighlight %}
 
-Similar problems occur when using a `map()` function with a generic return type. A method signature `Tuple2<Integer, Integer> map(Integer value)` is erasured to `Tuple2 map(Integer value)` in the example below.
+同样问题出现在当使用 `map()` 方法返回泛型类型中。下面例子中方法签名 `Tuple2<Integer, Integer> map(Integer value)` 被擦除为 `Tuple2 map(Integer value)`。
 
 {% highlight java %}
 import org.apache.flink.api.common.functions.MapFunction;
