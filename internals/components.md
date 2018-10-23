@@ -22,17 +22,17 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-Flink 软件栈是一个分层的系统。每一层都依次构建在其下层的基础上，并向上层提供它们所能接受的程序的抽象表示：
+Flink 软件栈是一个分层的系统。每一层都依次构建在其下层的基础上，并将下层可接受的程序抽象成更容易表述的方法：
 
-- **runtime** 层接收的是 *JobGraph* 格式定义的程序。JobGraph 是一个通用的并行数据流，由任意多个消费和生产数据流的任务构成。
+- **runtime** 层接收的是用 *JobGraph* 定义的程序。JobGraph 是一个通用的并行数据流，由任意多个消费和生产数据流的任务构成。
 
-- **DataStream API** 和 **DataSet API** 通过不同的编译流程生成 JobGraph。DataSet API 使用优化器来决定 JobGraph 程序的最优方案，而 DataStream API 使用的是流构建器。
+- **DataStream API** 和 **DataSet API** 通过不同的编译流程生成 JobGraph。DataSet API 使用优化器来为程序制定最优方案，而 DataStream API 使用的是流构建器。
 
-- JobGraph 可以运行在 Flink 的各种不同部署方式上（包括本地、远程、YARN等）。
+- JobGraph 会根据 Flink 的不同部署模式（例如：本地、远程、YARN 等）而解析成不同的执行计划。
 
-- Flink 还提供了一些专业的类库和 API 用于生成 DataSet 或者 DataStream API 程序。Table 库提供了逻辑表的查询操作，FlinkML 库用于机器学习领域，Gelly 提供了图计算功能。
+- Flink 还提供了一些专业的类库和 API 用于生成 DataSet 或者 DataStream API 程序。Table API 提供了逻辑表的查询操作，FlinkML 库用于机器学习领域，Gelly 提供了图计算功能。
 
-更详细的信息请点击下图中的各个组件了解。
+点击下图中的各个组件了解更详细的信息。
 
 <center>
   <img src="{{ site.baseurl }}/fig/stack.png" width="700px" alt="Apache Flink: Stack" usemap="#overview-stack">
