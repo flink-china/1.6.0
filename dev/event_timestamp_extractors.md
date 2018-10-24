@@ -1,5 +1,8 @@
-# Pre-defined Timestamp Extractors / Watermark Emitters
-
+---
+title: "Pre-defined Timestamp Extractors / Watermark Emitters"
+nav-parent_id: event_time
+nav-pos: 2
+---
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -18,6 +21,9 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -->
+
+* toc
+{:toc}
 
 如[timestamps and watermark 处理中所述](doc/dev/event_timestamps_watermarks.html)，Flink提供了抽象，允许程序员自定义时间戳和watermark。更具体地说，用户可以根据实际情况，选择实现`AssignerWithPeriodicWatermarks`或`AssignerWithPunctuatedWatermarks`接口。简而言之，第一个接口将定期发出watermark，而第二个接口基于传入记录的某些属性，例如在流中遇到特殊元素时，发出watermark。
 

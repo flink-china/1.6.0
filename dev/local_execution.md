@@ -1,5 +1,8 @@
-# 本地执行
-
+---
+title:  "本地执行"
+nav-parent_id: batch
+nav-pos: 8
+---
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -26,6 +29,9 @@ Flink 可以在单独一台机器，甚至一个 Java 虚拟机上运行。这�
 Flink支持两种不同的本地执行。 `LocalExecutionEnvironment` 是启动完整的Flink运行时（Flink Runtime），包括 JobManager 和 TaskManager 。 这种方式包括内存管理和在集群模式下执行的所有内部算法。
 
 `CollectionEnvironment` 是在 Java 集合（Java Collections）上执行 Flink 程序。 此模式不会启动完整的Flink运行时（Flink Runtime），因此执行的开销非常低并且轻量化。 例如一个`DataSet.map()`变换，会对Java list中所有元素应用 `map()` 函数。
+
+* TOC
+{:toc}
 
 ## 调试
 
@@ -117,3 +123,5 @@ public static void main(String[] args) throws Exception {
 基于集合执行的框架 `flink-examples-batch` 模块包含一个完整的示例，名为 `CollectionExecutionExample` 。
 
 请注意，基于集合的 Flink 程序的执行仅适用于小数据量计算。 集合上的执行不是多线程的，只使用一个线程。
+
+{% top %}

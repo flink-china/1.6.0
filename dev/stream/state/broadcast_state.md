@@ -1,4 +1,29 @@
-# 广播状态模式
+---
+title: "广播状态模式"
+nav-parent_id: streaming_state
+nav-pos: 2
+---
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+* ToC
+{:toc}
 
 我们在[状态使用](state.html)文档中介绍了两类算子状态（operator state）。第一类在任务恢复时会将所有状态平均分配给算子的每一个并行任务；第二类会首先对全部状态执行一个并操作，然后对于每一个需要恢复的并行任务，都利用该结果进行初始化。
 

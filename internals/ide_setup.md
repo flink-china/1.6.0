@@ -1,4 +1,29 @@
-# IDE 设置
+---
+title: "IDE 设置"
+nav-parent_id: start
+nav-pos: 3
+---
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+* Replaced by the TOC
+{:toc}
 
 本章将简介如何将 Flink 项目导入到 IDE 中以进行开发。为了编写 Flink 程序，请参见 [Java API]({{ site.baseurl }}/quickstart/java_api_quickstart.html) 和  [Scala API]({{ site.baseurl }}/quickstart/scala_api_quickstart.html) 等指南。
 
@@ -67,3 +92,5 @@ IntelliJ 在安装时已经提供并配置好了 Scale 插件。如果没有安�
 **注意：**依据我们的经验，本设置可能无法适用与 Flink，因为 Scala IDE 3.0.3 依赖于老版的 Eclipse，且 Scala IDE 4.4.1 使用了不兼容的 Scala 版本。
 
 **我们更推荐使用 IntelliJ 来代替 Eclipse（请参见[前文](#intellij-idea)）
+
+{% top %}

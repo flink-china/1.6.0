@@ -1,5 +1,8 @@
-# 执行配置
-
+---
+title: "执行配置"
+nav-parent_id: execution
+nav-pos: 10
+---
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -72,3 +75,5 @@ var executionConfig = env.getConfig
 - `setTaskCancellationInterval(long interval)` 设置在连续尝试取消正在运行的任务之间等待的间隔（以毫秒为单位）。 取消任务时，如果任务线程未在特定时间内终止，则创建一个新线程，该线程在任务线程上定期调用`interrupt()`。 此参数指的是连续调用`interrupt()`之间的时间，默认设置为 **30000** 毫秒，或 **30秒** 。
 
 通过 `getRuntimeContext()` 方法在 `Rich*` 函数中访问的 `RuntimeContext` 也允许在所有用户定义的函数中访问 `ExecutionConfig` 。
+
+{% top %}

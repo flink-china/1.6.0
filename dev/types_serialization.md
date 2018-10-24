@@ -1,6 +1,33 @@
-# 数据类型和序列化
+---
+title: "数据类型和序列化"
+nav-id: types
+nav-parent_id: dev
+nav-show_overview: true
+nav-pos: 50
+---
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
 
 独特的类型描述符，通用类型抽象以及序列化框架组成了Apache Flink处理数据类型和序列化的独特方式。本文描述了这些基本概念以及其间的关系。
+
+* This will be replaced by the TOC
+{:toc}
 
 ## Flink 中的类型处理
 
@@ -268,3 +295,5 @@ public class MyTupleTypeInfoFactory extends TypeInfoFactory<MyTuple> {
 `createTypeInfo(Type, Map<String, TypeInformation<?>>)` 方法用于创建该工厂目标类型的类型信息，当有参数时，参数和类型的泛型参数可以提供关于该类型的附加信息。
 
 如果你的类型包含的泛型参数可能源自Flink方法的输入类型，请确保你实现了 `org.apache.flink.api.common.typeinfo.TypeInformation#getGenericParameters` 用于建立从泛型参数到类型信息的双向映射。
+
+{% top %}

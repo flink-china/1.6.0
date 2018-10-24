@@ -1,5 +1,8 @@
-# 重启策略
-
+---
+title: "重启策略"
+nav-parent_id: execution
+nav-pos: 50
+---
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -20,6 +23,9 @@ under the License.
 -->
 
 Flink提供了不同的重启策略，这些策略可以控制如何重启运行失败的作业。集群启动时，可配置默认作业重启策略。如果作业在提交时指定了重启策略，将会覆盖集群默认重启策略。
+
+* toc
+{:toc}
 
 ## 概览
 
@@ -190,3 +196,5 @@ env.setRestartStrategy(RestartStrategies.noRestart())
 ### 回退重启策略
 
 使用群集定义的重启策略。这对启用checkpoint的流式程序很有帮助。默认情况下，如果没有定义其他重启策略，则选择固定延迟重启策略。
+
+{% top %}
