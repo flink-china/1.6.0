@@ -22,27 +22,17 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-Flink provides different state backends that specify how and where state is stored.
 
-State can be located on Java’s heap or off-heap. Depending on your state backend, Flink can also manage the state for the application, meaning Flink deals with the memory management (possibly spilling to disk if necessary) to allow applications to hold very large state. By default, the configuration file *flink-conf.yaml* determines the state backend for all Flink jobs.
+Flink提供了用于指定状态的存储方式和位置的不同状态后端。 
 
-However, the default state backend can be overridden on a per-job basis, as shown below.
+状态可以位于Java堆内存或之外。Flink可以根据状态后端管理应用程序的状态，这意味着Flink通过内存管理（溢出的话会写入到磁盘）来使应用程序持有很大的状态。默认情况下，配置文件*flink-conf.yaml*确定了所有Flink作业的状态后端。 
 
-For more information about the available state backends, their advantages, limitations, and configuration parameters see the corresponding section in [Deployment & Operations]({{ site.baseurl }}/ops/state/state_backends.html).
+但是，可以在每个作业的基础上覆盖默认状态后端，如下所示。 
 
-<div class="codetabs" markdown="1">
-<div data-lang="java" markdown="1">
-{% highlight java %}
-StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-env.setStateBackend(...);
-{% endhighlight %}
-</div>
-<div data-lang="scala" markdown="1">
-{% highlight scala %}
-val env = StreamExecutionEnvironment.getExecutionEnvironment()
-env.setStateBackend(...)
-{% endhighlight %}
-</div>
-</div>
+有关可用的状态后端的优点，限制和配置参数的详细信息，请参阅[部署和操作]({{ site.baseurl }}/ops/state/state_backends.html)中的相应部分。 
 
+{% highlight java %} StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment(); env.setStateBackend(...); {% endhighlight %}
+{% highlight scala %} val env = StreamExecutionEnvironment.getExecutionEnvironment() env.setStateBackend(...) {% endhighlight %}
 {% top %}
+
+
