@@ -23,16 +23,29 @@ under the License.
 -->
 
 
-Flink提供了用于指定状态的存储方式和位置的不同状态后端。 
+Flink提供了用于指定状态的存储方式和位置的不同状态后端。
 
 状态可以位于Java堆内存或之外。Flink可以根据状态后端管理应用程序的状态，这意味着Flink通过内存管理（溢出的话会写入到磁盘）来使应用程序持有很大的状态。默认情况下，配置文件*flink-conf.yaml*确定了所有Flink作业的状态后端。 
 
-但是，可以在每个作业的基础上覆盖默认状态后端，如下所示。 
+但是，可以在每个作业的基础上覆盖默认状态后端，如下所示。
 
-有关可用的状态后端的优点，限制和配置参数的详细信息，请参阅[部署和操作]({{ site.baseurl }}/ops/state/state_backends.html)中的相应部分。 
+有关可用的状态后端的优点，限制和配置参数的详细信息，请参阅[部署和操作]({{ site.baseurl }}/ops/state/state_backends.html)中的相应部分。
 
-{% highlight java %} StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment(); env.setStateBackend(...); {% endhighlight %}
-{% highlight scala %} val env = StreamExecutionEnvironment.getExecutionEnvironment() env.setStateBackend(...) {% endhighlight %}
+<div class="codetabs" markdown="1">
+<div data-lang="java" markdown="1">
+{% highlight java %}
+StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+env.setStateBackend(...);
+{% endhighlight %}
+</div>
+<div data-lang="scala" markdown="1">
+{% highlight scala %}
+val env = StreamExecutionEnvironment.getExecutionEnvironment()
+env.setStateBackend(...)
+{% endhighlight %}
+</div>
+</div>
+
 {% top %}
 
 
