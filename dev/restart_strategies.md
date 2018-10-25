@@ -1,5 +1,5 @@
 ---
-title: "Restart Strategies"
+title: "重启策略"
 nav-parent_id: execution
 nav-pos: 50
 ---
@@ -22,249 +22,179 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-Flink supports different restart strategies which control how the jobs are restarted in case of a failure.
-The cluster can be started with a default restart strategy which is always used when no job specific restart strategy has been defined.
-In case that the job is submitted with a restart strategy, this strategy overrides the cluster's default setting.
+Flink提供了不同的重启策略，这些策略可以控制如何重启运行失败的作业。集群启动时，可配置默认作业重启策略。如果作业在提交时指定了重启策略，将会覆盖集群默认重启策略。
 
-* This will be replaced by the TOC
+* toc
 {:toc}
 
-## Overview
+## 概览
 
-The default restart strategy is set via Flink's configuration file `flink-conf.yaml`.
-The configuration parameter *restart-strategy* defines which strategy is taken.
-If checkpointing is not enabled, the "no restart" strategy is used.
-If checkpointing is activated and the restart strategy has not been configured, the fixed-delay strategy is used with 
-`Integer.MAX_VALUE` restart attempts.
-See the following list of available restart strategies to learn what values are supported.
+默认重启策略是通过Flink的配置文件`flink-conf.yaml`来设置的。配置参数 *restart-strategy*指定了作业失败的重启策略。如果没有启用checkpoint，则使用“不重启”策略。如果开启了checkpoint并且未配置重启策略，则使用固定延迟重启策略，最大重试次数为`Integer.MAX_VALUE`。请参阅以下已经支持了的重启策略列表，
 
-Each restart strategy comes with its own set of parameters which control its behaviour.
-These values are also set in the configuration file.
-The description of each restart strategy contains more information about the respective configuration values.
+每个重启策略都有自己的一组参数来控制其行为。这些值也设置在配置文件中。各重启策略的描述包含这些配置项的更多信息。
 
-<table class="table table-bordered">
-  <thead>
-    <tr>
-      <th class="text-left" style="width: 50%">Restart Strategy</th>
-      <th class="text-left">Value for restart-strategy</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-        <td>Fixed delay</td>
-        <td>fixed-delay</td>
-    </tr>
-    <tr>
-        <td>Failure rate</td>
-        <td>failure-rate</td>
-    </tr>
-    <tr>
-        <td>No restart</td>
-        <td>none</td>
-    </tr>
-  </tbody>
-</table>
+|重启策略|重启策略对应值|
+|--|--|
+|固定延迟|fixed-delay|
+|故障率|failure-rate|
+|不重启|none|
 
-Apart from defining a default restart strategy, it is possible to define for each Flink job a specific restart strategy.
-This restart strategy is set programmatically by calling the `setRestartStrategy` method on the `ExecutionEnvironment`.
-Note that this also works for the `StreamExecutionEnvironment`.
+除了定义默认重启策略之外，还可以为每个Flink作业定义特定的重启策略。通过调用运行环境 `ExecutionEnvironment`中的 `setRestartStrategy`方法，以编程方式设置策略。注意，这也适用于流执行环境。
 
-The following example shows how we can set a fixed delay restart strategy for our job.
-In case of a failure the system tries to restart the job 3 times and waits 10 seconds in-between successive restart attempts.
+下面的示例演示了如何为我们的作业设置固定延迟重启策略。在发生故障时，系统尝试重启作业3次，重启间隔为10秒。
 
-<div class="codetabs" markdown="1">
-<div data-lang="java" markdown="1">
-{% highlight java %}
+**Java**
+```java
 ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 env.setRestartStrategy(RestartStrategies.fixedDelayRestart(
   3, // number of restart attempts
   Time.of(10, TimeUnit.SECONDS) // delay
 ));
-{% endhighlight %}
-</div>
-<div data-lang="scala" markdown="1">
-{% highlight scala %}
+```
+
+**Scala**
+```scala
 val env = ExecutionEnvironment.getExecutionEnvironment()
 env.setRestartStrategy(RestartStrategies.fixedDelayRestart(
   3, // number of restart attempts
   Time.of(10, TimeUnit.SECONDS) // delay
 ))
-{% endhighlight %}
-</div>
-</div>
+```
 
-{% top %}
+## 重启策略
 
-## Restart Strategies
+以下部分描述各重启策略特定的配置项。
 
-The following sections describe restart strategy specific configuration options.
+### 固定延迟重启策略
 
-### Fixed Delay Restart Strategy
+固定延迟重启策略尝试给定次数重启作业。如果超出了最大尝试次数，作业最终会失败。在两次连续重启尝试之间，重启策略等待固定的时间量。通过在 `flink-conf.yaml`中设置以下配置参数，该策略被启用为默认值。
 
-The fixed delay restart strategy attempts a given number of times to restart the job.
-If the maximum number of attempts is exceeded, the job eventually fails.
-In-between two consecutive restart attempts, the restart strategy waits a fixed amount of time.
-
-This strategy is enabled as default by setting the following configuration parameter in `flink-conf.yaml`.
-
-{% highlight yaml %}
+```yaml 
 restart-strategy: fixed-delay
-{% endhighlight %}
+```
+|配置参数|描述|默认值|
+|--|--|--|
+|restart-strategy.fixed-delay.attempts|FLink在作业失败前的重试次数。|如果checkpoint激活,值为1，或者Integer.MAX_VALUE|
+|restart-strategy.fixed-delay.attempts|延迟重试意味着在执行失败之后，重新执行不会立即开始，而是在一定的延迟之后才开始。当程序与外部系统进行交互时，延迟重试策略可能有帮助，例如，在尝试重启前，连接或挂起的事务应该已经超时。|如果checkpoint激活,其参数项为akka.ask.timeout, 或者10s|
 
-<table class="table table-bordered">
-  <thead>
-    <tr>
-      <th class="text-left" style="width: 40%">Configuration Parameter</th>
-      <th class="text-left" style="width: 40%">Description</th>
-      <th class="text-left">Default Value</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-        <td><code>restart-strategy.fixed-delay.attempts</code></td>
-        <td>The number of times that Flink retries the execution before the job is declared as failed.</td>
-        <td>1, or <code>Integer.MAX_VALUE</code> if activated by checkpointing</td>
-    </tr>
-    <tr>
-        <td><code>restart-strategy.fixed-delay.delay</code></td>
-        <td>Delaying the retry means that after a failed execution, the re-execution does not start immediately, but only after a certain delay. Delaying the retries can be helpful when the program interacts with external systems where for example connections or pending transactions should reach a timeout before re-execution is attempted.</td>
-        <td><code>akka.ask.timeout</code>, or 10s if activated by checkpointing</td>
-    </tr>
-  </tbody>
-</table>
+例如：
 
-For example:
-
-{% highlight yaml %}
+```yaml
 restart-strategy.fixed-delay.attempts: 3
 restart-strategy.fixed-delay.delay: 10 s
-{% endhighlight %}
+```
 
-The fixed delay restart strategy can also be set programmatically:
+固定延迟重启策略也可以编程方式设置：
 
-<div class="codetabs" markdown="1">
-<div data-lang="java" markdown="1">
-{% highlight java %}
+**Java**
+```Java
 ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 env.setRestartStrategy(RestartStrategies.fixedDelayRestart(
   3, // number of restart attempts
   Time.of(10, TimeUnit.SECONDS) // delay
 ));
-{% endhighlight %}
-</div>
-<div data-lang="scala" markdown="1">
-{% highlight scala %}
+```
+
+**Scala**
+```scala
 val env = ExecutionEnvironment.getExecutionEnvironment()
 env.setRestartStrategy(RestartStrategies.fixedDelayRestart(
   3, // number of restart attempts
   Time.of(10, TimeUnit.SECONDS) // delay
 ))
-{% endhighlight %}
-</div>
-</div>
+```
 
-{% top %}
+### 故障率重启策略
 
-### Failure Rate Restart Strategy
+失败率重启策略在失败之后重启作业，但是当超过 `failure rate`（某段时间内的失败次数）时，作业最终失败。在两次连续重启之间，间隔固定时间。
 
-The failure rate restart strategy restarts job after failure, but when `failure rate` (failures per time interval) is exceeded, the job eventually fails.
-In-between two consecutive restart attempts, the restart strategy waits a fixed amount of time.
+通过在 `flink-conf.yaml`中设置以下配置参数，设置该策略为默认策略。
 
-This strategy is enabled as default by setting the following configuration parameter in `flink-conf.yaml`.
-
-{% highlight yaml %}
+```yaml
 restart-strategy: failure-rate
-{% endhighlight %}
+```
 
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 40%">Configuration Parameter</th>
-      <th class="text-left" style="width: 40%">Description</th>
-      <th class="text-left">Default Value</th>
+      <th class="text-left" style="width: 40%">配置参数</th>
+      <th class="text-left" style="width: 40%">描述</th>
+      <th class="text-left">默认值</th>
     </tr>
   </thead>
   <tbody>
     <tr>
         <td><it>restart-strategy.failure-rate.max-failures-per-interval</it></td>
-        <td>Maximum number of restarts in given time interval before failing a job</td>
+        <td>在作业失败之前给定时间间隔的最大重启次数</td>
         <td>1</td>
     </tr>
     <tr>
         <td><it>restart-strategy.failure-rate.failure-rate-interval</it></td>
-        <td>Time interval for measuring failure rate.</td>
+        <td>测量故障率的时间间隔。</td>
         <td>1 minute</td>
     </tr>
     <tr>
         <td><it>restart-strategy.failure-rate.delay</it></td>
-        <td>Delay between two consecutive restart attempts</td>
+        <td>两次连续重启尝试之间的延迟</td>
         <td><it>akka.ask.timeout</it></td>
     </tr>
   </tbody>
 </table>
 
-{% highlight yaml %}
+```yaml
 restart-strategy.failure-rate.max-failures-per-interval: 3
 restart-strategy.failure-rate.failure-rate-interval: 5 min
 restart-strategy.failure-rate.delay: 10 s
-{% endhighlight %}
+```
 
-The failure rate restart strategy can also be set programmatically:
+失败率重启策略也可以以编程方式设置：
 
-<div class="codetabs" markdown="1">
-<div data-lang="java" markdown="1">
-{% highlight java %}
+**java**
+```java
 ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 env.setRestartStrategy(RestartStrategies.failureRateRestart(
   3, // max failures per interval
   Time.of(5, TimeUnit.MINUTES), //time interval for measuring failure rate
   Time.of(10, TimeUnit.SECONDS) // delay
 ));
-{% endhighlight %}
-</div>
-<div data-lang="scala" markdown="1">
-{% highlight scala %}
-val env = ExecutionEnvironment.getExecutionEnvironment()
+```
+
+**Scala**
+
+```scala
+val env = ExecutionEnvironment.getExecutionEnvironment();
 env.setRestartStrategy(RestartStrategies.failureRateRestart(
   3, // max failures per unit
   Time.of(5, TimeUnit.MINUTES), //time interval for measuring failure rate
   Time.of(10, TimeUnit.SECONDS) // delay
 ))
-{% endhighlight %}
-</div>
-</div>
+```
 
-{% top %}
 
-### No Restart Strategy
+### 不重启策略
 
-The job fails directly and no restart is attempted.
+作业直接失败，不尝试重启。
 
-{% highlight yaml %}
+```yaml
 restart-strategy: none
-{% endhighlight %}
+```
 
-The no restart strategy can also be set programmatically:
+还可以以编程方式设置不重启策略：
 
-<div class="codetabs" markdown="1">
-<div data-lang="java" markdown="1">
-{% highlight java %}
+**Java**
+```java
 ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 env.setRestartStrategy(RestartStrategies.noRestart());
-{% endhighlight %}
-</div>
-<div data-lang="scala" markdown="1">
-{% highlight scala %}
+```
+
+**Scala**
+```scala
 val env = ExecutionEnvironment.getExecutionEnvironment()
 env.setRestartStrategy(RestartStrategies.noRestart())
-{% endhighlight %}
-</div>
-</div>
+```
 
-### Fallback Restart Strategy
+### 回退重启策略
 
-The cluster defined restart strategy is used. 
-This helpful for streaming programs which enable checkpointing.
-Per default, a fixed delay restart strategy is chosen if there is no other restart strategy defined.
+使用群集定义的重启策略。这对启用checkpoint的流式程序很有帮助。默认情况下，如果没有定义其他重启策略，则选择固定延迟重启策略。
 
 {% top %}
