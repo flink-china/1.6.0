@@ -24,8 +24,12 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-* toc
-{:toc}
+- [事件时间 / 处理时间 / 导入时间](#------------------)
+    + [设置时间特性](#------)
+- [事件时间和水印](#-------)
+  * [并行流中的水印](#-------)
+  * [迟到的元素](#-----)
+  * [定位水印问题](#------)
 
 # 事件时间 / 处理时间 / 导入时间
 
@@ -69,7 +73,7 @@ Flink在流处理中支持多种*时间*概念。.
 
     从内部机制来讲，*导入时间*和*事件时间*的处理非常相似，它可以是看做具有自动时间戳和自动水印生成的*事件时间*处理。
 
-<img src="{{ site.baseurl }}/fig/times_clocks.svg" class="center" width="80%" />
+<img src="{{site.baseurl}}/fig/times_clocks.svg" class="center" width="80%" />
 
 
 ### 设置时间特性
@@ -79,9 +83,7 @@ Flink在流处理中支持多种*时间*概念。.
 
 下面这个例子展示了一个以每小时作为时间窗对事件进行聚合的Flink程序。其中时间窗的行为适应于时间特性。
 
-<div class="codetabs" markdown="1">
-<div data-lang="java" markdown="1">
-{% highlight java %}
+```java
 final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
 env.setStreamTimeCharacteristic(TimeCharacteristic.ProcessingTime);
@@ -97,10 +99,7 @@ stream
     .timeWindow(Time.hours(1))
     .reduce( (a, b) -> a.add(b) )
     .addSink(...);
-{% endhighlight %}
-</div>
-<div data-lang="scala" markdown="1">
-{% highlight scala %}
+
 val env = StreamExecutionEnvironment.getExecutionEnvironment
 
 env.setStreamTimeCharacteristic(TimeCharacteristic.ProcessingTime)
@@ -116,19 +115,18 @@ stream
     .timeWindow(Time.hours(1))
     .reduce( (a, b) => a.add(b) )
     .addSink(...)
-{% endhighlight %}
-</div>
-</div>
+
+```
 
 
 注意为了使用事件时间，这个程序要么需要直接定义事件时间并且自己发出水印，要么需要在数据源后植入一个时间戳指定器和
 水印生成器。这些函数描述了如何获得事件时间，以及数据会表现出多大程度上的乱序。
 
 下面的这个部分表述了一个在时间戳和水印背后的通用机制。关于如何使用Flink DataStream API打时间戳以及生成水印，
-请参见[生成时间戳/水印]({{ site.baseurl }}/dev/event_timestamps_watermarks.html)。
+请参见[生成时间戳/水印]({{site.baseurl}}/dev/event_timestamps_watermarks.html)。
 
 
-# Event Time and Watermarks
+# 事件时间和水印
 
 *注：Flink实现了很多基于Dataflow模型的技术。如果读者对事件时间和水印想了解更多，可以参见以下文章：*
 
@@ -152,16 +150,16 @@ Watermark(t)表示在数据流中的*事件时间*已经到达了时间t，意�
 下图展示了一个带有逻辑时间戳的事件流，其中含有水印。这个例子中所有的事件都是有序的（根据时间戳排序），也就是说水印
 只是在数据流中定期出现的标记。
 
-<img src="{{ site.baseurl }}/fig/stream_watermark_in_order.svg" alt="A data stream with events (in order) and watermarks" class="center" width="65%" />
+<img src="{{site.baseurl}}/fig/stream_watermark_in_order.svg" alt="A data stream with events (in order) and watermarks" class="center" width="65%" />
 
 水印对于*乱序*的流至关重要，如下图所示，事件没有按照他们的时间戳顺序来排列。大致上来说，水印是一个声明，它表示从
 流中的这个点开始，所有的在某个时刻之前的数据都已经到达了。一旦一个水印到达了一个算子，这个算子就可以将它内部的
 *事件时间时钟*向前推进到这个水印的时间。
 
-<img src="{{ site.baseurl }}/fig/stream_watermark_out_of_order.svg" alt="A data stream with events (out of order) and watermarks" class="center" width="65%" />
+<img src="{{site.baseurl}}/fig/stream_watermark_out_of_order.svg" alt="A data stream with events (out of order) and watermarks" class="center" width="65%" />
 
 
-## Watermarks in Parallel Streams
+## 并行流中的水印
 
 水印是在数据源节点生成的，或者说它们是在数据源节点后生成的。一个数据源节点中的每一个并行子任务通常独立的生成它自己
 的水印。这些水印定义了在某个并发的源上的事件时间。
@@ -174,12 +172,11 @@ Watermark(t)表示在数据流中的*事件时间*已经到达了时间t，意�
 
 下图展示了算子是如何根据在数据流中流经的事件和水印来更新其事件时间时钟的。
 
-<img src="{{ site.baseurl }}/fig/parallel_streams_watermarks.svg" alt="Parallel data streams and operators with events and watermarks" class="center" width="80%" />
+<img src="{{site.baseurl}}/fig/parallel_streams_watermarks.svg" alt="Parallel data streams and operators with events and watermarks" class="center" width="80%" />
 
-注意Kafka的源支持分区级别的水印，更多信息请参考[这里]({{ site.baseurl }}/dev/event_timestamps_watermarks
-.html#timestamps-per-kafka-partition)
+注意Kafka的源支持分区级别的水印，更多信息请参考[这里]({{site.baseurl}}/dev/event_timestamps_watermarks.html#timestamps-per-kafka-partition)
 
-## Late Elements
+## 迟到的元素
 
 在实际情况中，可能会出现有一些记录在水印标记到达后才到达，这意味着即便一个标记时间戳为t的水印watermark(t)到达后，
 还会有时间戳t’（t’ <= t）的记录到达。事实上，在很多现实设定中，某些记录可能会在任意晚的时间到达，对这些记录，就不
@@ -187,13 +184,12 @@ Watermark(t)表示在数据流中的*事件时间*已经到达了时间t，意�
 看到的，因为这会导致一个窗口的计算结果也被延迟很长时间。
 
 由于这个原因，流处理总是会预期一些迟到的记录，也就是那些在系统事件时间（以水印为记号）已经过了记录中的事件时间。在
-[允许的迟到]({{ site.baseurl }}/dev/stream/operators/windows.html#allowed-lateness)中有关于如何在窗口中处
+[允许的迟到]({{site.baseurl}}/dev/stream/operators/windows.html#allowed-lateness)中有关于如何在窗口中处
 理迟到记录的更多细节。
 
 
 ## 定位水印问题
 
-请参考定位[窗口和事件时间]({{ site.baseurl }}/monitoring/debugging_event_time.html)的部分以了解更多关于如何
+请参考定位[窗口和事件时间]({{site.baseurl}}/monitoring/debugging_event_time.html)的部分以了解更多关于如何
 在运行时定位水印的内容。
 
-{% top %}
