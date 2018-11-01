@@ -22,41 +22,44 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-The Flink community highly appreciates all sorts of contributions to FlinkML.
-FlinkML offers people interested in machine learning to work on a highly active open source project which makes scalable ML reality.
-The following document describes how to contribute to FlinkML.
+Flink 社区非常感激 FlinkML 的贡献者。FlinkML 为对机器学习感兴趣的人提供了一个高度活跃的开源项目，并且实现了扩展的机器学习。
+以下文档描述了如何为 FlinkML 做贡献～
 
 * This will be replaced by the TOC
 {:toc}
 
-## Getting Started
+## 快速上手
 
-In order to get started first read Flink's [contribution guide](http://flink.apache.org/how-to-contribute.html).
-Everything from this guide also applies to FlinkML.
+首先阅读 Flink 的 [贡献指南](http://flink.apache.org/how-to-contribute.html)。 手册中的所有内容均适用于 FlinkML。
 
-## Pick a Topic
+## 选题
 
-If you are looking for some new ideas you should first look into our [roadmap](https://cwiki.apache.org/confluence/display/FLINK/FlinkML%3A+Vision+and+Roadmap), then you should check out the list of [unresolved issues on JIRA](https://issues.apache.org/jira/issues/?jql=component%20%3D%20%22Machine%20Learning%20Library%22%20AND%20project%20%3D%20FLINK%20AND%20resolution%20%3D%20Unresolved%20ORDER%20BY%20priority%20DESC).
-Once you decide to contribute to one of these issues, you should take ownership of it and track your progress with this issue.
-That way, the other contributors know the state of the different issues and redundant work is avoided.
+如果你在寻找一些新点子，可以看一下我们的[计划](https://cwiki.apache.org/confluence/display/FLINK/FlinkML%3A+Vision+and+Roadmap)，然后你可以检查一下[JIRA上未解决问题的列表](https://issues.apache.org/jira/issues/?jql=component%20%3D%20%22Machine%20Learning%20Library%22%20AND%20project%20%3D%20FLINK%20AND%20resolution%20%3D%20Unresolved%20ORDER%20BY%20priority%20DESC).
 
-If you already know what you want to contribute to FlinkML all the better.
-It is still advisable to create a JIRA issue for your idea to tell the Flink community what you want to do, though.
+当你决定要去解决其中的一个 ISSUE，你应当承包它并且使用跟这个ISSUE跟踪你的进度。
+这样的话，其他贡献者就可以知道每个ISSUE的状态并且避免重复工作。
 
-## Testing
+如果你已经知道如何让 FlinkML 变得更好，最好创建一个 JIRA ISSUE 来告诉 Flink 社区你的想法。
 
-New contributions should come with tests to verify the correct behavior of the algorithm.
-The tests help to maintain the algorithm's correctness throughout code changes, e.g. refactorings.
 
-We distinguish between unit tests, which are executed during Maven's test phase, and integration tests, which are executed during maven's verify phase.
-Maven automatically makes this distinction by using the following naming rules:
-All test cases whose class name ends with a suffix fulfilling the regular expression `(IT|Integration)(Test|Suite|Case)`, are considered integration tests.
-The rest are considered unit tests and should only test behavior which is local to the component under test.
+## 测试
 
-An integration test is a test which requires the full Flink system to be started.
-In order to do that properly, all integration test cases have to mix in the trait `FlinkTestBase`.
-This trait will set the right `ExecutionEnvironment` so that the test will be executed on a special `FlinkMiniCluster` designated for testing purposes.
-Thus, an integration test could look the following:
+新的贡献应当随着测试一起提交以确保算法的正确性。
+这些测试有助于在代码的全生命周期保证算法的正确性,例如重构。
+
+我们需要区分单元测试之间的不同，有的在Maven的测试阶段，集成测试则在验证阶段。
+
+Maven通过如下的命名规则来自动区分：
+
+所有的测试用例的类名都以有意义的后缀结尾，该结尾如可被正则表达式`(IT|Integration)(Test|Suite|Case)`识别，则认为是集成测试。
+
+其余的均被认为是单元测试，且测试中应当仅仅测试局部的组件。
+
+集成测试的时候需要启动完整的 Flink 系统。
+为了正确的进行该测试，所有的集成测试都需要加入特性 `FlinkTestBase`
+这一特性将设置正确的 `ExecutionEnvironment` (执行环境)，所以该测试将会运行在一个特殊的、为测试设计的 `FlinkMiniCluster` （Flink最小集群）。
+
+因此继承测试看上去向下面这样：
 
 {% highlight scala %}
 class ExampleITSuite extends FlatSpec with FlinkTestBase {
@@ -68,24 +71,24 @@ class ExampleITSuite extends FlatSpec with FlinkTestBase {
 }
 {% endhighlight %}
 
-The test style does not have to be `FlatSpec` but can be any other scalatest `Suite` subclass.
-See [ScalaTest testing styles](http://scalatest.org/user_guide/selecting_a_style) for more information.
+这些测试不一定要是`FlatSpec`，也可以是任意其他的 scalatest 的 `Suite` 的子类。
 
-## Documentation
+详情请阅： [ScalaTest testing styles](http://scalatest.org/user_guide/selecting_a_style)。
 
-When contributing new algorithms, it is required to add code comments describing the way the algorithm works and its parameters with which the user can control its behavior.
-Additionally, we would like to encourage contributors to add this information to the online documentation.
-The online documentation for FlinkML's components can be found in the directory `docs/libs/ml`.
+## 文档
 
-Every new algorithm is described by a single markdown file.
-This file should contain at least the following points:
+当贡献新的算法的时候，需要添加代码注释描述该种算法如何工作，同时也需要说明其参数以及参数是如何控制程序的行为的。
+此外，我们鼓励贡献者将这些信息添加到在线文档中。
+FlinkML的在线文档在文件夹`docs/libs/ml`里。
 
-1. What does the algorithm do
-2. How does the algorithm work (or reference to description)
-3. Parameter description with default values
-4. Code snippet showing how the algorithm is used
+每个新的算法都应该使用单独的 MarkDown 文件描述，这个文件至少需要包含以下要点：
 
-In order to use latex syntax in the markdown file, you have to include `mathjax: include` in the YAML front matter.
+1. 算法做了什么；
+2. 算法是如何工作的（或者使用参考描述）；
+3. 参数及其默认值的说明；
+4. 参数及其默认值的说明使用代码片段展示如何使用该算法；
+
+如果需要在 MarkDown 文件中使用 LaTeX 语法，你应该在 YAML 前页中包含 `mathjax: include`。
 
 {% highlight java %}
 ---
@@ -95,14 +98,13 @@ title: <a href="../ml">FlinkML</a> - Example title
 ---
 {% endhighlight %}
 
-In order to use displayed mathematics, you have to put your latex code in `$$ ... $$`.
-For in-line mathematics, use `$ ... $`.
-Additionally some predefined latex commands are included into the scope of your markdown file.
-See `docs/_include/latex_commands.html` for the complete list of predefined latex commands.
+如果需要显示数学表达式，你需要将 LaTeX 代码放置在 `$$ ... $$` 里面。
+单行数学表达式使用`$ ... $`。
+此外，一些预定义的 LaTeX 命令已经包含到你的 MarkDown 文件中了。
+详情请阅：`docs/_include/latex_commands.html` 来获取完整的预定义 LaTeX 命令。
 
-## Contributing
+## 贡献
 
-Once you have implemented the algorithm with adequate test coverage and added documentation, you are ready to open a pull request.
-Details of how to open a pull request can be found [here](http://flink.apache.org/how-to-contribute.html#contributing-code--documentation).
+一旦你实现了你的算法并，有较高的（测试）代码覆盖率，并且添加了文档，你可以提交一个 Pull Request， 详情看[这儿](http://flink.apache.org/how-to-contribute.html#contributing-code--documentation)
 
 {% top %}
