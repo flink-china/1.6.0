@@ -21,27 +21,28 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -->
+Table API是对于流计算和批处理统一的，关系型的API，可以不作任何修改的运行在批和流上。Table API是SQL语言的超集，专门用于与Apache Flink一起使用。Table API是Scala和Java的语言集成API，它并不像SQL需要提供一个查询的字符串，而是基于Java或者Scala语言风格的写法，并可以在IDE中有自动补全和语法验证的支持。
 
-The Table API is a unified, relational API for stream and batch processing. Table API queries can be run on batch or streaming input without modifications. The Table API is a super set of the SQL language and is specially designed for working with Apache Flink. The Table API is a language-integrated API for Scala and Java. Instead of specifying queries as String values as common with SQL, Table API queries are defined in a language-embedded style in Java or Scala with IDE support like autocompletion and syntax validation. 
+Table API的很多概念和Flink SQL相同。参照这里[Common Concepts & API]({{ site.baseurl }}/dev/table/common.html)去学习如何注册一个 `Table`对象。这里 [Streaming Concepts]({{ site.baseurl }}/dev/table/streaming.html)介绍了流计算专有的概念，例如动态表和时间属性。
 
-The Table API shares many concepts and parts of its API with Flink's SQL integration. Have a look at the [Common Concepts & API]({{ site.baseurl }}/dev/table/common.html) to learn how to register tables or to create a `Table` object. The [Streaming Concepts]({{ site.baseurl }}/dev/table/streaming.html) page discusses streaming specific concepts such as dynamic tables and time attributes.
-
-The following examples assume a registered table called `Orders` with attributes `(a, b, c, rowtime)`. The `rowtime` field is either a logical [time attribute](streaming.html#time-attributes) in streaming or a regular timestamp field in batch.
+下面的例子假设一个注册了的`Orders`表，拥有属性`(a, b, c, rowtime)`，其中`rowtime`既可以当作一个流计算中的逻辑时间属性[time attribute](streaming.html#time-attributes)，或者批处理中的一个常规的时间戳字段。
 
 * This will be replaced by the TOC
 {:toc}
 
-Overview & Examples
+
+总览 & 例子
 -----------------------------
 
-The Table API is available for Scala and Java. The Scala Table API leverages on Scala expressions, the Java Table API is based on strings which are parsed and converted into equivalent expressions.
 
-The following example shows the differences between the Scala and Java Table API. The table program is executed in a batch environment. It scans the `Orders` table, groups by field `a`, and counts the resulting rows per group. The result of the table program is converted into a `DataSet` of type `Row` and printed.
+Table API支持Java和Scala。Scala的Table API使用Scala的表达式，而Java的Table API是基于字符串，并被转换为相同语义的表达式。
+
+下面的例子描述了Scala和Java Table API的不同。例子运行在批处理的环境。它扫描`Orders`表，group by `a`这个字段，并按照每个组来计数，最终将结果转换为一个`Row`类型的`DataSet`对象，并打印。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
 
-The Java Table API is enabled by importing `org.apache.flink.table.api.java.*`. The following example shows how a Java Table API program is constructed and how expressions are specified as strings.
+Java的Table API需要导入`org.apache.flink.table.api.java.*`这个包。下面的例子描述了Java的Table API是如何被构造，以及字符串如何描述表达式。
 
 {% highlight java %}
 // environment configuration
@@ -67,9 +68,10 @@ result.print();
 
 <div data-lang="scala" markdown="1">
 
-The Scala Table API is enabled by importing `org.apache.flink.api.scala._` and `org.apache.flink.table.api.scala._`.
+Scala的Table API需要导入`org.apache.flink.api.scala._` and `org.apache.flink.table.api.scala._`包。
 
-The following example shows how a Scala Table API program is constructed. Table attributes are referenced using [Scala Symbols](http://scala-lang.org/files/archive/spec/2.12/01-lexical-syntax.html#symbol-literals), which start with an apostrophe character (`'`).
+下面的例子描述了如何构造一个Scala Table API程序。表的属性使用[Scala Symbols](http://scala-lang.org/files/archive/spec/2.12/01-lexical-syntax.html#symbol-literals)来表示，以撇号字符(`'`)开始。
+
 
 {% highlight scala %}
 import org.apache.flink.api.scala._
@@ -95,7 +97,7 @@ val result = orders
 </div>
 </div>
 
-The next example shows a more complex Table API program. The program scans again the `Orders` table. It filters null values, normalizes the field `a` of type String, and calculates for each hour and product `a` the average billing amount `b`.
+下一个例子描述了一个更复杂的Table API程序。它还是先扫描`Orders`表，过滤掉空值，然后规范化字符串字段`a`，最后计算每个小时按照产品`a`分组的平均账单金额`b`。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -137,14 +139,15 @@ val result: Table = orders
 </div>
 </div>
 
-Since the Table API is a unified API for batch and streaming data, both example programs can be executed on batch and streaming inputs without any modification of the table program itself. In both cases, the program produces the same results given that streaming records are not late (see [Streaming Concepts](streaming.html) for details).
+由于Table API是对流计算和批处理统一的API，以上两个例子可以分别在批和流上运行，而不用做任何修改。在流的记录在不延迟的前提下，两种情况下程序会产生相同的结果。（参照[Streaming Concepts](streaming.html) ）
 
 {% top %}
 
-Operations
+
+操作符
 ----------
 
-The Table API supports the following operations. Please note that not all operations are available in both batch and streaming yet; they are tagged accordingly.
+Table API支持一下操作符。需要注意的是目前并不是所有操作都同时支持批处理和流计算，它们会分开标记。
 
 ### Scan, Projection, and Filter
 
@@ -154,8 +157,8 @@ The Table API supports the following operations. Please note that not all operat
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 20%">Operators</th>
-      <th class="text-center">Description</th>
+      <th class="text-left" style="width: 20%">操作符</th>
+      <th class="text-center">描述</th>
     </tr>
   </thead>
   <tbody>
@@ -165,7 +168,7 @@ The Table API supports the following operations. Please note that not all operat
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
   		<td>
-        <p>Similar to the FROM clause in a SQL query. Performs a scan of a registered table.</p>
+        <p>类似于SQL中的FROM子句，会扫描一个已注册的表。</p>
 {% highlight java %}
 Table orders = tableEnv.scan("Orders");
 {% endhighlight %}
@@ -177,12 +180,12 @@ Table orders = tableEnv.scan("Orders");
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
       <td>
-        <p>Similar to a SQL SELECT statement. Performs a select operation.</p>
+        <p>类似SQL中的SELECT子句，会执行选择操作。</p>
 {% highlight java %}
 Table orders = tableEnv.scan("Orders");
 Table result = orders.select("a, c as d");
 {% endhighlight %}
-        <p>You can use star (<code>*</code>) to act as a wild card, selecting all of the columns in the table.</p>
+        <p>可以使用星号(<code>*</code>)作为选择全部字段的通配符。</p>
 {% highlight java %}
 Table result = orders.select("*");
 {% endhighlight %}
@@ -195,7 +198,7 @@ Table result = orders.select("*");
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
       <td>
-        <p>Renames fields.</p>
+        <p>重命名字段。</p>
 {% highlight java %}
 Table orders = tableEnv.scan("Orders");
 Table result = orders.as("x, y, z, t");
@@ -209,7 +212,7 @@ Table result = orders.as("x, y, z, t");
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
       <td>
-        <p>Similar to a SQL WHERE clause. Filters out rows that do not pass the filter predicate.</p>
+        <p>类似于SQL与中的WHERE字句，过滤不符合条件的行。</p>
 {% highlight java %}
 Table orders = tableEnv.scan("Orders");
 Table result = orders.where("b === 'red'");
@@ -230,8 +233,8 @@ Table result = orders.filter("a % 2 === 0");
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 20%">Operators</th>
-      <th class="text-center">Description</th>
+      <th class="text-left" style="width: 20%">操作符</th>
+      <th class="text-center">描述</th>
     </tr>
   </thead>
   <tbody>
@@ -241,7 +244,7 @@ Table result = orders.filter("a % 2 === 0");
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
   		<td>
-        <p>Similar to the FROM clause in a SQL query. Performs a scan of a registered table.</p>
+        <p>类似于SQL中的FROM子句，会扫描一个已注册的表。</p>
 {% highlight scala %}
 val orders: Table = tableEnv.scan("Orders")
 {% endhighlight %}
@@ -253,12 +256,12 @@ val orders: Table = tableEnv.scan("Orders")
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
       <td>
-        <p>Similar to a SQL SELECT statement. Performs a select operation.</p>
+        <p>类似SQL中的SELECT子句，会执行选择操作。</p>
 {% highlight scala %}
 val orders: Table = tableEnv.scan("Orders")
 val result = orders.select('a, 'c as 'd)
 {% endhighlight %}
-        <p>You can use star (<code>*</code>) to act as a wild card, selecting all of the columns in the table.</p>
+        <p>可以使用星号(<code>*</code>)作为选择全部字段的通配符。</p>
 {% highlight scala %}
 val orders: Table = tableEnv.scan("Orders")
 val result = orders.select('*)
@@ -272,7 +275,7 @@ val result = orders.select('*)
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
       <td>
-        <p>Renames fields.</p>
+        <p>重命名字段。</p>
 {% highlight scala %}
 val orders: Table = tableEnv.scan("Orders").as('x, 'y, 'z, 't)
 {% endhighlight %}
@@ -285,7 +288,7 @@ val orders: Table = tableEnv.scan("Orders").as('x, 'y, 'z, 't)
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
       <td>
-        <p>Similar to a SQL WHERE clause. Filters out rows that do not pass the filter predicate.</p>
+        <p>类似于SQL中的WHERE字句，过滤不符合条件的行。</p>
 {% highlight scala %}
 val orders: Table = tableEnv.scan("Orders")
 val result = orders.filter('a % 2 === 0)
@@ -312,8 +315,8 @@ val result = orders.where('b === "red")
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 20%">Operators</th>
-      <th class="text-center">Description</th>
+      <th class="text-left" style="width: 20%">操作符</th>
+      <th class="text-center">描述</th>
     </tr>
   </thead>
   <tbody>
@@ -324,12 +327,12 @@ val result = orders.where('b === "red")
         <span class="label label-info">Result Updating</span>
       </td>
       <td>
-        <p>Similar to a SQL GROUP BY clause. Groups the rows on the grouping keys with a following running aggregation operator to aggregate rows group-wise.</p>
+        <p>类似于SQL语句中的GROUP BY子句，使用以下运行的聚合运算符对分组键上的行进行分组，再按照组来聚合行。</p>
 {% highlight java %}
 Table orders = tableEnv.scan("Orders");
 Table result = orders.groupBy("a").select("a, b.sum as d");
 {% endhighlight %}
-        <p><b>Note:</b> For streaming queries the required state to compute the query result might grow infinitely depending on the type of aggregation and the number of distinct grouping keys. Please provide a query configuration with valid retention interval to prevent excessive state size. See <a href="streaming.html">Streaming Concepts</a> for details.</p>
+        <p><b>注意:</b> 对于流式查询，计算查询结果所需的状态可能会无限增长，具体取决于聚合类型和不同分组键的数量。 请提供具有有效保留间隔的查询配置，以防止过大的状态。 参照<a href="streaming.html">Streaming Concepts</a>。</p>
       </td>
     </tr>
     <tr>
@@ -338,7 +341,7 @@ Table result = orders.groupBy("a").select("a, b.sum as d");
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
     	<td>
-        <p>Groups and aggregates a table on a <a href="#group-windows">group window</a> and possibly one or more grouping keys.</p>
+        <p>使用一个<a href="#group-windows">分组窗口</a>，以及一个或多个分组键对表进行聚合。</p>
 {% highlight java %}
 Table orders = tableEnv.scan("Orders");
 Table result = orders
@@ -354,7 +357,7 @@ Table result = orders
         <span class="label label-primary">Streaming</span>
       </td>
       <td>
-       <p>Similar to a SQL OVER clause. Over window aggregates are computed for each row, based on a window (range) of preceding and succeeding rows. See the <a href="#over-windows">over windows section</a> for more details.</p>
+       <p>类似于SQL中的OVER子句。开窗汇总是基于一个窗口范围，对前后行进行计算。参照<a href="#over-windows">over windows section</a>。</p>
 {% highlight java %}
 Table orders = tableEnv.scan("Orders");
 Table result = orders
@@ -367,7 +370,7 @@ Table result = orders
       .as("w"))
     .select("a, b.avg over w, b.max over w, b.min over w"); // sliding aggregate
 {% endhighlight %}
-       <p><b>Note:</b> All aggregates must be defined over the same window, i.e., same partitioning, sorting, and range. Currently, only windows with PRECEDING (UNBOUNDED and bounded) to CURRENT ROW range are supported. Ranges with FOLLOWING are not supported yet. ORDER BY must be specified on a single <a href="streaming.html#time-attributes">time attribute</a>.</p>
+       <p><b>注意:</b> 所有汇总运算必须定在在同一个窗口上，例如同一个分区，排序和范围。目前只支持从PRECEDING（UNBOUNDED 和 bounded）到CURRENT ROW的范围，FOLLOWING暂时还不支持。ORDER BY必须指定为一个<a href="streaming.html#time-attributes">时间属性</a>。 </p>
       </td>
     </tr>
     <tr>
@@ -377,12 +380,12 @@ Table result = orders
         <span class="label label-info">Result Updating</span>
       </td>
       <td>
-        <p>Similar to a SQL DISTINCT clause. Returns records with distinct value combinations.</p>
+        <p>类似于SQL的DISTINCT子句，返回具有不同值组合的记录。</p>
 {% highlight java %}
 Table orders = tableEnv.scan("Orders");
 Table result = orders.distinct();
 {% endhighlight %}
-        <p><b>Note:</b> For streaming queries the required state to compute the query result might grow infinitely depending on the number of distinct fields. Please provide a query configuration with valid retention interval to prevent excessive state size. See <a href="streaming.html">Streaming Concepts</a> for details.</p>
+        <p><b>注意:</b> 对于流式查询，计算查询结果所需的状态可能会根据不同字段的数量无限增长。 需要提供具有有效保留间隔的查询配置，以防止过大的状态。参照<a href="streaming.html">Streaming Concepts</a>。</p>
       </td>
     </tr>
   </tbody>
@@ -394,8 +397,8 @@ Table result = orders.distinct();
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 20%">Operators</th>
-      <th class="text-center">Description</th>
+      <th class="text-left" style="width: 20%">操作符</th>
+      <th class="text-center">描述</th>
     </tr>
   </thead>
   <tbody>
@@ -407,12 +410,12 @@ Table result = orders.distinct();
         <span class="label label-info">Result Updating</span>
       </td>
       <td>
-        <p>Similar to a SQL GROUP BY clause. Groups the rows on the grouping keys with a following running aggregation operator to aggregate rows group-wise.</p>
+        <p>类似于SQL语句中的GROUP BY子句，使用以下运行的聚合运算符对分组键上的行进行分组，再按照组来聚合行。</p>
 {% highlight scala %}
 val orders: Table = tableEnv.scan("Orders")
 val result = orders.groupBy('a).select('a, 'b.sum as 'd)
 {% endhighlight %}
-        <p><b>Note:</b> For streaming queries the required state to compute the query result might grow infinitely depending on the type of aggregation and the number of distinct grouping keys. Please provide a query configuration with valid retention interval to prevent excessive state size. See <a href="streaming.html">Streaming Concepts</a> for details.</p>
+        <p><b>注意:</b> 对于流式查询，计算查询结果所需的状态可能会无限增长，具体取决于聚合类型和不同分组键的数量。 请提供具有有效保留间隔的查询配置，以防止过大的状态。 参照<a href="streaming.html">Streaming Concepts</a>。</p>
       </td>
     </tr>
     <tr>
@@ -421,7 +424,7 @@ val result = orders.groupBy('a).select('a, 'b.sum as 'd)
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
     	<td>
-        <p>Groups and aggregates a table on a <a href="#group-windows">group window</a> and possibly one or more grouping keys.</p>
+        <p>使用一个<a href="#group-windows">分组窗口</a>，以及一个或多个分组键对表进行聚合。</p>
 {% highlight scala %}
 val orders: Table = tableEnv.scan("Orders")
 val result: Table = orders
@@ -437,7 +440,7 @@ val result: Table = orders
         <span class="label label-primary">Streaming</span>
       </td>
     	<td>
-       <p>Similar to a SQL OVER clause. Over window aggregates are computed for each row, based on a window (range) of preceding and succeeding rows. See the <a href="#over-windows">over windows section</a> for more details.</p>
+       <p>类似于SQL中的OVER子句。开窗汇总是基于一个窗口范围，对前后行进行计算。参照<a href="#over-windows">over windows section</a>。</p>
        {% highlight scala %}
 val orders: Table = tableEnv.scan("Orders")
 val result: Table = orders
@@ -450,7 +453,7 @@ val result: Table = orders
       as 'w)
     .select('a, 'b.avg over 'w, 'b.max over 'w, 'b.min over 'w) // sliding aggregate
 {% endhighlight %}
-       <p><b>Note:</b> All aggregates must be defined over the same window, i.e., same partitioning, sorting, and range. Currently, only windows with PRECEDING (UNBOUNDED and bounded) to CURRENT ROW range are supported. Ranges with FOLLOWING are not supported yet. ORDER BY must be specified on a single <a href="streaming.html#time-attributes">time attribute</a>.</p>
+       <p><b>注意:</b> 所有汇总运算必须定在在同一个窗口上，例如同一个分区，排序和范围。目前只支持从PRECEDING（UNBOUNDED 和 bounded）到CURRENT ROW的范围，FOLLOWING暂时还不支持。ORDER BY必须指定为一个<a href="streaming.html#time-attributes">时间属性</a>。</p>
       </td>
     </tr>
     <tr>
@@ -459,12 +462,12 @@ val result: Table = orders
         <span class="label label-primary">Batch</span>
       </td>
       <td>
-        <p>Similar to a SQL DISTINCT clause. Returns records with distinct value combinations.</p>
+        <p>类似于SQL的DISTINCT子句，返回具有不同值组合的记录。</p>
 {% highlight scala %}
 val orders: Table = tableEnv.scan("Orders")
 val result = orders.distinct()
 {% endhighlight %}
-        <p><b>Note:</b> For streaming queries the required state to compute the query result might grow infinitely depending on the number of distinct fields. Please provide a query configuration with valid retention interval to prevent excessive state size. See <a href="streaming.html">Streaming Concepts</a> for details.</p>
+        <p><b>注意:</b> 对于流式查询，计算查询结果所需的状态可能会根据不同字段的数量无限增长。 需要提供具有有效保留间隔的查询配置，以防止过大的状态。参照<a href="streaming.html">Streaming Concepts</a>。</p>
       </td>
     </tr>
   </tbody>
@@ -482,8 +485,8 @@ val result = orders.distinct()
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 20%">Operators</th>
-      <th class="text-center">Description</th>
+      <th class="text-left" style="width: 20%">操作符</th>
+      <th class="text-center">描述</th>
     </tr>
   </thead>
   <tbody>
@@ -494,13 +497,13 @@ val result = orders.distinct()
         <span class="label label-primary">Streaming</span>
       </td>
       <td>
-        <p>Similar to a SQL JOIN clause. Joins two tables. Both tables must have distinct field names and at least one equality join predicate must be defined through join operator or using a where or filter operator.</p>
+        <p>类似于SQL的JOIN子句，用于关联两张表。两张表需要有不相同的列名，以及在join操作上，或者where过滤上至少有一个关联条件。</p>
 {% highlight java %}
 Table left = tableEnv.fromDataSet(ds1, "a, b, c");
 Table right = tableEnv.fromDataSet(ds2, "d, e, f");
 Table result = left.join(right).where("a = d").select("a, b, e");
 {% endhighlight %}
-<p><b>Note:</b> For streaming queries the required state to compute the query result might grow infinitely depending on the number of distinct input rows. Please provide a query configuration with valid retention interval to prevent excessive state size. See <a href="streaming.html">Streaming Concepts</a> for details.</p>
+<p><b>注意:</b> 对于流式查询，计算查询结果所需的状态可能会根据不同字段的数量无限增长。 需要提供具有有效保留间隔的查询配置，以防止过大的状态。参照<a href="streaming.html">Streaming Concepts</a>。</p>
       </td>
     </tr>
 
@@ -512,7 +515,7 @@ Table result = left.join(right).where("a = d").select("a, b, e");
         <span class="label label-info">Result Updating</span>
       </td>
       <td>
-        <p>Similar to SQL LEFT/RIGHT/FULL OUTER JOIN clauses. Joins two tables. Both tables must have distinct field names and at least one equality join predicate must be defined.</p>
+        <p>类似于SQL的LEFT/RIGHT/FULL OUTER JOIN子句，用于关联两张表。每张表都需要有不相同的列名，以及至少一个相等关联谓词。</p>
 {% highlight java %}
 Table left = tableEnv.fromDataSet(ds1, "a, b, c");
 Table right = tableEnv.fromDataSet(ds2, "d, e, f");
@@ -521,7 +524,7 @@ Table leftOuterResult = left.leftOuterJoin(right, "a = d").select("a, b, e");
 Table rightOuterResult = left.rightOuterJoin(right, "a = d").select("a, b, e");
 Table fullOuterResult = left.fullOuterJoin(right, "a = d").select("a, b, e");
 {% endhighlight %}
-<p><b>Note:</b> For streaming queries the required state to compute the query result might grow infinitely depending on the number of distinct input rows. Please provide a query configuration with valid retention interval to prevent excessive state size. See <a href="streaming.html">Streaming Concepts</a> for details.</p>
+<p><b>注意:</b> 对于流式查询，计算查询结果所需的状态可能会根据不同字段的数量无限增长。 需要提供具有有效保留间隔的查询配置，以防止过大的状态。参照<a href="streaming.html">Streaming Concepts</a>。</p>
       </td>
     </tr>
     <tr>
@@ -530,10 +533,10 @@ Table fullOuterResult = left.fullOuterJoin(right, "a = d").select("a, b, e");
         <span class="label label-primary">Streaming</span>
       </td>
       <td>
-        <p><b>Note:</b> Time-windowed joins are a subset of regular joins that can be processed in a streaming fashion.</p>
+        <p><b>注意:</b> 时间窗口的关联也是常规的关联的一种，只是用流的方式来运行。</p>
 
-        <p>A time-windowed join requires at least one equi-join predicate and a join condition that bounds the time on both sides. Such a condition can be defined by two appropriate range predicates (<code>&lt;, &lt;=, &gt;=, &gt;</code>) or a single equality predicate that compares <a href="streaming.html#time-attributes">time attributes</a> of the same type (i.e., processing time or event time) of both input tables.</p> 
-        <p>For example, the following predicates are valid window join conditions:</p>
+        <p>时间窗口关联需要至少一个相等关联谓词，以及限制双方时间范围的关联条件。这种条件可以定义为两个适当的范围谓词(<code>&lt;, &lt;=, &gt;=, &gt;</code>)，或者单个相等的谓词连接两张表的相同类型的<a href="streaming.html#time-attributes">时间属性</a>（ processing time 或 event time）。</p> 
+        <p>例如下面正确的窗口关联条件：</p>
 
         <ul>
           <li><code>ltime === rtime</code></li>
@@ -556,8 +559,8 @@ Table result = left.join(right)
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
     	<td>
-        <p>Joins a table with a the results of a table function. Each row of the left (outer) table is joined with all rows produced by the corresponding call of the table function. A row of the left (outer) table is dropped, if its table function call returns an empty result.
-        </p>
+        <p>关联一张表和一个table function的结果。左边表中的每行都会和table function产生的所有行做关联。如果table function的结果为空，则表的行记录会被丢弃。
+		</p>
 {% highlight java %}
 // register function
 TableFunction<String> split = new MySplitUDTF();
@@ -577,9 +580,9 @@ Table result = orders
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
       <td>
-        <p>Joins a table with a the results of a table function. Each row of the left (outer) table is joined with all rows produced by the corresponding call of the table function. If a table function call returns an empty result, the corresponding outer row is preserved and the result padded with null values.
-        <p><b>Note:</b> Currently, the predicate of a table function left outer join can only be empty or literal <code>true</code>.</p>
-        </p>
+      <p>关联一张表和一个table function的结果。左边表中的每行都会和table function产生的所有行做关联。如果table function的结果为空，则表的当前行记录会被保留，其他字段用null来填充。
+      <p><b>注意:</b> 目前，表函数的谓词左外连接只能是空或<code>true</code>。</p>
+      </p>
 {% highlight java %}
 // register function
 TableFunction<String> split = new MySplitUDTF();
@@ -603,8 +606,8 @@ Table result = orders
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 20%">Operators</th>
-      <th class="text-center">Description</th>
+      <th class="text-left" style="width: 20%">操作符</th>
+      <th class="text-center">描述</th>
     </tr>
   </thead>
   <tbody>
@@ -616,13 +619,13 @@ Table result = orders
         <span class="label label-primary">Streaming</span>
       </td>
       <td>
-        <p>Similar to a SQL JOIN clause. Joins two tables. Both tables must have distinct field names and at least one equality join predicate must be defined through join operator or using a where or filter operator.</p>
+        <p>类似于SQL的JOIN子句，用于关联两张表。两张表需要有不相同的列名，以及在join操作上，或者where过滤上至少有一个关联条件。</p>
 {% highlight scala %}
 val left = ds1.toTable(tableEnv, 'a, 'b, 'c)
 val right = ds2.toTable(tableEnv, 'd, 'e, 'f)
 val result = left.join(right).where('a === 'd).select('a, 'b, 'e)
 {% endhighlight %}
-<p><b>Note:</b> For streaming queries the required state to compute the query result might grow infinitely depending on the number of distinct input rows. Please provide a query configuration with valid retention interval to prevent excessive state size. See <a href="streaming.html">Streaming Concepts</a> for details.</p>
+<p><b>注意:</b> 对于流式查询，计算查询结果所需的状态可能会根据不同字段的数量无限增长。 需要提供具有有效保留间隔的查询配置，以防止过大的状态。参照<a href="streaming.html">Streaming Concepts</a>。</p>
       </td>
     </tr>
     <tr>
@@ -633,7 +636,7 @@ val result = left.join(right).where('a === 'd).select('a, 'b, 'e)
         <span class="label label-info">Result Updating</span>
       </td>
       <td>
-        <p>Similar to SQL LEFT/RIGHT/FULL OUTER JOIN clauses. Joins two tables. Both tables must have distinct field names and at least one equality join predicate must be defined.</p>
+        <p>类似于SQL的LEFT/RIGHT/FULL OUTER JOIN子句，用于关联两张表。每张表都需要有不相同的列名，以及至少一个相等关联谓词。</p>
 {% highlight scala %}
 val left = tableEnv.fromDataSet(ds1, 'a, 'b, 'c)
 val right = tableEnv.fromDataSet(ds2, 'd, 'e, 'f)
@@ -642,7 +645,7 @@ val leftOuterResult = left.leftOuterJoin(right, 'a === 'd).select('a, 'b, 'e)
 val rightOuterResult = left.rightOuterJoin(right, 'a === 'd).select('a, 'b, 'e)
 val fullOuterResult = left.fullOuterJoin(right, 'a === 'd).select('a, 'b, 'e)
 {% endhighlight %}
-<p><b>Note:</b> For streaming queries the required state to compute the query result might grow infinitely depending on the number of distinct input rows. Please provide a query configuration with valid retention interval to prevent excessive state size. See <a href="streaming.html">Streaming Concepts</a> for details.</p>
+<p><b>注意:</b> 对于流式查询，计算查询结果所需的状态可能会根据不同字段的数量无限增长。 需要提供具有有效保留间隔的查询配置，以防止过大的状态。参照<a href="streaming.html">Streaming Concepts</a>。</p>
       </td>
     </tr>
     <tr>
@@ -651,10 +654,10 @@ val fullOuterResult = left.fullOuterJoin(right, 'a === 'd).select('a, 'b, 'e)
         <span class="label label-primary">Streaming</span>
       </td>
       <td>
-        <p><b>Note:</b> Time-windowed joins are a subset of regular joins that can be processed in a streaming fashion.</p>
+        <p><b>注意:</b> 时间窗口的关联也是常规的关联的一种，只是用流的方式来运行。</p>
 
-        <p>A time-windowed join requires at least one equi-join predicate and a join condition that bounds the time on both sides. Such a condition can be defined by two appropriate range predicates (<code>&lt;, &lt;=, &gt;=, &gt;</code>) or a single equality predicate that compares <a href="streaming.html#time-attributes">time attributes</a> of the same type (i.e., processing time or event time) of both input tables.</p> 
-        <p>For example, the following predicates are valid window join conditions:</p>
+        <p>时间窗口关联需要至少一个相等关联谓词，以及限制双方时间范围的关联条件。这种条件可以定义为两个适当的范围谓词(<code>&lt;, &lt;=, &gt;=, &gt;</code>)，或者单个相等的谓词连接两张表的相同类型的<a href="streaming.html#time-attributes">时间属性</a>（ processing time 或 event time）。</p> 
+        <p>例如下面正确的窗口关联条件：</p>
 
         <ul>
           <li><code>'ltime === 'rtime</code></li>
@@ -677,7 +680,7 @@ val result = left.join(right)
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
     	<td>
-        <p>Joins a table with a the results of a table function. Each row of the left (outer) table is joined with all rows produced by the corresponding call of the table function. A row of the left (outer) table is dropped, if its table function call returns an empty result.
+        <p>关联一张表和一个table function的结果。左边表中的每行都会和table function产生的所有行做关联。如果table function的结果为空，则表的行记录会被丢弃。
         </p>
         {% highlight scala %}
 // instantiate function
@@ -695,8 +698,8 @@ val result: Table = table
         <strong>TableFunction Left Outer Join</strong><br>
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span></td>
     	<td>
-        <p>Joins a table with a the results of a table function. Each row of the left (outer) table is joined with all rows produced by the corresponding call of the table function. If a table function call returns an empty result, the corresponding outer row is preserved and the result padded with null values.
-        <p><b>Note:</b> Currently, the predicate of a table function left outer join can only be empty or literal <code>true</code>.</p>
+        <p>关联一张表和一个table function的结果。左边表中的每行都会和table function产生的所有行做关联。如果table function的结果为空，则表的当前行记录会被保留，其他字段用null来填充。
+        <p><b>注意:</b> 目前，表函数的谓词左外连接只能是空或<code>true</code>。</p>
         </p>
 {% highlight scala %}
 // instantiate function
@@ -736,7 +739,7 @@ val result: Table = table
         <span class="label label-primary">Batch</span>
       </td>
       <td>
-        <p>Similar to a SQL UNION clause. Unions two tables with duplicate records removed. Both tables must have identical field types.</p>
+        <p>类似于SQL的UNION子句。联合两个表并删除重复记录，两个表必须具有相同的字段类型。</p>
 {% highlight java %}
 Table left = tableEnv.fromDataSet(ds1, "a, b, c");
 Table right = tableEnv.fromDataSet(ds2, "a, b, c");
@@ -751,7 +754,7 @@ Table result = left.union(right);
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
       <td>
-        <p>Similar to a SQL UNION ALL clause. Unions two tables. Both tables must have identical field types.</p>
+        <p>类似于SQL的UNION ALL子句。联合两个表，两个表必须具有相同的字段类型。</p>
 {% highlight java %}
 Table left = tableEnv.fromDataSet(ds1, "a, b, c");
 Table right = tableEnv.fromDataSet(ds2, "a, b, c");
@@ -766,7 +769,7 @@ Table result = left.unionAll(right);
         <span class="label label-primary">Batch</span>
       </td>
       <td>
-        <p>Similar to a SQL INTERSECT clause. Intersect returns records that exist in both tables. If a record is present one or both tables more than once, it is returned just once, i.e., the resulting table has no duplicate records. Both tables must have identical field types.</p>
+        <p>类似于SQL的INTERSECT子句。 Intersect返回两个表中均存在的记录，如果一个或两个表不止一次出现记录，则只返回一次，即结果表没有重复记录。两个表必须具有相同的字段类型。</p>
 {% highlight java %}
 Table left = tableEnv.fromDataSet(ds1, "a, b, c");
 Table right = tableEnv.fromDataSet(ds2, "d, e, f");
@@ -781,7 +784,7 @@ Table result = left.intersect(right);
         <span class="label label-primary">Batch</span>
       </td>
       <td>
-        <p>Similar to a SQL INTERSECT ALL clause. IntersectAll returns records that exist in both tables. If a record is present in both tables more than once, it is returned as many times as it is present in both tables, i.e., the resulting table might have duplicate records. Both tables must have identical field types.</p>
+        <p>类似于SQL的INTERSECT ALL子句。 IntersectAll返回两个表中均存在的记录，如果两个表中的记录不止一次出现，则返回的次数与两个表中的记录一样多，即结果表可能具有重复记录。 两个表必须具有相同的字段类型。</p>
 {% highlight java %}
 Table left = tableEnv.fromDataSet(ds1, "a, b, c");
 Table right = tableEnv.fromDataSet(ds2, "d, e, f");
@@ -796,7 +799,7 @@ Table result = left.intersectAll(right);
         <span class="label label-primary">Batch</span>
       </td>
       <td>
-        <p>Similar to a SQL EXCEPT clause. Minus returns records from the left table that do not exist in the right table. Duplicate records in the left table are returned exactly once, i.e., duplicates are removed. Both tables must have identical field types.</p>
+        <p>类似于SQL的EXCEPT子句。 Minus返回左表中右表中不存在的记录，左表中的重复记录只返回一次，即删除重复项。 两个表必须具有相同的字段类型。</p>
 {% highlight java %}
 Table left = tableEnv.fromDataSet(ds1, "a, b, c");
 Table right = tableEnv.fromDataSet(ds2, "a, b, c");
@@ -811,7 +814,7 @@ Table result = left.minus(right);
         <span class="label label-primary">Batch</span>
       </td>
       <td>
-        <p>Similar to a SQL EXCEPT ALL clause. MinusAll returns the records that do not exist in the right table. A record that is present n times in the left table and m times in the right table is returned (n - m) times, i.e., as many duplicates as are present in the right table are removed. Both tables must have identical field types.</p>
+        <p>类似于SQL的EXCEPT ALL子句。MinusAll返回右表中不存在的记录，在左表中出现n次并在右表中出现m次的记录返回（n-m）次，即删除右表中出现的重复数。 两个表必须具有相同的字段类型。</p>
 {% highlight java %}
 Table left = tableEnv.fromDataSet(ds1, "a, b, c");
 Table right = tableEnv.fromDataSet(ds2, "a, b, c");
@@ -826,7 +829,7 @@ Table result = left.minusAll(right);
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
       <td>
-        <p>Similar to a SQL IN clause. In returns true if an expression exists in a given table sub-query. The sub-query table must consist of one column. This column must have the same data type as the expression.</p>
+        <p>类似于SQL的IN子句。如果表达式存在于给定的表子查询中，则返回true。子查询表必须包含一列，且此列必须与表达式具有相同的数据类型。</p>
 {% highlight java %}
 Table left = ds1.toTable(tableEnv, "a, b, c");
 Table right = ds2.toTable(tableEnv, "a");
@@ -839,7 +842,7 @@ tableEnv.registerTable("RightTable", right);
 Table result = left.select("a, b, c").where("a.in(RightTable)");
 {% endhighlight %}
 
-        <p><b>Note:</b> For streaming queries the operation is rewritten in a join and group operation. The required state to compute the query result might grow infinitely depending on the number of distinct input rows. Please provide a query configuration with valid retention interval to prevent excessive state size. See <a href="streaming.html">Streaming Concepts</a> for details.</p>
+        <p><b>注意:</b> 对于流式查询，计算查询结果所需的状态可能会根据不同字段的数量无限增长。 需要提供具有有效保留间隔的查询配置，以防止过大的状态。参照<a href="streaming.html">Streaming Concepts</a>。</p>
       </td>
     </tr>
   </tbody>
@@ -851,8 +854,8 @@ Table result = left.select("a, b, c").where("a.in(RightTable)");
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 20%">Operators</th>
-      <th class="text-center">Description</th>
+      <th class="text-left" style="width: 20%">操作符</th>
+      <th class="text-center">描述</th>
     </tr>
   </thead>
   <tbody>
@@ -862,7 +865,7 @@ Table result = left.select("a, b, c").where("a.in(RightTable)");
         <span class="label label-primary">Batch</span>
       </td>
       <td>
-        <p>Similar to a SQL UNION clause. Unions two tables with duplicate records removed, both tables must have identical field types.</p>
+        <p>类似于SQL的UNION子句。联合两个表并删除重复记录，两个表必须具有相同的字段类型。</p>
 {% highlight scala %}
 val left = ds1.toTable(tableEnv, 'a, 'b, 'c)
 val right = ds2.toTable(tableEnv, 'a, 'b, 'c)
@@ -878,7 +881,7 @@ val result = left.union(right)
 
       </td>
       <td>
-        <p>Similar to a SQL UNION ALL clause. Unions two tables, both tables must have identical field types.</p>
+        <p>类似于SQL的UNION ALL子句。联合两个表，两个表必须具有相同的字段类型。</p>
 {% highlight scala %}
 val left = ds1.toTable(tableEnv, 'a, 'b, 'c)
 val right = ds2.toTable(tableEnv, 'a, 'b, 'c)
@@ -893,7 +896,7 @@ val result = left.unionAll(right)
         <span class="label label-primary">Batch</span>
       </td>
       <td>
-        <p>Similar to a SQL INTERSECT clause. Intersect returns records that exist in both tables. If a record is present in one or both tables more than once, it is returned just once, i.e., the resulting table has no duplicate records. Both tables must have identical field types.</p>
+        <p>类似于SQL的INTERSECT子句。 Intersect返回两个表中均存在的记录，如果一个或两个表不止一次出现记录，则只返回一次，即结果表没有重复记录。两个表必须具有相同的字段类型。</p>
 {% highlight scala %}
 val left = ds1.toTable(tableEnv, 'a, 'b, 'c)
 val right = ds2.toTable(tableEnv, 'e, 'f, 'g)
@@ -908,7 +911,7 @@ val result = left.intersect(right)
         <span class="label label-primary">Batch</span>
       </td>
       <td>
-        <p>Similar to a SQL INTERSECT ALL clause. IntersectAll returns records that exist in both tables. If a record is present in both tables more than once, it is returned as many times as it is present in both tables, i.e., the resulting table might have duplicate records. Both tables must have identical field types.</p>
+        <p>类似于SQL的INTERSECT ALL子句。 IntersectAll返回两个表中均存在的记录，如果两个表中的记录不止一次出现，则返回的次数与两个表中的记录一样多，即结果表可能具有重复记录。 两个表必须具有相同的字段类型。</p>
 {% highlight scala %}
 val left = ds1.toTable(tableEnv, 'a, 'b, 'c)
 val right = ds2.toTable(tableEnv, 'e, 'f, 'g)
@@ -923,7 +926,7 @@ val result = left.intersectAll(right)
         <span class="label label-primary">Batch</span>
       </td>
       <td>
-        <p>Similar to a SQL EXCEPT clause. Minus returns records from the left table that do not exist in the right table. Duplicate records in the left table are returned exactly once, i.e., duplicates are removed. Both tables must have identical field types.</p>
+        <p>类似于SQL的EXCEPT子句。 Minus返回左表中右表中不存在的记录，左表中的重复记录只返回一次，即删除重复项。 两个表必须具有相同的字段类型。</p>
 {% highlight scala %}
 val left = ds1.toTable(tableEnv, 'a, 'b, 'c)
 val right = ds2.toTable(tableEnv, 'a, 'b, 'c)
@@ -938,7 +941,7 @@ val result = left.minus(right)
         <span class="label label-primary">Batch</span>
       </td>
       <td>
-        <p>Similar to a SQL EXCEPT ALL clause. MinusAll returns the records that do not exist in the right table. A record that is present n times in the left table and m times in the right table is returned (n - m) times, i.e., as many duplicates as are present in the right table are removed. Both tables must have identical field types.</p>
+        <p>类似于SQL的EXCEPT ALL子句。MinusAll返回右表中不存在的记录，在左表中出现n次并在右表中出现m次的记录返回（n-m）次，即删除右表中出现的重复数。 两个表必须具有相同的字段类型。</p>
 {% highlight scala %}
 val left = ds1.toTable(tableEnv, 'a, 'b, 'c)
 val right = ds2.toTable(tableEnv, 'a, 'b, 'c)
@@ -953,13 +956,13 @@ val result = left.minusAll(right)
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
       <td>
-        <p>Similar to a SQL IN clause. In returns true if an expression exists in a given table sub-query. The sub-query table must consist of one column. This column must have the same data type as the expression.</p>
+        <p>类似于SQL的IN子句。如果表达式存在于给定的表子查询中，则返回true。子查询表必须包含一列，且此列必须与表达式具有相同的数据类型。</p>
 {% highlight scala %}
 val left = ds1.toTable(tableEnv, 'a, 'b, 'c)
 val right = ds2.toTable(tableEnv, 'a)
 val result = left.select('a, 'b, 'c).where('a.in(right))
 {% endhighlight %}
-        <p><b>Note:</b> For streaming queries the operation is rewritten in a join and group operation. The required state to compute the query result might grow infinitely depending on the number of distinct input rows. Please provide a query configuration with valid retention interval to prevent excessive state size. See <a href="streaming.html">Streaming Concepts</a> for details.</p>
+        <p><b>注意:</b> 对于流式查询，计算查询结果所需的状态可能会根据不同字段的数量无限增长。 需要提供具有有效保留间隔的查询配置，以防止过大的状态。参照<a href="streaming.html">Streaming Concepts</a>。</p>
       </td>
     </tr>
 
@@ -977,8 +980,8 @@ val result = left.select('a, 'b, 'c).where('a.in(right))
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 20%">Operators</th>
-      <th class="text-center">Description</th>
+      <th class="text-left" style="width: 20%">操作符</th>
+      <th class="text-center">描述</th>
     </tr>
   </thead>
   <tbody>
@@ -988,7 +991,7 @@ val result = left.select('a, 'b, 'c).where('a.in(right))
         <span class="label label-primary">Batch</span>
       </td>
       <td>
-        <p>Similar to a SQL ORDER BY clause. Returns records globally sorted across all parallel partitions.</p>
+        <p>类似于SQL的ORDER BY子句。返回跨分区的全局排序结果。</p>
 {% highlight java %}
 Table in = tableEnv.fromDataSet(ds, "a, b, c");
 Table result = in.orderBy("a.asc");
@@ -1002,7 +1005,7 @@ Table result = in.orderBy("a.asc");
         <span class="label label-primary">Batch</span>
       </td>
       <td>
-        <p>Similar to the SQL OFFSET and FETCH clauses. Offset and Fetch limit the number of records returned from a sorted result. Offset and Fetch are technically part of the Order By operator and thus must be preceded by it.</p>
+        <p>类似于SQL的OFFSET和FETCH子句。Offset和Fetch截取了排序后的结果的记录。Offset和Fetch是Order by操作的一部分，所以只能跟在Order By后面。</p>
 {% highlight java %}
 Table in = tableEnv.fromDataSet(ds, "a, b, c");
 
@@ -1026,8 +1029,8 @@ Table result3 = in.orderBy("a.asc").offset(10).fetch(5);
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 20%">Operators</th>
-      <th class="text-center">Description</th>
+      <th class="text-left" style="width: 20%">操作符</th>
+      <th class="text-center">描述</th>
     </tr>
   </thead>
   <tbody>
@@ -1037,7 +1040,7 @@ Table result3 = in.orderBy("a.asc").offset(10).fetch(5);
         <span class="label label-primary">Batch</span>
       </td>
       <td>
-        <p>Similar to a SQL ORDER BY clause. Returns records globally sorted across all parallel partitions.</p>
+        <p>类似于SQL的ORDER BY子句。返回跨分区的全局排序结果。</p>
 {% highlight scala %}
 val in = ds.toTable(tableEnv, 'a, 'b, 'c)
 val result = in.orderBy('a.asc)
@@ -1051,7 +1054,7 @@ val result = in.orderBy('a.asc)
         <span class="label label-primary">Batch</span>
       </td>
       <td>
-        <p>Similar to the SQL OFFSET and FETCH clauses. Offset and Fetch limit the number of records returned from a sorted result. Offset and Fetch are technically part of the Order By operator and thus must be preceded by it.</p>
+        <p>类似于SQL的OFFSET和FETCH子句。Offset和Fetch截取了排序后的结果的记录。Offset和Fetch是Order by操作的一部分，所以只能跟在Order By后面。</p>
 {% highlight scala %}
 val in = ds.toTable(tableEnv, 'a, 'b, 'c)
 
@@ -1080,8 +1083,8 @@ val result3: Table = in.orderBy('a.asc).offset(10).fetch(5)
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 20%">Operators</th>
-      <th class="text-center">Description</th>
+      <th class="text-left" style="width: 20%">操作符</th>
+      <th class="text-center">描述</th>
     </tr>
   </thead>
   <tbody>
@@ -1091,9 +1094,9 @@ val result3: Table = in.orderBy('a.asc).offset(10).fetch(5)
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
       <td>
-        <p>Similar to the INSERT INTO clause in a SQL query. Performs a insertion into a registered output table.</p>
+        <p>类似于SQL的INSERT INTO子句。执行插入操作到已注册的输出表。</p>
 
-        <p>Output tables must be registered in the TableEnvironment (see <a href="common.html#register-a-tablesink">Register a TableSink</a>). Moreover, the schema of the registered table must match the schema of the query.</p>
+        <p>输出表必须已注册在TableEnvironment（参照<a href="common.html#register-a-tablesink">Register a TableSink</a>）中。而且，输出的表和查询子句的schema必须一致。</p>
 
 {% highlight java %}
 Table orders = tableEnv.scan("Orders");
@@ -1110,8 +1113,8 @@ orders.insertInto("OutOrders");
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 20%">Operators</th>
-      <th class="text-center">Description</th>
+      <th class="text-left" style="width: 20%">操作符</th>
+      <th class="text-center">描述</th>
     </tr>
   </thead>
   <tbody>
@@ -1121,9 +1124,9 @@ orders.insertInto("OutOrders");
         <span class="label label-primary">Batch</span> <span class="label label-primary">Streaming</span>
       </td>
       <td>
-        <p>Similar to the INSERT INTO clause in a SQL query. Performs a insertion into a registered output table.</p>
+        <p>类似于SQL的INSERT INTO子句。执行插入操作到已注册的输出表。</p>
 
-        <p>Output tables must be registered in the TableEnvironment (see <a href="common.html#register-a-tablesink">Register a TableSink</a>). Moreover, the schema of the registered table must match the schema of the query.</p>
+        <p>输出表必须已注册在TableEnvironment（参照<a href="common.html#register-a-tablesink">Register a TableSink</a>）中。而且，输出的表和查询子句的schema必须一致。</p>
 
 {% highlight scala %}
 val orders: Table = tableEnv.scan("Orders")
@@ -1141,10 +1144,10 @@ orders.insertInto("OutOrders")
 
 ### Group Windows
 
-Group window aggregates group rows into finite groups based on time or row-count intervals and evaluate aggregation functions once per group. For batch tables, windows are a convenient shortcut to group records by time intervals.
+Group window根据时间窗口或者行数间隔将行聚合成有限个组。对于批处理的场景，窗口是按照时间间隔来汇总的简便方式。
 
-Windows are defined using the `window(w: Window)` clause and require an alias, which is specified using the `as` clause. In order to group a table by a window, the window alias must be referenced in the `groupBy(...)` clause like a regular grouping attribute. 
-The following example shows how to define a window aggregation on a table.
+窗口使用`window(w: Window)`子句来定义，并需要一个用`as`指定别名。为了按窗口对表进行分组，必须在`groupBy（...）`子句中引用窗口别名，就像常规分组属性一样。
+下面的例子展示了如何在表上定义窗口聚合。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -1165,10 +1168,8 @@ val table = input
 {% endhighlight %}
 </div>
 </div>
-
-In streaming environments, window aggregates can only be computed in parallel if they group on one or more attributes in addition to the window, i.e., the `groupBy(...)` clause references a window alias and at least one additional attribute. A `groupBy(...)` clause that only references a window alias (such as in the example above) can only be evaluated by a single, non-parallel task. 
-The following example shows how to define a window aggregation with additional grouping attributes.
-
+在流计算场景下，如果窗口聚合除了窗口之外还在一个或多个属性上进行分组，即`groupBy(...)`包含窗口别名和至少一个附加属性，则它们只能并行执行。 如果`groupBy(...)`子句只引用了窗口的别名（例如上面的例子中）只能串行执行。
+下面的例子展示了如果定义窗口聚合和其他聚合属性。
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
 {% highlight java %}
@@ -1189,7 +1190,8 @@ val table = input
 </div>
 </div>
 
-Window properties such as the start, end, or rowtime timestamp of a time window can be added in the select statement as a property of the window alias as `w.start`, `w.end`, and `w.rowtime`, respectively. The window start and rowtime timestamps are the inclusive lower and uppper window boundaries. In contrast, the window end timestamp is the exclusive upper window boundary. For example a tumbling window of 30 minutes that starts at 2pm would have `14:00:00.000` as start timestamp, `14:29:59.999` as rowtime timestamp, and `14:30:00.000` as end timestamp.
+窗口的属性（例如窗口的开始，结束或行时间戳）可以在select子句中添加为窗口别名的属性，如`w.start`，`w.end`和`w.rowtime`。窗口开始和行时间戳是包含在窗口边界上的，而窗口结束时间戳不包含在窗口内。
+例如，从下午2点开始的30分钟的滚动窗口将以“14：00：00.000”作为开始时间戳，将“14：29：59.999”作为行时间戳，将“14：30：00.000”作为结束时间戳。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -1211,34 +1213,33 @@ val table = input
 </div>
 </div>
 
-The `Window` parameter defines how rows are mapped to windows. `Window` is not an interface that users can implement. Instead, the Table API provides a set of predefined `Window` classes with specific semantics, which are translated into underlying `DataStream` or `DataSet` operations. The supported window definitions are listed below.
+`Window`参数定义行如何映射到窗口中，它不是用户可以实现的接口。而Table API提供了一组具有特定语义的预定义`Window`类，这些类被转换为底层的`DataStream`或`DataSet`操作，支持的窗口定义如下所示。
 
 #### Tumble (Tumbling Windows)
 
-A tumbling window assigns rows to non-overlapping, continuous windows of fixed length. For example, a tumbling window of 5 minutes groups rows in 5 minutes intervals. Tumbling windows can be defined on event-time, processing-time, or on a row-count.
-
-Tumbling windows are defined by using the `Tumble` class as follows:
+滚动窗口是固定长度的非重叠连续窗口。例如，5分钟的滚动窗口以5分钟为间隔对行进行分组。可以在event-time, processing-time, row-count上定义滚动窗口。
+滚动窗口使用`Tumble`类定义，如下：
 
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 20%">Method</th>
-      <th class="text-left">Description</th>
+      <th class="text-left" style="width: 20%">方法</th>
+      <th class="text-left">描述</th>
     </tr>
   </thead>
 
   <tbody>
     <tr>
       <td><code>over</code></td>
-      <td>Defines the length the window, either as time or row-count interval.</td>
+      <td>定义窗口长度，参数为时间间隔或者行数间隔。</td>
     </tr>
     <tr>
       <td><code>on</code></td>
-      <td>The time attribute to group (time interval) or sort (row count) on. For batch queries this might be any Long or Timestamp attribute. For streaming queries this must be a <a href="streaming.html#time-attributes">declared event-time or processing-time time attribute</a>.</td>
+      <td>需要分组（时间）或排序（行数）的属性。对于批处理查询，可以是任何Long或Timestamp属性。对于流计算查询，必须是一个声明为<a href="streaming.html#time-attributes">event-time 或 processing-time的属性</a>。</td>
     </tr>
     <tr>
       <td><code>as</code></td>
-      <td>Assigns an alias to the window. The alias is used to reference the window in the following <code>groupBy()</code> clause and optionally to select window properties such as window start, end, or rowtime timestamps in the <code>select()</code> clause.</td>
+      <td>指定的窗口别名。窗口别名在接下来的<code>groupBy()</code>子句中使用，或者在<code>select()</code>子句中使用窗口的属性，例如窗口开始，结束，行时间戳。</td>
     </tr>
   </tbody>
 </table>
@@ -1272,35 +1273,34 @@ Tumbling windows are defined by using the `Tumble` class as follows:
 </div>
 
 #### Slide (Sliding Windows)
+滑动窗口是一个具有固定长度，并按照指定间隔滑动的窗口。如果滑动间隔小于窗口大小，那么滑动窗口会重叠，所以数据行可以属于多个窗口。例如，一个窗口大小为15分钟，滑动间隔为5分钟的滑动窗口，每行数据都会归属于三个不同的窗口。可以在event-time, processing-time, row-count上定义滑动窗口。
 
-A sliding window has a fixed size and slides by a specified slide interval. If the slide interval is smaller than the window size, sliding windows are overlapping. Thus, rows can be assigned to multiple windows. For example, a sliding window of 15 minutes size and 5 minute slide interval assigns each row to 3 different windows of 15 minute size, which are evaluated in an interval of 5 minutes. Sliding windows can be defined on event-time, processing-time, or on a row-count.
-
-Sliding windows are defined by using the `Slide` class as follows:
+滑动窗口使用`Slide`类来定义，如下：
 
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 20%">Method</th>
-      <th class="text-left">Description</th>
+      <th class="text-left" style="width: 20%">方法</th>
+      <th class="text-left">描述</th>
     </tr>
   </thead>
 
   <tbody>
     <tr>
       <td><code>over</code></td>
-      <td>Defines the length of the window, either as time or row-count interval.</td>
+      <td>定义窗口长度，参数为时间间隔或者行数间隔。</td>
     </tr>
     <tr>
       <td><code>every</code></td>
-      <td>Defines the slide interval, either as time or row-count interval. The slide interval must be of the same type as the size interval.</td>
+      <td>定义滑动窗口间隔，可以用时间间隔或者行数间隔。窗口间隔和窗口大小必须是同一单位。</td>
     </tr>
     <tr>
       <td><code>on</code></td>
-      <td>The time attribute to group (time interval) or sort (row count) on. For batch queries this might be any Long or Timestamp attribute. For streaming queries this must be a <a href="streaming.html#time-attributes">declared event-time or processing-time time attribute</a>.</td>
+      <td>需要分组（时间）或排序（行数）的属性。对于批处理查询，可以是任何Long或Timestamp属性。对于流计算查询，必须是一个声明为<a href="streaming.html#time-attributes">event-time 或 processing-time的属性</a>。</td>
     </tr>
     <tr>
       <td><code>as</code></td>
-      <td>Assigns an alias to the window. The alias is used to reference the window in the following <code>groupBy()</code> clause and optionally to select window properties such as window start, end, or rowtime timestamps in the <code>select()</code> clause.</td>
+      <td>指定的窗口别名。窗口别名在接下来的<code>groupBy()</code>子句中使用，或者在<code>select()</code>子句中使用窗口的属性，例如窗口开始，结束，行时间戳。</td>
     </tr>
   </tbody>
 </table>
@@ -1335,30 +1335,30 @@ Sliding windows are defined by using the `Slide` class as follows:
 
 #### Session (Session Windows)
 
-Session windows do not have a fixed size but their bounds are defined by an interval of inactivity, i.e., a session window is closes if no event appears for a defined gap period. For example a session window with a 30 minute gap starts when a row is observed after 30 minutes inactivity (otherwise the row would be added to an existing window) and is closed if no row is added within 30 minutes. Session windows can work on event-time or processing-time.
+会话窗口是一个没有固定大小，界限是由不活动的间隔来定义的窗口。如果在定义的间隙期间没有出现事件，则会话窗口关闭。例如，一个间隔定义为30分钟的会话窗口，从超过30分钟后的一个新数据的出现而开始（否则它会被加到上一个已存在的窗口），如果30分钟内没有新数据出现则关闭。会话窗口可以定义在event-time 或 processing-time.
 
-A session window is defined by using the `Session` class as follows:
+会话窗口用 `Session`类来定义，如下：
 
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 20%">Method</th>
-      <th class="text-left">Description</th>
+      <th class="text-left" style="width: 20%">方法</th>
+      <th class="text-left">描述</th>
     </tr>
   </thead>
 
   <tbody>
     <tr>
       <td><code>withGap</code></td>
-      <td>Defines the gap between two windows as time interval.</td>
+      <td>定义窗口间的时间间隔。</td>
     </tr>
     <tr>
       <td><code>on</code></td>
-      <td>The time attribute to group (time interval) or sort (row count) on. For batch queries this might be any Long or Timestamp attribute. For streaming queries this must be a <a href="streaming.html#time-attributes">declared event-time or processing-time time attribute</a>.</td>
+      <td>需要分组（时间）或排序（行数）的属性。对于批处理查询，可以是任何Long或Timestamp属性。对于流计算查询，必须是一个声明为<a href="streaming.html#time-attributes">event-time 或 processing-time的属性</a>。</td>
     </tr>
     <tr>
       <td><code>as</code></td>
-      <td>Assigns an alias to the window. The alias is used to reference the window in the following <code>groupBy()</code> clause and optionally to select window properties such as window start, end, or rowtime timestamps in the <code>select()</code> clause.</td>
+      <td>指定的窗口别名。窗口别名在接下来的<code>groupBy()</code>子句中使用，或者在<code>select()</code>子句中使用窗口的属性，例如窗口开始，结束，行时间戳。</td>
     </tr>
   </tbody>
 </table>
@@ -1389,9 +1389,10 @@ A session window is defined by using the `Session` class as follows:
 
 ### Over Windows
 
-Over window aggregates are known from standard SQL (`OVER` clause) and defined in the `SELECT` clause of a query. Unlike group windows, which are specified in the `GROUP BY` clause, over windows do not collapse rows. Instead over window aggregates compute an aggregate for each input row over a range of its neighboring rows. 
 
-Over windows are defined using the `window(w: OverWindow*)` clause and referenced via an alias in the `select()` method. The following example shows how to define an over window aggregation on a table.
+Over window聚合类似于标准SQL中定义在SELECT查询子句中的OVER子句，与需要在`GROUP BY` 子句上指定的group windows不同，over windows不会折叠减少行数，而是计算每个输入行在其相邻行的范围内的聚合。
+
+Over window使用`window(w: OverWindow*)`子句来定义，使用别名在`select()`方法中引用。下面的例子展示了如何在表上定义over window聚合。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -1411,74 +1412,75 @@ val table = input
 </div>
 </div>
 
-The `OverWindow` defines a range of rows over which aggregates are computed. `OverWindow` is not an interface that users can implement. Instead, the Table API provides the `Over` class to configure the properties of the over window. Over windows can be defined on event-time or processing-time and on ranges specified as time interval or row-count. The supported over window definitions are exposed as methods on `Over` (and other classes) and are listed below:
+`OverWindow`定义了计算聚合的行范围，它不是用户可以实现的接口。但是Table API提供了`Over`类来配置over window的属性，可以在event-time ，processing-time，一段指定的时间范围或者row-count上使用over window。定义over window的属性使用`Over`类（以及其他类）的方法，如下：
 
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th class="text-left" style="width: 20%">Method</th>
-      <th class="text-left">Required</th>
-      <th class="text-left">Description</th>
+      <th class="text-left" style="width: 20%">方法</th>
+      <th class="text-left">是否可选</th>
+      <th class="text-left">描述</th>
     </tr>
   </thead>
 
   <tbody>
     <tr>
       <td><code>partitionBy</code></td>
-      <td>Optional</td>
+      <td>可选</td>
       <td>
-        <p>Defines a partitioning of the input on one or more attributes. Each partition is individually sorted and aggregate functions are applied to each partition separately.</p>
+        <p>定义对一个或多个属性的输入分区。每个分区单独排序，聚合函数分别应用于每个分区。</p>
 
-        <p><b>Note:</b> In streaming environments, over window aggregates can only be computed in parallel if the window includes a partition by clause. Without <code>partitionBy(...)</code> the stream is processed by a single, non-parallel task.</p>
+        <p><b>Note:</b> 在流式计算的场景下, over window 如果包含partition by子句，则它可以并行的运算。 如果没有 <code>partitionBy(...)</code> ，则数据流只能单线程串行运算。</p>
       </td>
     </tr>
     <tr>
       <td><code>orderBy</code></td>
-      <td>Required</td>
+      <td>必选</td>
       <td>
-        <p>Defines the order of rows within each partition and thereby the order in which the aggregate functions are applied to rows.</p>
+        <p>定义每个分区内的行的顺序，从而定义聚合函数应用于行的顺序。</p>
 
-        <p><b>Note:</b> For streaming queries this must be a <a href="streaming.html#time-attributes">declared event-time or processing-time time attribute</a>. Currently, only a single sort attribute is supported.</p>
+        <p><b>Note:</b> 流式计算的查询必须声明 <a href="streaming.html#time-attributes">event-time 或者 processing-time</a>的时间属性。目前，只支持单一的排序属性。</p>
       </td>
     </tr>
     <tr>
       <td><code>preceding</code></td>
-      <td>Required</td>
+      <td>必选</td>
       <td>
-        <p>Defines the interval of rows that are included in the window and precede the current row. The interval can either be specified as time or row-count interval.</p>
+        <p>定义窗口中在当前行之前包含的行的间隔。间隔可以指定为时间或行计数间隔。</p>
 
-        <p><a href="tableApi.html#bounded-over-windows">Bounded over windows</a> are specified with the size of the interval, e.g., <code>10.minutes</code> for a time interval or <code>10.rows</code> for a row-count interval.</p>
+        <p><a href="tableApi.html#bounded-over-windows">有边界的 over windows</a> 需要指定间隔的大小， 例如，时间间隔用<code>10.minutes</code> ，行数间隔用<code>10.rows</code>。</p>
 
-        <p><a href="tableApi.html#unbounded-over-windows">Unbounded over windows</a> are specified using a constant, i.e., <code>UNBOUNDED_RANGE</code> for a time interval or <code>UNBOUNDED_ROW</code> for a row-count interval. Unbounded over windows start with the first row of a partition.</p>
+        <p><a href="tableApi.html#unbounded-over-windows">无边界的 over windows</a> 用一个常量指定， 例如， 时间间隔用<code>UNBOUNDED_RANGE</code> ，行数间隔用 <code>UNBOUNDED_ROW</code> 。 Unbounded over windows 是从分区的第一行开始。</p>
       </td>
     </tr>
     <tr>
       <td><code>following</code></td>
-      <td>Optional</td>
+      <td>可选</td>
       <td>
-        <p>Defines the window interval of rows that are included in the window and follow the current row. The interval must be specified in the same unit as the preceding interval (time or row-count).</p>
+        <p>定义窗口中在当前行之后包含的行的间隔，间隔的的单位必须和preceding中的单位相同。</p>
 
-        <p>At the moment, over windows with rows following the current row are not supported. Instead you can specify one of two constants:</p>
+        <p>目前over windows 在当前行之后的行间隔还不支持。但可以使用一下两个常量之一:</p>
 
         <ul>
-          <li><code>CURRENT_ROW</code> sets the upper bound of the window to the current row.</li>
-          <li><code>CURRENT_RANGE</code> sets the upper bound of the window to sort key of the current row, i.e., all rows with the same sort key as the current row are included in the window.</li>
+          <li><code>CURRENT_ROW</code> 设置从窗口上界到当前行。</li>
+          <li><code>CURRENT_RANGE</code> 设置从窗口上界到当前行的排序键，例如，使用相同排序键的所有行都被包含在窗口中。</li>
         </ul>
 
-        <p>If the <code>following</code> clause is omitted, the upper bound of a time interval window is defined as <code>CURRENT_RANGE</code> and the upper bound of a row-count interval window is defined as <code>CURRENT_ROW</code>.</p>
+        <p>如果省略了<code>following</code>子句，时间间隔的窗口上界被定义为 <code>CURRENT_RANGE</code> and 行数间隔的窗口上界被定义为<code>CURRENT_ROW</code>。</p>
       </td>
     </tr>
     <tr>
       <td><code>as</code></td>
-      <td>Required</td>
+      <td>必选</td>
       <td>
-        <p>Assigns an alias to the over window. The alias is used to reference the over window in the following <code>select()</code> clause.</p>
+        <p>指定over window的别名。别名会在下面的<code>select()</code>子句中引用到。 </p>
       </td>
     </tr>
   </tbody>
 </table>
 
-**Note:** Currently, all aggregation functions in the same `select()` call must be computed of the same over window.
+
+**Note:** 目前，必须在相同的窗口上计算同一`select()`调用中的所有聚合函数。
 
 #### Unbounded Over Windows
 <div class="codetabs" markdown="1">
@@ -1552,10 +1554,9 @@ The `OverWindow` defines a range of rows over which aggregates are computed. `Ov
 
 {% top %}
 
-Data Types
+数据类型
 ----------
-
-The Table API is built on top of Flink's DataSet and DataStream APIs. Internally, it also uses Flink's `TypeInformation` to define data types. Fully supported types are listed in `org.apache.flink.table.api.Types`. The following table summarizes the relation between Table API types, SQL types, and the resulting Java class.
+Table API建立在Flink的DataSet和DataStream API之上。 在内部，它还使用Flink的`TypeInformation`来定义数据类型，完全支持的类型列在`org.apache.flink.table.api.Types`中。 下表总结了Table API类型，SQL类型和Java类之间的关系。
 
 | Table API              | SQL                         | Java type              |
 | :--------------------- | :-------------------------- | :--------------------- |
@@ -1578,16 +1579,17 @@ The Table API is built on top of Flink's DataSet and DataStream APIs. Internally
 | `Types.MAP`            | `MAP`                       | `java.util.HashMap`    |
 | `Types.MULTISET`       | `MULTISET`                  | e.g. `java.util.HashMap<String, Integer>` for a multiset of `String` |
 
-Generic types and composite types (e.g., POJOs or Tuples) can be fields of a row as well. Generic types are treated as a black box and can be passed on or processed by [user-defined functions](udfs.html). Composite types can be accessed with [built-in functions](#built-in-functions) (see *Value access functions* section).
 
+通用类型和复合类型（例如，POJO或元组）也可以是行的字段。 通用类型被视为黑盒子，可以通过[user-defined functions]（udfs.html）传递或处理。 可以使用[built-in functions](＃built-in-functions)访问复合类型（参考*Value access functions*部分）。
 {% top %}
 
-Expression Syntax
+表达式语法
 -----------------
 
-Some of the operators in previous sections expect one or more expressions. Expressions can be specified using an embedded Scala DSL or as Strings. Please refer to the examples above to learn how expressions can be specified.
+前面章节中的一些运算符需要一个或多个表达式。 可以使用嵌入式Scala DSL或字符串指定表达式。请参阅上面的示例以了解如何指定表达式。
 
-This is the EBNF grammar for expressions:
+下面是表达式的EBNF语法：
+
 
 {% highlight ebnf %}
 
@@ -1645,14 +1647,13 @@ timeIndicator = fieldReference , "." , ( "proctime" | "rowtime" ) ;
 
 {% endhighlight %}
 
-Here, `literal` is a valid Java literal, `fieldReference` specifies a column in the data (or all columns if `*` is used), and `functionIdentifier` specifies a supported scalar function. The
-column names and function names follow Java identifier syntax. Expressions specified as Strings can also use prefix notation instead of suffix notation to call operators and functions.
+这里，`literal`是一个有效的Java文字，`fieldReference`指定数据中的列（如果使用`*`则指定所有列），`functionIdentifier`指定支持的标量函数。该列名和函数名遵循Java标识符语法。 指定为字符串的表达式也可以使用前缀表示而不是后缀表示来调用运算符和函数。
 
-If working with exact numeric values or large decimals is required, the Table API also supports Java's BigDecimal type. In the Scala Table API decimals can be defined by `BigDecimal("123456")` and in Java by appending a "p" for precise e.g. `123456p`.
+如果需要使用精确数值或大数，Table API也支持Java的BigDecimal类型。 在Scala Table API中，小数可以由`BigDecimal("123456"）`和Java来定义，通过附加"p"来表示精确的例如`123456p`。
 
-In order to work with temporal values the Table API supports Java SQL's Date, Time, and Timestamp types. In the Scala Table API literals can be defined by using `java.sql.Date.valueOf("2016-06-27")`, `java.sql.Time.valueOf("10:10:42")`, or `java.sql.Timestamp.valueOf("2016-06-27 10:10:42.123")`. The Java and Scala Table API also support calling `"2016-06-27".toDate()`, `"10:10:42".toTime()`, and `"2016-06-27 10:10:42.123".toTimestamp()` for converting Strings into temporal types. *Note:* Since Java's temporal SQL types are time zone dependent, please make sure that the Flink Client and all TaskManagers use the same time zone.
+为了支持日期时间，Table API支持Java SQL的Date，Time和Timestamp类型。 在Scala Table API中，可以使用`java.sql.Date.valueOf("2016-06-27")`，`java.sql.Timestamp.valueOf("2016-06-27 10:10:42.123")`来定义时间，或者 `java.sql.Timestamp.valueOf("2016-06-27 10:10:42.123")`。 Java和Scala Table API也支持调用`java.sql.Date.valueOf("2016-06-27")`，`java.sql.Time.valueOf("10:10:42")`和`"2016-06-27 10:10:42.123".toTimestamp()`用于将字符串转换为时间类型。 *注意：*由于Java的临时SQL类型与时区有关，请确保Flink Client和所有TaskManagers使用相同的时区。
 
-Temporal intervals can be represented as number of months (`Types.INTERVAL_MONTHS`) or number of milliseconds (`Types.INTERVAL_MILLIS`). Intervals of same type can be added or subtracted (e.g. `1.hour + 10.minutes`). Intervals of milliseconds can be added to time points (e.g. `"2016-08-10".toDate + 5.days`).
+时间间隔可以表示为月数（`Types.INTERVAL_MONTHS`）或毫秒数（`Types.INTERVAL_MILLIS`）。 可以添加或减去相同类型的间隔（例如，`1.hour + 10.minutes`）。 也可以将毫秒的间隔添加到时间点（例如，“`"2016-08-10".toDate + 5.days`）。
 
 {% top %}
 
