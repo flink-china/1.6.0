@@ -1,5 +1,5 @@
 ---
-title: "Connect to External Systems"
+title: "对接外部系统"
 nav-parent_id: tableapi
 nav-pos: 19
 ---
@@ -22,23 +22,23 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-Flink's Table API & SQL programs can be connected to other external systems for reading and writing both batch and streaming tables. A table source provides access to data which is stored in external systems (such as a database, key-value store, message queue, or file system). A table sink emits a table to an external storage system. Depending on the type of source and sink, they support different formats such as CSV, Parquet, or ORC.
+Flink 的 Table & SQL 程序可以对接其他外部系统以读写流式或批式数据表。其中表源（table source）可以用来访问存储于外部系统（数据库、键值存储、消息队列和文件系统等）的数据；表汇（table sink）可以将某个数据表写入外部系统。不同的源和汇支持不同的数据格式，例如 CSV、Parquet、ORC 等。
 
-This page describes how to declare built-in table sources and/or table sinks and register them in Flink. After a source or sink has been registered, it can be accessed by Table API & SQL statements.
+本页将介绍如何声明及在 Flink 中注册那些内置的表源及表汇。注册后，用户就可以在 Table API 及 SQL 语句中使用它们。
 
-<span class="label label-danger">Attention</span> If you want to implement your own *custom* table source or sink, have a look at the [user-defined sources & sinks page](sourceSinks.html).
+<span class="label label-danger">注意：</span> 如果您想实现*自定义*的表源或表汇，请参照[user-defined sources & sinks 页面](sourceSinks.html).
 
 * This will be replaced by the TOC
 {:toc}
 
-Dependencies
+依赖
 ------------
 
-The following table list all available connectors and formats. Their mutual compatibility is tagged in the corresponding sections for [table connectors](connect.html#table-connectors) and [table formats](connect.html#table-formats). The following table provides dependency information for both projects using a build automation tool (such as Maven or SBT) and SQL Client with SQL JAR bundles.
+下表中列出了 Flink 现版本中所有可用的连接器及数据格式。两者之间的相容性将在介绍[表连接器](connect.html#表连接器)和[表格式](connect.html#表格式)的特定章节以标签形式展示。针对使用自动化构建工具（Maven 和 SBT 等）和使用 SQL Client JAR bundles，下表也分别给出了相应的依赖信息。
 
 {% if site.is_stable %}
 
-### Connectors
+### 连接器
 
 | Name              | Version       | Maven dependency             | SQL Client JAR         |
 | :---------------- | :------------ | :--------------------------- | :----------------------|
@@ -48,7 +48,7 @@ The following table list all available connectors and formats. Their mutual comp
 | Apache Kafka      | 0.10          | `flink-connector-kafka-0.10` | [Download](http://central.maven.org/maven2/org/apache/flink/flink-connector-kafka-0.10{{site.scala_version_suffix}}/{{site.version}}/flink-connector-kafka-0.10{{site.scala_version_suffix}}-{{site.version}}-sql-jar.jar) |
 | Apache Kafka      | 0.11          | `flink-connector-kafka-0.11` | [Download](http://central.maven.org/maven2/org/apache/flink/flink-connector-kafka-0.11{{site.scala_version_suffix}}/{{site.version}}/flink-connector-kafka-0.11{{site.scala_version_suffix}}-{{site.version}}-sql-jar.jar) |
 
-### Formats
+### 格式
 
 | Name              | Maven dependency             | SQL Client JAR         |
 | :---------------- | :--------------------------- | :--------------------- |
@@ -64,27 +64,27 @@ This table is only available for stable releases.
 
 {% top %}
 
-Overview
+概览
 --------
 
-Beginning from Flink 1.6, the declaration of a connection to an external system is separated from the actual implementation.
+从1.6版本开始，Flink已经将连接外部系统的声明过程和其具体的实现分离开来。
 
-Connections can be specified either
+用户可以通过以下两种方式指定一个连接器：
 
-- **programmatically** using a `Descriptor` under `org.apache.flink.table.descriptors` for Table & SQL API
-- or **declaratively** via [YAML configuration files](http://yaml.org/) for the SQL Client.
+- 在 Table & SQL API 中使用 `org.apache.flink.table.descriptors` 包内某个 `Descriptor` 进行**编码**；
+- 在 SQL Client 的 [YAML 配置文件中](http://yaml.org/)直接进行**声明**。
 
-This allows not only for better unification of APIs and SQL Client but also for better extensibility in case of [custom implementations](sourceSinks.html) without changing the actual declaration.
+这种设计不仅有助于 API 和 SQL Client 间更好地融合，而且允许在不改变实际声明的前提下以[自定义实现](sourceSinks.html)的方式进行更好的扩展。
 
-Every declaration is similar to a SQL `CREATE TABLE` statement. One can define the name of the table, the schema of the table, a connector, and a data format upfront for connecting to an external system.
+声明连接的方式和 SQL `CREATE TABLE` 语句类似。用户可以定义表名、表模式，连接器、以及连接外部系统需要用的数据格式。
 
-The **connector** describes the external system that stores the data of a table. Storage systems such as [Apacha Kafka](http://kafka.apache.org/) or a regular file system can be declared here. The connector might already provide a fixed format with fields and schema.
+**连接器**用来描述某个存储数据表的外部系统。用户可以用它来声明诸如[Apache Kafka](http://kafka.apache.org/) 或普通文件的存储系统。连接器可能已经提供了一个包含字段和模式信息的固定格式。
 
-Some systems support different **data formats**. For example, a table that is stored in Kafka or in files can encode its rows with CSV, JSON, or Avro. A database connector might need the table schema here. Whether or not a storage system requires the definition of a format, is documented for every [connector](connect.html#table-connectors). Different systems also require different [types of formats](connect.html#table-formats) (e.g., column-oriented formats vs. row-oriented formats). The documentation states which format types and connectors are compatible.
+一些系统支持不同的**数据格式**。例如：存储在 Kafka 或文件中的表允许通过 CSV、JSON 或 Avro 等格式对数据行进行编码。此时数据库连接器就需要定义一个表模式。我们会在介绍每个[连接器](connect.html#表连接器)的时候注明其相应的外部系统是否需要定义格式。不同的系统（例如：面向列的格式和面向行的格式）所需的[格式类型](connect.html#表格式)也可能不同。文档中会说明格式类型以及连接器之间的相容关系。
 
-The **table schema** defines the schema of a table that is exposed to SQL queries. It describes how a source maps the data format to the table schema and a sink vice versa. The schema has access to fields defined by the connector or format. It can use one or more fields for extracting or inserting [time attributes](streaming.html#time-attributes). If input fields have no determinstic field order, the schema clearly defines column names, their order, and origin.
+**表模式**定义了表在 SQL 查询中对外展现的模式。它用来描述数据源以及数据汇中的数据格式和表模式之间如何进行映射。模式允许访问连接器或格式中定义的数据字段，同时它还可以从多个字段中提取或直接插入[时间属性](streaming.html#时间属性) 。如果输入字段没有确定的顺序，模式将明确定义列名、列顺序以及列的来源。
 
-The subsequent sections will cover each definition part ([connector](connect.html#table-connectors), [format](connect.html#table-formats), and [schema](connect.html#table-schema)) in more detail. The following example shows how to pass them:
+接下来的章节将详细介绍每个部分([连接器](connect.html#表连接器), [格式](connect.html#表格式)以及[模式](connect.html#表模式))的定义。以下例子展示了基本的使用模板：
 
 <div class="codetabs" markdown="1">
 <div data-lang="Java/Scala" markdown="1">
@@ -110,11 +110,11 @@ schema: ...
 </div>
 </div>
 
-The table's type (`source`, `sink`, or `both`) determines how a table is registered. In case of table type `both`, both a table source and table sink are registered under the same name. Logically, this means that we can both read and write to such a table similarly to a table in a regular DBMS.
+表的类型（源、汇或二者皆是）决定了其注册的方式。如果是二者皆是的情况，用户需要以相同名称同时注册一个表源和一个表汇。逻辑上来看，这意味着我们可以像操作传统数据库一样读写某个表。
 
-For streaming queries, an [update mode](connect.html#update-mode) declares how to communicate between a dynamic table and the storage system for continous queries.
+对流式环境下的持续查询，用户需要通过一个[更新模式](connect.html#更新模式)属性来声明动态表和外部系统之间是如何进行数据交换的。
 
-The following code shows a full example of how to connect to Kafka for reading Avro records.
+以下代码展示了一个从 Kafka 队列中读取 Avro 格式记录的完整示例。
 
 <div class="codetabs" markdown="1">
 <div data-lang="Java/Scala" markdown="1">
@@ -220,18 +220,18 @@ tables:
 </div>
 </div>
 
-In both ways the desired connection properties are converted into normalized, string-based key-value pairs. So-called [table factories](sourceSinks.html#define-a-tablefactory) create configured table sources, table sinks, and corresponding formats from the key-value pairs. All table factories that can be found via Java's [Service Provider Interfaces (SPI)](https://docs.oracle.com/javase/tutorial/sound/SPI-intro.html) are taken into account when searching for exactly-one matching table factory.
+无论采用哪种方式，连接所需的属性都会被转换为标准化的 String 键值对。一些名为[表工厂（table factories）](sourceSinks.html#define-a-tablefactory)的工具会根据它们创建表源、表汇以及相应的格式。系统会利用 Java 的 [Service Provider Interfaces(SPI)](https://docs.oracle.com/javase/tutorial/sound/SPI-intro.html) 对所有表工厂进行检索并找出唯一一个满足条件的。
 
-If no factory can be found or multiple factories match for the given properties, an exception will be thrown with additional information about considered factories and supported properties.
+如果根据给定属性没有找到或找到多个工厂，系统会抛出异常并提供候选工厂及其支持属性列表的信息。
 
 {% top %}
 
-Table Schema
+表模式
 ------------
 
-The table schema defines the names and types of columns similar to the column definitions of a SQL `CREATE TABLE` statement. In addition, one can specify how columns are mapped from and to fields of the format in which the table data is encoded. The origin of a field might be important if the name of the column should differ from the input/output format. For instance, a column `user_name` should reference the field `$$-user-name` from a JSON format. Additionally, the schema is needed to map types from an external system to Flink's representation. In case of a table sink, it ensures that only data with valid schema is written to an external system.
+如同在 SQL `CREATE TABLE` 语句中对列的定义，表模式可用来定义列的名称及类型。此外，用户还可以指定这些列和表数据编码格式中的字段是如何进行映射的。如果列名和格式字段名称不同，明确其来源就显得尤为重要。例如：名为 `user_name` 的列可能会引用 JSON 格式中的 `$$-user-name` 字段。此外模式中还需要将外部系统的数据类型映射为 Flink 内部的类型。对于表汇而言，它保证了只有有效模式中定义的数据才会被写入外部系统。
 
-The following example shows a simple schema without time attributes and one-to-one field mapping of input/output to table columns.
+下列例子展示了一个简单的、不含时间属性的模式，它对字段和列进行了一对一的映射。
 
 <div class="codetabs" markdown="1">
 <div data-lang="Java/Scala" markdown="1">
@@ -258,7 +258,7 @@ schema:
 </div>
 </div>
 
-For *each field*, the following properties can be declared in addition to the column's name and type:
+对于*每个字段*，除了定义列名和类型之外还可以定义如下属性：
 
 <div class="codetabs" markdown="1">
 <div data-lang="Java/Scala" markdown="1">
@@ -291,15 +291,15 @@ schema:
 </div>
 </div>
 
-Time attributes are essential when working with unbounded streaming tables. Therefore both processing-time and event-time (also known as "rowtime") attributes can be defined as part of the schema.
+处理无界数据流表时，时间属性必不可少。因此，可以在模式中定义 processing-time 和 event-time（rowtime）属性。
 
-For more information about time handling in Flink and especially event-time, we recommend the general [event-time section](streaming.html#time-attributes).
+欲了解更多有关 Flink 中时间处理的内容（尤其是 event-time），请参阅通用[时间处理章节](streaming.html#时间属性)。
 
-### Rowtime Attributes
+### Rowtime 属性 
 
-In order to control the event-time behavior for tables, Flink provides predefined timestamp extractors and watermark strategies.
+为了控制数据表中 event-time 的行为，Flink 提供了预置的时间提取器和 watermark 生成策略。
 
-The following timestamp extractors are supported:
+系统目前支持以下时间提取器：
 
 <div class="codetabs" markdown="1">
 <div data-lang="Java/Scala" markdown="1">
@@ -344,7 +344,7 @@ rowtime:
 </div>
 </div>
 
-The following watermark strategies are supported:
+支持如下 watermark 生成策略：
 
 <div class="codetabs" markdown="1">
 <div data-lang="Java/Scala" markdown="1">
@@ -398,11 +398,11 @@ rowtime:
 </div>
 </div>
 
-Make sure to always declare both timestamps and watermarks. Watermarks are required for triggering time-based operations.
+基于（事件）时间的操作需要 watermark，时间提取器和 watermark 策略缺一不可。
 
-### Type Strings
+### 类型字符串
 
-Because type information is only available in a programming language, the following type strings are supported for being defined in a YAML file:
+由于类型信息只在编程语言中可用，因此在 YAML 文件中定义如下类型字符串：
 
 {% highlight yaml %}
 VARCHAR
@@ -428,18 +428,17 @@ ANY(class, serialized)           # used for type information that is not support
 
 {% top %}
 
-Update Modes
+更新模式
 ------------
+对于流式查询，用户需要声明如何执行[动态表和外部系统之间的转换](streaming.html#dynamic-tables--continuous-queries)。*update mode* 选项指定了何种消息需要和外部系统进行交换：
 
-For streaming queries, it is required to declare how to perform the [conversion between a dynamic table and an external connector](streaming.html#dynamic-tables--continuous-queries). The *update mode* specifies which kind of messages should be exchanged with the external system:
+**Append 模式:** 在 append 模式下，动态表和外部连接器之间只能交换 INSERT 类型的消息。
 
-**Append Mode:** In append mode, a dynamic table and an external connector only exchange INSERT messages.
+**Retract 模式:** 在 retract 模式下，动态表和外部连接器之间可以交换 ADD 和 RETRACT 类型的消息。一个 INSERT 修改会被编码成为一条 ADD 消息，一个 DELETE 修改会被编码成一条 RETRACT 消息，而一个 UPDATE 修改会被分解成为一条针对已有行的 RETRACT 消息和一条针对新行的 ADD 消息。和 upsert 模式不同，该模式下不允许定义 key。由于所有 update 修改都包含两条消息，性能会比较低下。
 
-**Retract Mode:** In retract mode, a dynamic table and an external connector exchange ADD and RETRACT messages. An INSERT change is encoded as an ADD message, a DELETE change as a RETRACT message, and an UPDATE change as a RETRACT message for the updated (previous) row and an ADD message for the updating (new) row. In this mode, a key must not be defined as opposed to upsert mode. However, every update consists of two messages which is less efficient.
+**Upsert 模式:** 在 upsert 模式下，一个动态表和外部连接器之间可以交换 UPSERT 以及 DELETE 消息。该模式需要一个（复合式）唯一键（unique key），通过该键进行传播更新。为了可以正确应用消息，外部连接器需要获知唯一键属性。INSERT 和 UPDATE 修改被编码为 UPSERT 消息，DELETE 修改通过 DELETE 消息实现。和 retract 流不同的是 UPDATE 修改通过单条消息进行编码，因此更加高效。
 
-**Upsert Mode:** In upsert mode, a dynamic table and an external connector exchange UPSERT and DELETE messages. This mode requires a (possibly composite) unique key by which updates can be propagated. The external connector needs to be aware of the unique key attribute in order to apply messages correctly. INSERT and UPDATE changes are encoded as UPSERT messages. DELETE changes as DELETE messages. The main difference to a retract stream is that UPDATE changes are encoded with a single message and are therefore more efficient.
-
-<span class="label label-danger">Attention</span> The documentation of each connector states which update modes are supported.
+<span class="label label-danger">注意</span> 每个连接器的文档中都会说明各自所支持的更新模式。
 
 <div class="codetabs" markdown="1">
 <div data-lang="Java/Scala" markdown="1">
@@ -458,18 +457,18 @@ tables:
 </div>
 </div>
 
-See also the [general streaming concepts documentation](streaming.html#dynamic-tables--continuous-queries) for more information.
+更多信息请参阅[通用流概念文档](streaming.html#dynamic-tables--continuous-queries)。
 
 {% top %}
 
-Table Connectors
+表连接器
 ----------------
 
-Flink provides a set of connectors for connecting to external systems.
+Flink 提供了一系列的用于连接外部系统的连接器。
 
-Please note that not all connectors are available in both batch and streaming yet. Furthermore, not every streaming connector supports every streaming mode. Therefore, each connector is tagged accordingly. A format tag indicates that the connector requires a certain type of format.
+注意，并不是所有的连接器都可以同时工作在批和流模式下。此外，也并不是所有流式连接器都支持所有的流模式。因此每个连接器都有相应的标签作为说明。格式标签表示连接器需要某种特定的格式。
 
-### File System Connector
+### 文件系统连接器
 
 <span class="label label-primary">Source: Batch</span>
 <span class="label label-primary">Source: Streaming Append Mode</span>
@@ -477,7 +476,7 @@ Please note that not all connectors are available in both batch and streaming ye
 <span class="label label-primary">Sink: Streaming Append Mode</span>
 <span class="label label-info">Format: CSV-only</span>
 
-The file system connector allows for reading and writing from a local or distributed filesystem. A filesystem can be defined as:
+文件系统连接器允许读写本地或远程的文件系统。某个文件系统可以通过如下方式定义：
 
 <div class="codetabs" markdown="1">
 <div data-lang="Java/Scala" markdown="1">
@@ -498,20 +497,20 @@ connector:
 </div>
 </div>
 
-The file system connector itself is included in Flink and does not require an additional dependency. A corresponding format needs to be specified for reading and writing rows from and to a file system.
+文件系统连接器本身被包含在 Flink 项目中，因此不需要额外的依赖。为了从文件系统中读写行，需要指定相应的格式。
 
-<span class="label label-danger">Attention</span> Make sure to include [Flink File System specific dependencies]({{ site.baseurl }}/ops/filesystems.html).
+<span class="label label-danger">注意</span> 确保引入[Flink 文件系统特定依赖]({{ site.baseurl }}/ops/filesystems.html).
 
-<span class="label label-danger">Attention</span> File system sources and sinks for streaming are only experimental. In the future, we will support actual streaming use cases, i.e., directory monitoring and bucket output.
+<span class="label label-danger">注意</span> 针对数据流的文件系统源和汇还处于试验阶段。未来我们会支持实际流式环境下的用例，例如：目录监测和桶输出。
 
-### Kafka Connector
+### Kafka 连接器
 
 <span class="label label-primary">Source: Streaming Append Mode</span>
 <span class="label label-primary">Sink: Streaming Append Mode</span>
 <span class="label label-info">Format: Serialization Schema</span>
 <span class="label label-info">Format: Deserialization Schema</span>
 
-The Kafka connector allows for reading and writing from and to an Apache Kafka topic. It can be defined as follows:
+Kafka 连接器允许通过某个 Apache Kafka 的 topic 读写数据。它可通过如下方式定义：
 
 <div class="codetabs" markdown="1">
 <div data-lang="Java/Scala" markdown="1">
@@ -571,28 +570,28 @@ connector:
 </div>
 </div>
 
-**Specify the start reading position:** By default, the Kafka source will start reading data from the committed group offsets in Zookeeper or Kafka brokers. You can specify other start positions, which correspond to the configurations in section [Kafka Consumers Start Position Configuration]({{ site.baseurl }}/dev/connectors/kafka.html#kafka-consumers-start-position-configuration).
+**指定开始读取的位置**：默认情况下，Kafka Source 将从已提交至 Zookeeper 或 Kafka broker 的组偏移地址开始读数据。您可以参考 [Kafka 消费者开始位置配置]({{ site.baseurl }}/dev/connectors/kafka.html#kafka-consumers-start-position-configuration)章节中的配置，指定其他开始位置。
 
-**Flink-Kafka Sink Partitioning:** By default, a Kafka sink writes to at most as many partitions as its own parallelism (each parallel instance of the sink writes to exactly one partition). In order to distribute the writes to more partitions or control the routing of rows into partitions, a custom sink partitioner can be provided. The round-robin partitioner is useful to avoid an unbalanced partitioning. However, it will cause a lot of network connections between all the Flink instances and all the Kafka brokers.
+**Flink-Kafka Sink 分区**：默认情况下，Kafka Sink 并行写入的最大分区数等于它自身的并发度（每个 sink 的并行实例只写一个分区）。为了同时写入更多分区或控制数据行写入哪个分区，用户可以提供一个自定义的 sink 分区器（partitioner）。Round-robin 分区器可用来避免分区不平衡，但它可能会增加 Flink 实例以及 Kafka broker 之间的网络连接数。
 
-**Consistency guarantees:** By default, a Kafka sink ingests data with at-least-once guarantees into a Kafka topic if the query is executed with [checkpointing enabled]({{ site.baseurl }}/dev/stream/state/checkpointing.html#enabling-and-configuring-checkpointing).
+**一致性保证**：默认情况下，如果查询[启用 checkpointing]({{ site.baseurl }}/dev/stream/state/checkpointing.html#enabling-and-configuring-checkpointing)，Kafka sink 会以至少一次语义向某个 topic 中写入数据。
 
-**Kafka 0.10+ Timestamps:** Since Kafka 0.10, Kafka messages have a timestamp as metadata that specifies when the record was written into the Kafka topic. These timestamps can be used for a [rowtime attribute](connect.html#defining-the-schema) by selecting `timestamps: from-source` in YAML and `timestampsFromSource()` in Java/Scala respectively. 
+**Kafka 0.10+ 时间戳**：从 0.10 版本开始，Kafka 消息中会保存一个时间戳元数据，用以标明该消息是何时写入 Kafka topic 中的。可以通过下列方式指定该时间戳为消息的 [rowtime 属性](connect.html#defining-the-schema)：在YAML文件中设置 from-source 或在 Java/Scala 中使用 `timestampsFromSource()` 方法。
 
-Make sure to add the version-specific Kafka dependency. In addition, a corresponding format needs to be specified for reading and writing rows from and to Kafka.
+使用时请确保导入了和 Kafka 版本相匹配的依赖包。除此之外还需以指定一个从 Kafka 中读写数据的格式。
 
 {% top %}
 
-Table Formats
+表格式
 -------------
 
-Flink provides a set of table formats that can be used with table connectors.
+Flink 提供了一系列可用于表连接器的格式。
 
-A format tag indicates the format type for matching with a connector.
+与连接器匹配的格式类型会以格式标签的形式给出。
 
-### CSV Format
+### CSV 格式
 
-The CSV format allows to read and write comma-separated rows.
+CSV格式允许读写以逗号（或其他符号）分隔的数据行。
 
 <div class="codetabs" markdown="1">
 <div data-lang="Java/Scala" markdown="1">
@@ -630,18 +629,18 @@ format:
 </div>
 </div>
 
-The CSV format is included in Flink and does not require additional dependencies.
+CSV 是 Flink 内置的格式，因此不需要额外依赖。
 
-<span class="label label-danger">Attention</span> The CSV format for writing rows is limited at the moment. Only a custom field delimiter is supported as optional parameter.
+<span class="label label-danger">注意</span> 使用 CSV 格式写数据行现在还有一定限制。可选参数中只支持字段分隔符。
 
-### JSON Format
+### JSON 格式
 
 <span class="label label-info">Format: Serialization Schema</span>
 <span class="label label-info">Format: Deserialization Schema</span>
 
-The JSON format allows to read and write JSON data that corresponds to a given format schema. The format schema can be defined either as a Flink type, as a JSON schema, or derived from the desired table schema. A Flink type enables a more SQL-like definition and mapping to the corresponding SQL data types. The JSON schema allows for more complex and nested structures.
+JSON 格式允许以一个指定的格式 schema 来读写 JSON 数据。该格式 schema 可以通过Flink 类型或 JSON schema 来定义，也可以从所需表的 schema 中推断出来。Flink 类型定义起来更加偏向 SQL，并支持到相应的 SQL 数据类型的映射，而 JSON schema 支持更加复杂的嵌套结构。
 
-If the format schema is equal to the table schema, the schema can also be automatically derived. This allows for defining schema information only once. The names, types, and field order of the format are determined by the table's schema. Time attributes are ignored if their origin is not a field. A `from` definition in the table schema is interpreted as a field renaming in the format.
+如果格式的 schema 和表的 schema 相同，前者可以自动推断出来。这允许我们只定义一次 schema 信息。所有格式的名称、类型、字段类型都由表的 schema 来决定。如果时间属性源不是一个有效字段，它将被忽略。表 schema 中的 from 定义在格式中会被翻译成一个字段重命名操作。
 
 <div class="codetabs" markdown="1">
 <div data-lang="Java/Scala" markdown="1">
@@ -705,7 +704,7 @@ format:
 </div>
 </div>
 
-The following table shows the mapping of JSON schema types to Flink SQL types:
+下表展示了 JSON schema 的类型到 Flink SQL 类型的映射。
 
 | JSON schema                       | Flink SQL               |
 | :-------------------------------- | :---------------------- |
@@ -721,10 +720,9 @@ The following table shows the mapping of JSON schema types to Flink SQL types:
 | `string` with `encoding: base64`  | `ARRAY[TINYINT]`        |
 | `null`                            | `NULL` (unsupported yet)|
 
+目前 Flink 只支持 [JSON schema 说明](http://json-schema.org/) `draft-07` 版本中的部分类型。Flink 暂不支持 Union 类型以及 `allOf`、`anyOf`、`not` 等。`onOf` 和 `arrays` 类型仅在指定是否为空时支持。
 
-Currently, Flink supports only a subset of the [JSON schema specification](http://json-schema.org/) `draft-07`. Union types (as well as `allOf`, `anyOf`, `not`) are not supported yet. `oneOf` and arrays of types are only supported for specifying nullability.
-
-Simple references that link to a common definition in the document are supported as shown in the more complex example below:
+如下面一个更复杂的例子所示，Flink 支持通过一些简单引用，链接到文档中已有的普通定义。
 
 {% highlight json %}
 {
@@ -771,17 +769,16 @@ Simple references that link to a common definition in the document are supported
 }
 {% endhighlight %}
 
-**Missing Field Handling:** By default, a missing JSON field is set to `null`. You can enable strict JSON parsing that will cancel the source (and query) if a field is missing.
+**处理缺失值**：默认情况下 JSON 中缺失的字段将会设置为 `null`。您还可以采用一种更加严格的方式，即某个字段出现缺失值时取消数据读取（查询）。
 
-Make sure to add the JSON format as a dependency.
-
+使用前请确保将 JSON 格式添加至依赖。
 
 ### Apache Avro Format
 
 <span class="label label-info">Format: Serialization Schema</span>
 <span class="label label-info">Format: Deserialization Schema</span>
 
-The [Apache Avro](https://avro.apache.org/) format allows to read and write Avro data that corresponds to a given format schema. The format schema can be defined either as a fully qualified class name of an Avro specific record or as an Avro schema string. If a class name is used, the class must be available in the classpath during runtime.
+[Apache Avro](https://avro.apache.org/) 格式允许读写遵循某个给定格式 schema 的 Avro 数据。格式 schema 既可以通过某条 Avro 特定记录的完整类名来定义，也可以通过 Avro schema 字符串来定义。如果使用类名，请确保运行时对应的类存在于 classpath 中。
 
 <div class="codetabs" markdown="1">
 <div data-lang="Java/Scala" markdown="1">
@@ -829,7 +826,7 @@ format:
 </div>
 </div>
 
-Avro types are mapped to the corresponding SQL data types. Union types are only supported for specifying nullability otherwise they are converted to an `ANY` type. The following table shows the mapping:
+Avro 类型会被映射为对应的 SQL 数据类型。其中 Union 类型只在指定是否为空时支持，其他时候会被转换为 `ANY` 类型。下表给出了类型映射规则：
 
 | Avro schema                                 | Flink SQL               |
 | :------------------------------------------ | :---------------------- |
@@ -855,23 +852,23 @@ Avro types are mapped to the corresponding SQL data types. Union types are only 
 | `fixed` with `logicalType: decimal`         | `DECIMAL`               |
 | `null`                                      | `NULL` (unsupported yet)|
 
-Avro uses [Joda-Time](http://www.joda.org/joda-time/) for representing logical date and time types in specific record classes. The Joda-Time dependency is not part of Flink's distribution. Therefore, make sure that Joda-Time is in your classpath together with your specific record class during runtime. Avro formats specified via a schema string do not require Joda-Time to be present.
+Avro 使用 [Joda-Time](http://www.joda.org/joda-time/) 来表示特定记录类中的逻辑日期以及时间类型。Joda-Time 所需的依赖没有包含在 Flink 发行版中。因此请确保在运行期间 Joda-Time 和特定的记录类都包含在在 classpath 中。通过 schema 字符串指定 Avro 格式时不需要提供 Joda-Time。
 
-Make sure to add the Apache Avro dependency.
+使用前请确保将 Apache Avro 添加至依赖中。
 
 {% top %}
 
-Further TableSources and TableSinks
+其他 TableSources 及 TableSinks
 -----------------------------------
 
-The following table sources and sinks have not yet been migrated (or have not been migrated entirely) to the new unified interfaces.
+以下表源和表汇还没有（完全）迁移至新的统一接口。
 
-These are the additional `TableSource`s which are provided with Flink:
+这些是 Flink 中提供的其他 `TableSource`：
 
 | **Class name** | **Maven dependency** | **Batch?** | **Streaming?** | **Description**
 | `OrcTableSource` | `flink-orc` | Y | N | A `TableSource` for ORC files.
 
-These are the additional `TableSink`s which are provided with Flink:
+这些是 Flink 中提供的其他 `TableSink`：
 
 | **Class name** | **Maven dependency** | **Batch?** | **Streaming?** | **Description**
 | `CsvTableSink` | `flink-table` | Y | Append | A simple sink for CSV files.
@@ -880,9 +877,9 @@ These are the additional `TableSink`s which are provided with Flink:
 
 ### OrcTableSource
 
-The `OrcTableSource` reads [ORC files](https://orc.apache.org). ORC is a file format for structured data and stores the data in a compressed, columnar representation. ORC is very storage efficient and supports projection and filter push-down.
+OrcTableSource 可用来读取 [ORC 文件](https://orc.apache.org)。ORC 是一个面向结构化数据的文件格式，它将数据压缩并进行列式存储。ORC 格式具有很高的存储效率并支持选择操作以及过滤器下推。
 
-An `OrcTableSource` is created as shown below:
+用户可以通过如下方式创建一个 `OrcTableSource`：
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -922,15 +919,15 @@ val orcTableSource = OrcTableSource.builder()
 </div>
 </div>
 
-**Note:** The `OrcTableSource` does not support ORC's `Union` type yet.
+**注意：** `OrcTableSource` 暂不支持 ORC 中的 `Union` 类型。
 
 {% top %}
 
 ### CsvTableSink
 
-The `CsvTableSink` emits a `Table` to one or more CSV files. 
+`CsvTableSink` 允许将一个 `Table` 发送至一个或多个 CSV 文件中。
 
-The sink only supports append-only streaming tables. It cannot be used to emit a `Table` that is continuously updated. See the [documentation on Table to Stream conversions](./streaming.html#table-to-stream-conversion) for details. When emitting a streaming table, rows are written at least once (if checkpointing is enabled) and the `CsvTableSink` does not split output files into bucket files but continuously writes to the same files. 
+该 sink 只支持 append-only 的流式数据表。它无法用于需要进行持续更新的数据表。详情请参阅 [Table 到 Stream 的转换文档](./streaming.html#table-to-stream-conversion)。当发送一个流式数据表时，数据行会以至少一次语义写入（如果启用 checkpointing），`CsvTableSink` 不会将输出文件拆分为不同的桶文件，而是会一直写同一个文件。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -966,11 +963,11 @@ table.writeToSink(
 
 ### JDBCAppendTableSink
 
-The `JDBCAppendTableSink` emits a `Table` to a JDBC connection. The sink only supports append-only streaming tables. It cannot be used to emit a `Table` that is continuously updated. See the [documentation on Table to Stream conversions](./streaming.html#table-to-stream-conversion) for details. 
+`JDBCAppendTableSink` 将一个数据表发送至一个 JDBC 连接中。该 sink 只支持 append-only 的流式数据表。它无法用于需要进行持续更新的数据表。详情请参阅 [Table 到 Stream 的转换文档](./streaming.html#table-to-stream-conversion)。
 
-The `JDBCAppendTableSink` inserts each `Table` row at least once into the database table (if checkpointing is enabled). However, you can specify the insertion query using <code>REPLACE</code> or <code>INSERT OVERWRITE</code> to perform upsert writes to the database.
+JDBCAppendTableSink 会以至少一次语义将每个数据行写入数据库中（如果启用 checkpointing）。但您可以利用 `REPLACE` 或 `INSERT OVERWRITE` 来指定插入查询语句，从而实现对数据库的 upsert 操作。
 
-To use the JDBC sink, you have to add the JDBC connector dependency (<code>flink-jdbc</code>) to your project. Then you can create the sink using <code>JDBCAppendSinkBuilder</code>:
+为了使用 JDBC sink，您需要将 JDBC 连接器的依赖（`flink-jdbc`）添加至您的项目中。随后即可利用`JDBCAppendSinkBuilder` 来创建此类 sink。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -1003,17 +1000,17 @@ table.writeToSink(sink)
 </div>
 </div>
 
-Similar to using <code>JDBCOutputFormat</code>, you have to explicitly specify the name of the JDBC driver, the JDBC URL, the query to be executed, and the field types of the JDBC table. 
+和使用 `JDBCOutputFormat` 类似，您必须显式指定 JDBC 驱动的名称、JDBC URL、需要执行的查询以及 JDBC 表的字段类型。
 
 {% top %}
 
 ### CassandraAppendTableSink
 
-The `CassandraAppendTableSink` emits a `Table` to a Cassandra table. The sink only supports append-only streaming tables. It cannot be used to emit a `Table` that is continuously updated. See the [documentation on Table to Stream conversions](./streaming.html#table-to-stream-conversion) for details. 
+`CassandraAppendTableSink` 将一个数据表发送至一个 Cassandra 表中。该 sink 只支持 append-only 的流式数据表。它无法用于需要进行持续更新的数据表。详情请参阅 [Table 到 Stream 的转换文档](./streaming.html#table-to-stream-conversion)。
 
-The `CassandraAppendTableSink` inserts all rows at least once into the Cassandra table if checkpointing is enabled. However, you can specify the query as upsert query.
+如果启用 checkpointing，`CassandraAppendTableSink` 会以至少一次语义将所有数据行写入到 Cassandra 表中。但您可以将查询设置为 upsert 类型。
 
-To use the `CassandraAppendTableSink`, you have to add the Cassandra connector dependency (<code>flink-connector-cassandra</code>) to your project. The example below shows how to use the `CassandraAppendTableSink`.
+使用 `CassandraAppendTableSink` 之前，您必须将 Cassandra 连接器的依赖（`flink-connector-cassandra`）加入到项目中。以下示例展示了 `CassandraAppendTableSink` 的基本用法。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
