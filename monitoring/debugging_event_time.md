@@ -25,33 +25,23 @@ under the License.
 * ToC
 {:toc}
 
-## Monitoring Current Event Time
+# 调试窗口 &#38; 事件时间
+* [监控当前事件时间](#监控当前事件时间)
+* [处理延迟事件时间](#处理延迟事件时间)
 
-Flink's [event time]({{ site.baseurl }}/dev/event_time.html) and watermark support is a powerful feature for handling
-out-of-order events. However, it's harder to understand what exactly is going on because the progress of time
-is tracked within the system.
+## 监控当前事件时间
+对于处理无序事件来讲，Flink的[事件时间](http://doc.flink-china.org/1.2.0/dev/event_time.html)和水位线支持是一个强大的功能。然而，由于它是在系统内部跟踪时间进度，因此很难了解具体发生了什么。
+可以通过Flink的Web接口或者[指标系统](http://doc.flink-china.org/1.2.0/monitoring/metrics.html)来访问每一个任务的低水印。
 
-Low watermarks of each task can be accessed through Flink web interface or [metrics system]({{ site.baseurl }}/monitoring/metrics.html).
+Flink的每个任务都公开一个称为currentLowWatermark的指标，表示此任务接收到的最低水印。 这一长值所表示的是“当前的事件时间”。
+该值是通过获取上游操作接收到的所有水印的最小值来计算的。这意味着用水印跟踪的事件时间总是被最远的源来支配。
 
-Each Task in Flink exposes a metric called `currentLowWatermark` that represents the lowest watermark received
-by this task. This long value represents the "current event time".
-The value is calculated by taking the minimum of all watermarks received by upstream operators. This means that 
-the event time tracked with watermarks is always dominated by the furthest-behind source.
+您可以使用**Web接口**，通过在指标标签页选择一个任务然后选择 \<taskNr\>.currentLowWatermark来访问低水印的指标。它会生成一个新的盒子，让您能够马上看到任务的当前低水印。
 
-The low watermark metric is accessible **using the web interface**, by choosing a task in the metric tab,
-and selecting the `<taskNr>.currentLowWatermark` metric. In the new box you'll now be able to see 
-the current low watermark of the task.
+获取度量的另一种方法是使用一个**指标报告程序**，如[指标系统](http://doc.flink-china.org/1.2.0/monitoring/metrics.html)文档中描述的那样。对于本地设置，我们建议使用JMX指标报告和像[VisualVM](https://visualvm.github.io/)这样的工具。
 
-Another way of getting the metric is using one of the **metric reporters**, as described in the documentation
-for the [metrics system]({{ site.baseurl }}/monitoring/metrics.html).
-For local setups, we recommend using the JMX metric reporter and a tool like [VisualVM](https://visualvm.github.io/).
-
-
-
-
-## Handling Event Time Stragglers
-
-  - Approach 1: Watermark stays late (indicated completeness), windows fire early
-  - Approach 2: Watermark heuristic with maximum lateness, windows accept late data
+## 处理延迟事件时间
+* 方法1:水印滞留（数据完整生成），窗口提前触发
+* 方法2:最大推迟启发式水印，窗口接受延迟数据
 
 {% top %}
