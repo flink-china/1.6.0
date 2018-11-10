@@ -1,5 +1,3 @@
-[toc]
-
 # Flink类加载概述
 Flink应用程序在运行过程中，随着时间的推移，会加载各种各样的类。 这些类可以分为两种：
 * Java Classpath：包括JDK的库和Flink lib目录下的所有类（Flink的类和一些核心依赖）。
