@@ -24,73 +24,65 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-* toc
-{:toc}
+- [事件时间 / 处理时间 / 导入时间](#------------------)
+    + [设置时间特性](#------)
+- [事件时间和水印](#-------)
+  * [并行流中的水印](#-------)
+  * [迟到的元素](#-----)
+  * [定位水印问题](#------)
 
-# Event Time / Processing Time / Ingestion Time
+# 事件时间 / 处理时间 / 导入时间
 
-Flink supports different notions of *time* in streaming programs.
+Flink在流处理中支持多种*时间*概念。.
 
-- **Processing time:** Processing time refers to the system time of the machine that is executing the
-    respective operation.
+- **处理时间:** 处理时间指机器在执行相应操作时的系统时间。
 
-    When a streaming program runs on processing time, all time-based operations (like time windows) will
-    use the system clock of the machines that run the respective operator. An hourly
-    processing time window will include all records that arrived at a specific operator between the
-    times when the system clock indicated the full hour. For example, if an application
-    begins running at 9:15am, the first hourly processing time window will include events
-    processed between 9:15am and 10:00am, the next window will include events processed between 10:00am and 11:00am, and so on.
+    当一个流处理程序以处理时间的模式运行时，所有基于时间的操作（比如时间窗）都会使用运行机器的系统时间。
+    一个按处理时间每小时计算的窗口将计算所有在机器系统时钟一个自然小时内所收到的记录。举例来说，如果一个应用
+    从9：15开始运行，第一个小时的处理时间窗口将包括从9：15到10：00收到的消息，第二个小时将包含从10:00到
+    11:00点的记录，以此类推。
+    
+    处理时间是最简单的时间概念，它不需要在不同的流和机器之间做协同，因此具有最好的性能和最低的延迟。然而
+    在分布式异步环境中，处理时间无法提供可重现的确定结果，因为每条记录的处理时间取决于它到达系统的时间
+    （比如从消息队列读取），也取决于每条记录在系统中各个算子上处理和在算子间流通的速度，还取决于输出的条件
+    （比如是否定时触发）。
 
-    Processing time is the simplest notion of time and requires no coordination between streams and machines.
-    It provides the best performance and the lowest latency. However, in distributed and asynchronous
-    environments processing time does not provide determinism, because it is susceptible to the speed at which
-    records arrive in the system (for example from the message queue), to the speed at which the
-    records flow between operators inside the system, and to outages (scheduled, or otherwise).
+- **事件时间:** 事件时间是每条消息在发送设备上生成的时间。这个时间通常在记录到达Flink之前就已经在记录中了，并且
+    这个时间戳可以从每条记录中被提取。在事件时间中，时间的向前推移取决于数据，而非处理时的真实时钟。处理事件时
+    间的程序必须要指定如何产生事件时间的水印，这个水印被用来表示事件时间的处理进度。关于水印的机制稍后有
+    [详细的解释](#事件时间和水印)。
 
-- **Event time:** Event time is the time that each individual event occurred on its producing device.
-    This time is typically embedded within the records before they enter Flink, and that *event timestamp*
-    can be extracted from each record. In event time, the progress of time depends on the data,
-    not on any wall clocks. Event time programs must specify how to generate *Event Time Watermarks*,
-    which is the mechanism that signals progress in event time. This watermarking mechanism is
-    described in a later section, [below](#event-time-and-watermarks).
+    理想情况下，不论记录何时何时到达系统，到达顺序如何，使用事件时间进行记录处理会总会得到一致的可重现的确定
+    结果。然而，除非事件按照时间戳的顺序到达，基于事件时间的处理总会因为等待乱序记录带来一些延迟。由于在处理中只
+    可能等待一个有限的时长，这对于事件时间处理的结果确定程度带来了一些限制。
+    
+    假设所有的数据已经到达，那么即便他们到达的顺序是混乱的或有延迟，或者数据本身是一些历史数据的重放，基于事件时
+    间的处理仍会正常进行，并且产生正确和始终一致的结果。举例来说，无论记录是以何种顺序到达，或者他们是怎样被处理
+    的，一个基于小时的事件时间窗口将会包含事件时间处于该小时内的所有记录。
 
-    In a perfect world, event time processing would yield completely consistent and deterministic results, regardless of when events arrive, or their ordering.
-    However, unless the events are known to arrive in-order (by timestamp), event time processing incurs some latency while waiting for out-of-order events. As it is only possible to wait for a finite period of time, this places a limit on how deterministic event time applications can be.
+    值得注意的是，当处理基于事件时间的实时数据时，我们有时仍会使用一些基于处理时间的操作以保证数据处理的及时性。
+    
+- **导入时间:** 导入时间是指事件进入Flink的时间。在数据源算子中每条记录都会得到一个基于当前数据源系统时间的一个
+    时间戳，后续的记录处理操作（如窗口）将会基于这个时间戳进行。
 
-    Assuming all of the data has arrived, event time operations will behave as expected, and produce correct and consistent results even when working with out-of-order or late events, or when reprocessing historic data. For example, an hourly event time window will contain all records
-    that carry an event timestamp that falls into that hour, regardless of the order in which they arrive, or when they are processed. (See the section on [late events](#late-elements) for more information.)
+    从概念上来说，*导入时间*处于*事件时间*和*处理时间*之间。相比于*处理时间*，使用*导入时间*的开销稍大，但是好
+    处是它会产生更加可预测的结果。这是因为*导入时间*使用的是固定的时间（在数据源端一次性指定），不同的窗口操作将
+    会使用同一个时间戳。相比之下，在*处理时间*的窗口算子中，由于本地时钟的不同或者处理延迟，同一条记录在不同算子
+    中可能会被归于不同的窗口。
 
+    对比*事件时间*，基于*导入时间*的程序不能处理乱序或者迟到的事件，但是程序不需要指定如何生成水印。
 
+    从内部机制来讲，*导入时间*和*事件时间*的处理非常相似，它可以是看做具有自动时间戳和自动水印生成的*事件时间*处理。
 
-    Note that sometimes when event time programs are processing live data in real-time, they will use some *processing time* operations in order to guarantee that they are progressing in a timely fashion.
-
-- **Ingestion time:** Ingestion time is the time that events enter Flink. At the source operator each
-    record gets the source's current time as a timestamp, and time-based operations (like time windows)
-    refer to that timestamp.
-
-    *Ingestion time* sits conceptually in between *event time* and *processing time*. Compared to
-    *processing time*, it is slightly more expensive, but gives more predictable results. Because
-    *ingestion time* uses stable timestamps (assigned once at the source), different window operations
-    over the records will refer to the same timestamp, whereas in *processing time* each window operator
-    may assign the record to a different window (based on the local system clock and any transport delay).
-
-    Compared to *event time*, *ingestion time* programs cannot handle any out-of-order events or late data,
-    but the programs don't have to specify how to generate *watermarks*.
-
-    Internally, *ingestion time* is treated much like *event time*, but with automatic timestamp assignment and
-    automatic watermark generation.
-
-<img src="{{ site.baseurl }}/fig/times_clocks.svg" class="center" width="80%" />
+<img src="https://ci.apache.org/projects/flink/flink-docs-release-1.6/fig/times_clocks.svg" class="center" width="80%" />
 
 
-### Setting a Time Characteristic
+### 设置时间特性
 
-The first part of a Flink DataStream program usually sets the base *time characteristic*. That setting
-defines how data stream sources behave (for example, whether they will assign timestamps), and what notion of
-time should be used by window operations like `KeyedStream.timeWindow(Time.seconds(30))`.
+在Flink的DataStream程序的第一部分通常会设置基本的时间特性。这个设置定义了数据流的源的行为（例如它们是否会对对记
+录打上时间戳），以及使用哪种时间概念来执行诸如`KeyedStream.timeWindow(Time.Seconds(30)`这样的时间窗操作。
 
-The following example shows a Flink program that aggregates events in hourly time windows. The behavior of the
-windows adapts with the time characteristic.
+下面这个例子展示了一个以每小时作为时间窗对事件进行聚合的Flink程序。其中时间窗口的行为取决于时间特性。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -133,90 +125,77 @@ stream
 </div>
 </div>
 
+注意，为了使用事件时间，上述程序要么需要直接定义事件时间并且自己发出水印，要么需要在数据源后植入一个时间戳指定器和
+水印生成器。这些函数描述了如何获得事件时间，以及数据会表现出多大程度上的乱序。
 
-Note that in order to run this example in *event time*, the program needs to either use sources
-that directly define event time for the data and emit watermarks themselves, or the program must
-inject a *Timestamp Assigner & Watermark Generator* after the sources. Those functions describe how to access
-the event timestamps, and what degree of out-of-orderness the event stream exhibits.
-
-The section below describes the general mechanism behind *timestamps* and *watermarks*. For a guide on how
-to use timestamp assignment and watermark generation in the Flink DataStream API, please refer to
-[Generating Timestamps / Watermarks]({{ site.baseurl }}/dev/event_timestamps_watermarks.html).
+下面的这个部分介绍了一个在时间戳和水印背后的通用机制。关于如何使用Flink DataStream API打时间戳以及生成水印，
+请参见[生成时间戳/水印](doc/dev/event_timestamps_watermarks.html)。
 
 
-# Event Time and Watermarks
+# 事件时间和水印
 
-*Note: Flink implements many techniques from the Dataflow Model. For a good introduction to event time and watermarks, have a look at the articles below.*
+*注：Flink实现了很多基于Dataflow模型的技术。如果读者对事件时间和水印想了解更多，可以参见以下文章：*
 
   - [Streaming 101](https://www.oreilly.com/ideas/the-world-beyond-batch-streaming-101) by Tyler Akidau
   - The [Dataflow Model paper](https://research.google.com/pubs/archive/43864.pdf)
 
 
-A stream processor that supports *event time* needs a way to measure the progress of event time.
-For example, a window operator that builds hourly windows needs to be notified when event time has passed beyond the
-end of an hour, so that the operator can close the window in progress.
+一个支持*事件时间*的流处理器需要一种能够衡量*事件时间*进度的方法。比如一个基于小时的时间窗口算子，它需要在*事件
+时间*一小时结束后收到通知，并据此关闭正在进行的时间窗口。
 
-*Event time* can progress independently of *processing time* (measured by wall clocks).
-For example, in one program the current *event time* of an operator may trail slightly behind the *processing time*
-(accounting for a delay in receiving the events), while both proceed at the same speed.
-On the other hand, another streaming program might progress through weeks of event time with only a few seconds of processing,
-by fast-forwarding through some historic data already buffered in a Kafka topic (or another message queue).
+*事件时间*和*处理时间*（以实际时钟来计算）的进度是相互独立的。例如，在一个程序中，一个操作符的当前*事件时间*可能
+比*处理时间*稍有延迟（这是由于从事件产生到事件被收到之间的延时），而*事件时间*和*处理时间*的向前推进速度则是相同
+的。而在另一个程序中，在几秒钟之内，程序可能处理了缓存在Kafka（或其他消息队列）中*事件时间*横跨几个星期的数据。
 
 ------
 
-The mechanism in Flink to measure progress in event time is **watermarks**.
-Watermarks flow as part of the data stream and carry a timestamp *t*. A *Watermark(t)* declares that event time has reached time
-*t* in that stream, meaning that there should be no more elements from the stream with a timestamp *t' <= t* (i.e. events with timestamps
-older or equal to the watermark).
+在Flink中衡量*事件时间*的处理进度是通过水印来实现的。水印作为数据流的一部分带有一个时间戳t，并随着数据流动。
+Watermark(t)表示在数据流中的*事件时间*已经到达了时间t，意味着数据流中将不再会出现时间戳为t’(t’<=t)的事件，也就
+是说数据流中将不会再出现与t相等或更早的时间戳。
 
-The figure below shows a stream of events with (logical) timestamps, and watermarks flowing inline. In this example the events are in order
-(with respect to their timestamps), meaning that the watermarks are simply periodic markers in the stream.
+下图展示了一个带有逻辑时间戳和水印的事件流。这个例子中所有的事件都是有序的（根据时间戳排序），也就是说水印
+只是在数据流中定期出现的标记。
 
-<img src="{{ site.baseurl }}/fig/stream_watermark_in_order.svg" alt="A data stream with events (in order) and watermarks" class="center" width="65%" />
+<img src="https://ci.apache.org/projects/flink/flink-docs-release-1.6/fig/stream_watermark_in_order.svg" alt="A data stream with events (in order) and watermarks" class="center" width="65%" />
 
-Watermarks are crucial for *out-of-order* streams, as illustrated below, where the events are not ordered by their timestamps.
-In general a watermark is a declaration that by that point in the stream, all events up to a certain timestamp should have arrived.
-Once a watermark reaches an operator, the operator can advance its internal *event time clock* to the value of the watermark.
+水印对于处理*乱序*的流至关重要，如下图所示，事件没有按照他们的时间戳顺序来排列。大致上来说，水印是一个声明，它表示从
+流中的这个点开始，所有的在某个时刻之前的数据都已经到达了。一旦一个水印到达了一个算子，这个算子就可以将它内部的
+*事件时间时钟*向前推进到这个水印的时间。
 
-<img src="{{ site.baseurl }}/fig/stream_watermark_out_of_order.svg" alt="A data stream with events (out of order) and watermarks" class="center" width="65%" />
-
-
-## Watermarks in Parallel Streams
-
-Watermarks are generated at, or directly after, source functions. Each parallel subtask of a source function usually
-generates its watermarks independently. These watermarks define the event time at that particular parallel source.
-
-As the watermarks flow through the streaming program, they advance the event time at the operators where they arrive. Whenever an
-operator advances its event time, it generates a new watermark downstream for its successor operators.
-
-Some operators consume multiple input streams; a union, for example, or operators following a *keyBy(...)* or *partition(...)* function.
-Such an operator's current event time is the minimum of its input streams' event times. As its input streams
-update their event times, so does the operator.
-
-The figure below shows an example of events and watermarks flowing through parallel streams, and operators tracking event time.
-
-<img src="{{ site.baseurl }}/fig/parallel_streams_watermarks.svg" alt="Parallel data streams and operators with events and watermarks" class="center" width="80%" />
-
-Note that the Kafka source supports per-partition watermarking, which you can read more about [here]({{ site.baseurl }}/dev/event_timestamps_watermarks.html#timestamps-per-kafka-partition).
+<img src="https://ci.apache.org/projects/flink/flink-docs-release-1.6/fig/stream_watermark_out_of_order.svg" alt="A data stream with events (out of order) and watermarks" class="center" width="65%" />
 
 
-## Late Elements
+## 并行流中的水印
 
-It is possible that certain elements will violate the watermark condition, meaning that even after the *Watermark(t)* has occurred,
-more elements with timestamp *t' <= t* will occur. In fact, in many real world setups, certain elements can be arbitrarily
-delayed, making it impossible to specify a time by which all elements of a certain event timestamp will have occurred.
-Furthermore, even if the lateness can be bounded, delaying the watermarks by too much is often not desirable, because it
-causes too much delay in the evaluation of event time windows.
+水印是在数据源或紧随其后的算子生成的。一个数据源节点中的每一个并行子任务通常独立的生成它自己
+的水印。这些水印定义了在某个并发的源上的事件时间。
 
-For this reason, streaming programs may explicitly expect some *late* elements. Late elements are elements that
-arrive after the system's event time clock (as signaled by the watermarks) has already passed the time of the late element's
-timestamp. See [Allowed Lateness]({{ site.baseurl }}/dev/stream/operators/windows.html#allowed-lateness) for more information on how to work
-with late elements in event time windows.
+随着水印流经整个流计算程序，接收到水印的算子将会将其事件时间时钟向前推进。当一个算子向前推进事件时间时，它会产生一个新
+的水印并发给它的下游算子。
+
+有些算子会有多个不同的输入数据流，例如union，或者在keyBy(...)和partition(...)函数之后的算子。这些算子的当前事
+件时间是在所有输入流中最小的事件时间。当它的输入数据流更新事件时间时，这个算子也会相应的更新其事件时间。
+
+下图展示了算子是如何根据在并行数据流中流经的事件和水印来更新其事件时间时钟的。
+
+<img src="https://ci.apache.org/projects/flink/flink-docs-release-1.6/fig/parallel_streams_watermarks.svg" alt="Parallel data streams and operators with events and watermarks" class="center" width="80%" />
+
+注意Kafka的源支持分区级别的水印，更多信息请参考[这里](doc/dev/event_timestamps_watermarks.html)
+
+## 迟到的元素
+
+在实际情况中，可能会出现有一些记录在水印标记到达后才到达，这意味着即便一个标记时间戳为t的水印watermark(t)到达后，
+还会有时间戳t’（t’ <= t）的记录到达。事实上，在很多现实设定中，某些记录可能会在任意晚的时间到达，对这些记录，就不
+可能给定一个保证所有记录都已到达的水印时间，此外，即便迟到的程度有上限，延迟太长时间发送一个水印通常都不是用户想要
+看到的，因为这会导致一个窗口被延迟很久才触发计算。
+
+由于这个原因，流处理总是会收到一些迟到的记录，也就是那些在系统事件时间（以水印为记号）已经过了记录中的事件时间。在
+[允许的迟到](doc/dev/stream/operators/windows.html)中有关于如何在窗口中处
+理迟到记录的更多细节。
 
 
-## Debugging Watermarks
+## 调试水印问题
 
-Please refer to the [Debugging Windows & Event Time]({{ site.baseurl }}/monitoring/debugging_event_time.html) section for debugging
-watermarks at runtime.
+请参考定位[窗口和事件时间](doc/monitoring/debugging_event_time.html)的部分以了解更多关于如何
+在运行时调试水印问题的内容。
 
-{% top %}
