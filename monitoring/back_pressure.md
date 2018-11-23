@@ -22,59 +22,59 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-Flink's web interface provides a tab to monitor the back pressure behaviour of running jobs.
+Flink的web页面提供了一个选项卡可以监控到运行的作业背压行为
 
 * ToC
 {:toc}
 
-## Back Pressure
+## 背压
 
-If you see a **back pressure warning** (e.g. `High`) for a task, this means that it is producing data faster than the downstream operators can consume. Records in your job flow downstream (e.g. from sources to sinks) and back pressure is propagated in the opposite direction, up the stream.
+如果你看到一个任务的**背压警告** (e.g. `High`), 这意味着生产数据的速率比下游的消费的算子们更快. 数据在你流的下游(e.g 从source到sink),即背压会向相反方向传递, 直到上游.
 
-Take a simple `Source -> Sink` job as an example. If you see a warning for `Source`, this means that `Sink` is consuming data slower than `Source` is producing. `Sink` is back pressuring the upstream operator `Source`.
+举个简单的`Source -> Sink`作业例子. 如果你看到一个关于`Source`的警告, 这说明`Sink`消费数据比`Source`生产的要慢. `Sink`对上游的`Source`进行背压.
 
 
-## Sampling Threads
+## 采样线程
 
-Back pressure monitoring works by repeatedly taking stack trace samples of your running tasks. The JobManager triggers repeated calls to `Thread.getStackTrace()` for the tasks of your job.
+背压监控工作依靠持续对你正在运行的task采下的堆栈样本. JobManager会对你的Job中的tasks触发`Thread.getStackTrace()`的重复调用
 
 <img src="{{ site.baseurl }}/fig/back_pressure_sampling.png" class="img-responsive">
 <!-- https://docs.google.com/drawings/d/1_YDYGdUwGUck5zeLxJ5Z5jqhpMzqRz70JxKnrrJUltA/edit?usp=sharing -->
 
-If the samples show that a task Thread is stuck in a certain internal method call (requesting buffers from the network stack), this indicates that there is back pressure for the task.
+如果你的样本显示一个task线程停在内部的方法调用上(从网络栈中申请buffer), 这指明这个task中有背压出现
 
-By default, the job manager triggers 100 stack traces every 50ms for each task in order to determine back pressure. The ratio you see in the web interface tells you how many of these stack traces were stuck in the internal method call, e.g. `0.01` indicates that only 1 in 100 was stuck in that method.
+默认情况下, JobManager对每个任务每50毫秒采下100个堆栈信息用于背压. 你能在web页面中看到背压占比从而计算出有多少线程停在了内部的方法调用上, 比如: `0.01`说明100个中有1个停在了这个方法上.
 
 - **OK**: 0 <= Ratio <= 0.10
 - **LOW**: 0.10 < Ratio <= 0.5
 - **HIGH**: 0.5 < Ratio <= 1
 
-In order to not overload the task managers with stack trace samples, the web interface refreshes samples only after 60 seconds.
+为了TaskManager不会因为堆栈的样本而过载, web页面会隔60秒刷新样本
 
-## Configuration
+## 配置
 
-You can configure the number of samples for the job manager with the following configuration keys:
+你可以使用如下的配置key,对JobManager配置采集的样本数量:
 
-- `jobmanager.web.backpressure.refresh-interval`: Time after which available stats are deprecated and need to be refreshed (DEFAULT: 60000, 1 min).
-- `jobmanager.web.backpressure.num-samples`: Number of stack trace samples to take to determine back pressure (DEFAULT: 100).
-- `jobmanager.web.backpressure.delay-between-samples`: Delay between stack trace samples to determine back pressure (DEFAULT: 50, 50 ms).
+- `jobmanager.web.backpressure.refresh-interval`: 背压统计过期及刷新时间 (默认: 60000, 1 min).
+- `jobmanager.web.backpressure.num-samples`: 用于背压堆栈的样本数量 (默认: 100).
+- `jobmanager.web.backpressure.delay-between-samples`: 采样用于背压的堆栈样本的间隔时间 (默认: 50, 50 ms).
 
 
-## Example
+## 示例
 
-You can find the *Back Pressure* tab next to the job overview.
+你可以在job overview旁边找到*Back Pressure*选项卡
 
-### Sampling In Progress
+### 采样处理中
 
-This means that the JobManager triggered a stack trace sample of the running tasks. With the default configuration, this takes about 5 seconds to complete.
+意思是JobManager触发了对运行中的tasks的一个堆栈采样. 默认配置下, 这些tasks需要5秒完成采样.
 
-Note that clicking the row, you trigger the sample for all subtasks of this operator.
+需要说明的是你点击的那行, 会对所有的子任务触发采样操作
 
 <img src="{{ site.baseurl }}/fig/back_pressure_sampling_in_progress.png" class="img-responsive">
 
-### Back Pressure Status
+### 背压状态
 
-If you see status **OK** for the tasks, there is no indication of back pressure. **HIGH** on the other hand means that the tasks are back pressured.
+哪果你看到tasks的状态是**OK**, 说明没有背压. 状态是 **HIGH** 正好相反,说明tasks受到背压
 
 <img src="{{ site.baseurl }}/fig/back_pressure_sampling_ok.png" class="img-responsive">
 
