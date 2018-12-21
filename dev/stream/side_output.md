@@ -1,5 +1,5 @@
 ---
-title: "Side Outputs"
+title: "支流输出"
 nav-title: "Side Outputs"
 nav-parent_id: streaming
 nav-pos: 36
@@ -26,15 +26,9 @@ under the License.
 * This will be replaced by the TOC
 {:toc}
 
-In addition to the main stream that results from `DataStream` operations, you can also produce any
-number of additional side output result streams. The type of data in the result streams does not
-have to match the type of data in the main stream and the types of the different side outputs can
-also differ. This operation can be useful when you want to split a stream of data where you would
-normally have to replicate the stream and then filter out from each stream the data that you don't
-want to have.
+通过 `DataStream` 算子生成的结果除了可以输出到主流，还可以输出到多条支流。支流输出结果的数据类型不需要与主流一致，各支流之间也可以各不相同。当你想要拆分流数据时，可以使用支流输出功能，否则只能把相同的数据复制成多条流，再从各流中分别筛除多余的数据。 
 
-When using side outputs, you first need to define an `OutputTag` that will be used to identify a
-side output stream:
+如果要使用支流输出，你首先需要定义一个 `OutputTag` 用来标示这条支流：
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -52,19 +46,16 @@ val outputTag = OutputTag[String]("side-output")
 </div>
 </div>
 
-Notice how the `OutputTag` is typed according to the type of elements that the side output stream
-contains.
+创建 `OutputTag` 时需指定数据类型，并与支流中的数据类型保持一致。
 
-Emitting data to a side output is possible from the following functions:
+支持输出数据到支流的有以下函数：
 
 - [ProcessFunction]({{ site.baseurl }}/dev/stream/operators/process_function.html)
 - CoProcessFunction
 - [ProcessWindowFunction]({{ site.baseurl }}/dev/stream/operators/windows.html#processwindowfunction)
 - ProcessAllWindowFunction
 
-You can use the `Context` parameter, which is exposed to users in the above functions, to emit
-data to a side output identified by an `OutputTag`. Here is an example of emitting side output
-data from a `ProcessFunction`:
+上述函数都提供了 `Context` 参数，用于输出数据到 `OutputTag` 指定的支流。以下是一个使用 `ProcessFunction` 输出到支流的样例：
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -116,9 +107,7 @@ val mainDataStream = input
 </div>
 </div>
 
-For retrieving the side output stream you use `getSideOutput(OutputTag)`
-on the result of the `DataStream` operation. This will give you a `DataStream` that is typed
-to the result of the side output stream:
+`DataStream` 类型算子的输出提供了 `getSideOutput(OutputTag)` 方法，用于获得支流的输出结果。方法的返回值是 `DataStream` 类型。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
