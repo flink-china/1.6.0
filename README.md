@@ -26,7 +26,7 @@
 |https://ci.apache.org/projects/flink/flink-docs-release-1.6/ops/cli.html	|		|		|
 |https://ci.apache.org/projects/flink/flink-docs-release-1.6/ops/security-kerberos.html	|		|		|
 |https://ci.apache.org/projects/flink/flink-docs-release-1.6/ops/security-ssl.html	|		|		|
-|https://ci.apache.org/projects/flink/flink-docs-release-1.6/ops/filesystems.html	|		|		|
+|https://ci.apache.org/projects/flink/flink-docs-release-1.6/ops/filesystems.html	|	已认领	|   8月29日	|
 |https://ci.apache.org/projects/flink/flink-docs-release-1.6/ops/upgrading.html	|	已认领	|		|
 |https://ci.apache.org/projects/flink/flink-docs-release-1.6/monitoring/metrics.html	|	已认领	|	8月29日	|
 |https://ci.apache.org/projects/flink/flink-docs-release-1.6/monitoring/logging.html	|	已认领	|	8月29日	|
