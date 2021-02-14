@@ -23,16 +23,16 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-This page briefly discusses how to test a Flink application in your IDE or a local environment.
+以下会简要的介绍，如何在您的集成开发环境或者本地开发环境，测试Flink应用程序。
 
 * This will be replaced by the TOC
 {:toc}
 
-## Unit testing
+## 单元测试
 
-Usually, one can assume that Flink produces correct results outside of a user-defined `Function`. Therefore, it is recommended to test `Function` classes that contain the main business logic with unit tests as much as possible.
+通常认为，Flink里除了用户自定义的`Function`外，其它的步骤都能够正确的输出结果。因此，建议尽量使用单元测试方法，去检测包含主要业务逻辑的`Function`类。
 
-For example if one implements the following `ReduceFunction`:
+假设，您执行下面的`ReduceFunction`功能。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -59,7 +59,7 @@ class SumReduce extends ReduceFunction[Long] {
 </div>
 </div>
 
-It is very easy to unit test it with your favorite framework by passing suitable arguments and verify the output:
+通过传递合适的参数到您最喜爱的架构中，您就能够轻松的使用单元测试方法完成对`ReduceFunction`功能的检测，以及对输出结果的验证。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -94,11 +94,11 @@ class SumReduceTest extends FlatSpec with Matchers {
 </div>
 </div>
 
-## Integration testing
+## 集合测试
 
-In order to end-to-end test Flink streaming pipelines, you can also write integration tests that are executed against a local Flink mini cluster.
+为了完成Flink流通道的端对端测试，您可以通过使用本地的Flink迷你集群，来执行您编写的集合测试代码。
 
-In order to do so add the test dependency `flink-test-utils`:
+但是您需要添加测试依赖环境`flink-test-utils`。
 
 {% highlight xml %}
 <dependency>
@@ -226,16 +226,17 @@ object CollectSink {
 </div>
 </div>
 
-The static variable in `CollectSink` is used here because Flink serializes all operators before distributing them across a cluster.
-Communicating with operators instantiated by a local Flink mini cluster via static variables is one way around this issue.
-Alternatively, you could for example write the data to files in a temporary directory with your test sink.
-You can also implement your own custom sources for emitting watermarks.
 
-## Testing checkpointing and state handling
+Flink在所有的运算符分布到集群前，已经将这些运算符进行排序。所以需要在这里使用`CollectSink`中的静态变量，
+通过静态数据，与本地的Flink迷你集群实现的运算符发生交互，是现在解决这种状况的一种方案。
+或者，例如您可以通过使用您的测试接收器，将测试数据写入一个临时文件夹的一些文件的方法，来解决这个问题。
+您也可以使用添加水印的方法来创建自定义的数据源。
 
-One way to test state handling is to enable checkpointing in integration tests. 
+## 测试检查点和测试状态处理状况
 
-You can do that by configuring your `StreamExecutionEnvironment` in the test:
+测试**状态处理**的一种方法是在集合检测中激活检查点功能。
+
+在测试中，您可以通过设置`StreamExecutionEnvironment`来激活检查点功能。
 
 <div class="codetabs" markdown="1">
 <div data-lang="java" markdown="1">
@@ -253,13 +254,13 @@ env.setRestartStrategy(RestartStrategies.fixedDelayRestart(3, 100))
 </div>
 </div>
 
-And for example adding to your Flink application an identity mapper operator that will throw an exception
-once every `1000ms`. However writing such test could be tricky because of time dependencies between the actions.
+例如，在您的Flink应用程序中添加一个的身份映射器的运算符时，系统将会每`1000ms`进行错误提示。但是，执行步骤之间的时间依赖关系使得编写这种测试代码有些困难。
 
-Another approach is to write a unit test using the Flink internal testing utility `AbstractStreamOperatorTestHarness` from the `flink-streaming-java` module.
+使用Flink内部测试功能，`flink-streaming-java`模型中的`AbstractStreamOperatorTestHarness`，编写单元测试也是一种解决方案。
 
-For an example of how to do that please have a look at the `org.apache.flink.streaming.runtime.operators.windowing.WindowOperatorTest` also in the `flink-streaming-java` module.
+您可以查看`flink-streaming-java`模型中的范例`org.apache.flink.streaming.runtime.operators.windowing.WindowOperatorTest`来了解
+以上解决方案。
 
-Be aware that `AbstractStreamOperatorTestHarness` is currently not a part of public API and can be subject to change.
+要注意的是，现在`AbstractStreamOperatorTestHarness`已经不是公共API的一部分了，它的功能也可会有所变化。
 
 {% top %}
